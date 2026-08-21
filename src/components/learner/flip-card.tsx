@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { t, type Lang } from "@/lib/i18n";
 import { ChevronLeft, ChevronRightBig, SpeakerIcon } from "@/components/ui/icons";
@@ -10,10 +10,18 @@ import type { UnitDetail } from "@/lib/learner-data";
 
 type Word = UnitDetail["words"][number];
 
+/** Past this many pixels a horizontal drag counts as a swipe, not a tap. */
+const SWIPE_THRESHOLD = 48;
+/** Beyond this much vertical movement it is a scroll, so leave it alone. */
+const SCROLL_TOLERANCE = 40;
+
 /**
  * Cards mode: a 3D flip card carousel. The front carries the word, IPA and
- * syllable stress with a Listen button; the back carries the Spanish definition
- * and the English example.
+ * syllable stress with a Listen button; the back carries the Spanish
+ * definition, the English example and its Spanish translation.
+ *
+ * Two ways to move between cards — the arrows and a horizontal swipe — and a
+ * tap anywhere on the card turns it over.
  */
 export function CardsMode({
   words,
@@ -27,6 +35,10 @@ export function CardsMode({
   const d = t(lang);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  // The nudge stops for good once the learner discovers the flip themselves.
+  const [everFlipped, setEverFlipped] = useState(false);
+  const [drag, setDrag] = useState(0);
+  const gesture = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
   const { speak, speaking, state } = useSpeech();
 
   const word = words[index];
@@ -35,7 +47,51 @@ export function CardsMode({
   const go = (next: number) => {
     setIndex((next + words.length) % words.length);
     setFlipped(false);
+    setDrag(0);
     if (next >= words.length - 1) onSeen();
+  };
+
+  const flip = () => {
+    setFlipped((v) => !v);
+    setEverFlipped(true);
+    onSeen();
+  };
+
+  const onPointerDown = (event: React.PointerEvent) => {
+    gesture.current = { x: event.clientX, y: event.clientY, dragging: false };
+  };
+
+  const onPointerMove = (event: React.PointerEvent) => {
+    const start = gesture.current;
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    // Vertical intent wins: the page must still scroll under the card.
+    if (Math.abs(dy) > SCROLL_TOLERANCE && Math.abs(dy) > Math.abs(dx)) {
+      gesture.current = null;
+      setDrag(0);
+      return;
+    }
+    if (Math.abs(dx) > 6) {
+      start.dragging = true;
+      // Resist past the threshold so the card follows the finger without
+      // sliding away — it snaps back or advances on release.
+      setDrag(Math.sign(dx) * Math.min(Math.abs(dx), SWIPE_THRESHOLD * 1.6) * 0.6);
+    }
+  };
+
+  const onPointerUp = (event: React.PointerEvent) => {
+    const start = gesture.current;
+    gesture.current = null;
+    setDrag(0);
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    if (!start.dragging || Math.abs(dx) < SWIPE_THRESHOLD) {
+      // Not a swipe: treat it as the tap it was.
+      if (!start.dragging) flip();
+      return;
+    }
+    go(dx < 0 ? index + 1 : index - 1);
   };
 
   return (
@@ -47,15 +103,42 @@ export function CardsMode({
         <span className="ml-auto">{flipped ? d.flipBack : d.flipShow}</span>
       </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          setFlipped((v) => !v);
-          onSeen();
-        }}
-        className="h-[352px] [perspective:1300px]"
+      <div
+        role="button"
+        tabIndex={0}
         aria-label={flipped ? d.flipBack : d.flipShow}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => {
+          gesture.current = null;
+          setDrag(0);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            flip();
+          }
+          if (event.key === "ArrowRight") go(index + 1);
+          if (event.key === "ArrowLeft") go(index - 1);
+        }}
+        // pan-y keeps vertical scrolling with the page while we take the
+        // horizontal axis for swiping.
+        className="h-[352px] cursor-pointer touch-pan-y select-none [perspective:1300px]"
       >
+        <div
+          className="size-full [transform-style:preserve-3d]"
+          style={{
+            transform: `translateX(${drag}px)`,
+            transition: drag === 0 ? "transform 260ms cubic-bezier(.2,.8,.3,1)" : "none",
+          }}
+        >
+        <div
+          className={cn(
+            "size-full [transform-style:preserve-3d]",
+            !everFlipped && "[animation:flip-hint_4.2s_ease-in-out_infinite]",
+          )}
+        >
         <div
           className="relative size-full transition-transform duration-[520ms] [transform-style:preserve-3d]"
           style={{
@@ -81,25 +164,19 @@ export function CardsMode({
               {d.q2}
             </div>
             <div className="relative mt-auto flex items-center gap-3">
-              <span
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
+                onPointerDown={(event) => event.stopPropagation()}
+                onPointerUp={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.stopPropagation();
                   speak(word.text);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    speak(word.text);
-                  }
                 }}
                 className="press inline-flex items-center gap-2 rounded-[14px] border-2 border-ink bg-brand px-[15px] py-[11px] text-[13.5px] font-bold text-white hard-1"
               >
                 <SpeakerIcon />
                 {d.listen}
-              </span>
+              </button>
               <Waveform active={speaking} />
             </div>
             {state === "unsupported" ? (
@@ -130,6 +207,11 @@ export function CardsMode({
                 {word.exampleSentence}
                 {d.q2}
               </p>
+              {word.exampleSentenceEs ? (
+                <p className="mt-[6px] border-l-[3px] border-brand-mid pl-[10px] text-[13.5px] leading-[1.45] text-muted-2 text-pretty">
+                  {word.exampleSentenceEs}
+                </p>
+              ) : null}
             </div>
             <div className="mt-auto flex items-baseline gap-[10px] font-mono text-[14px] text-brand-deep">
               {word.ipa}
@@ -139,7 +221,9 @@ export function CardsMode({
             </div>
           </div>
         </div>
-      </button>
+        </div>
+        </div>
+      </div>
 
       <div className="flex items-center gap-[10px]">
         <button

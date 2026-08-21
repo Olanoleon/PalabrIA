@@ -323,7 +323,7 @@ export const EN: Translated = {
   pron: "Pronunciation · American IPA",
   stress: "stress on",
   listen: "Listen",
-  defTitle: "Spanish definition",
+  defTitle: "Definition",
   exTitle: "English example",
   paraKicker: "Topic paragraph",
   chipsNote: (n) => "All " + n + " unit words appear in the paragraph",
