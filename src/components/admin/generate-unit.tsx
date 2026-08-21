@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   generateUnitDraft,
+  regenerateUnit,
   saveGeneratedUnit,
   type GenerationResult,
 } from "@/lib/actions/admin";
@@ -47,11 +48,30 @@ export function GenerateUnit({
   areaName,
   base,
   lang,
+  /**
+   * When present the draft replaces this unit's content instead of creating a
+   * new unit, and the form starts from the request that produced it.
+   */
+  replacing,
 }: {
   areaId: string;
   areaName: string;
   base: "/admin" | "/super";
   lang: Lang;
+  replacing?: {
+    unitId: string;
+    unitName: string;
+    /** Falls back to this when no request was stored, so regenerating a unit
+     *  cannot silently change its difficulty. */
+    currentDifficulty: Difficulty;
+    currentWordCount: number;
+    previousInput: {
+      wordCount?: number;
+      difficulty?: Difficulty;
+      topic?: string;
+      wordList?: string[];
+    } | null;
+  };
 }) {
   const d = adminT(lang);
   const DIFFICULTIES: Array<{ value: Difficulty; label: string }> = [
@@ -83,15 +103,20 @@ export function GenerateUnit({
   }
   const active = draft;
 
-  const difficulty = (result.input?.difficulty ?? "EASY") as Difficulty;
+  const prior = replacing?.previousInput ?? null;
+  const fallbackDifficulty =
+    prior?.difficulty ?? replacing?.currentDifficulty ?? "EASY";
+  const difficulty = (result.input?.difficulty ?? fallbackDifficulty) as Difficulty;
   const blocking = (result.issues ?? []).filter((i) => i.level === "error");
   const warnings = (result.issues ?? []).filter((i) => i.level === "warning");
 
   return (
     <div className="flex flex-col gap-5">
       <Panel
-        title={d.generateTitle}
-        description={d.generateArea(areaName)}
+        title={replacing ? d.regenerateTitle : d.generateTitle}
+        description={
+          replacing ? d.regenerateOf(replacing.unitName) : d.generateArea(areaName)
+        }
         actions={
           <button
             type="button"
@@ -106,16 +131,23 @@ export function GenerateUnit({
               ) {
                 return;
               }
-              router.push(`${base}/content/${areaId}`);
+              router.push(
+                replacing ? `${base}/unit/${replacing.unitId}` : `${base}/content/${areaId}`,
+              );
             }}
             className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
           >
-            {d.generateBack}
+            {replacing ? d.regenerateBack : d.generateBack}
           </button>
         }
       >
         <form action={generate} className="flex flex-col gap-4">
           <input type="hidden" name="areaId" value={areaId} />
+          {replacing ? (
+            <p className="rounded-xl border-2 border-dashed border-ink bg-cream px-3 py-2 text-[12.5px] leading-[1.45] text-body">
+              {d.regenerateWarn}
+            </p>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
               label={d.generateWords}
@@ -123,14 +155,14 @@ export function GenerateUnit({
               type="number"
               min={4}
               max={12}
-              defaultValue={result.input?.wordCount ?? 6}
+              defaultValue={result.input?.wordCount ?? prior?.wordCount ?? replacing?.currentWordCount ?? 6}
               required
               hint={d.generateWordsHint}
             />
             <Select
               label={d.generateDifficulty}
               name="difficulty"
-              defaultValue={result.input?.difficulty ?? "EASY"}
+              defaultValue={result.input?.difficulty ?? fallbackDifficulty}
             >
               {DIFFICULTIES.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -144,14 +176,14 @@ export function GenerateUnit({
             <Field
               label={d.generateTopic}
               name="topic"
-              defaultValue={result.input?.topic ?? ""}
+              defaultValue={result.input?.topic ?? prior?.topic ?? ""}
               placeholder="Cooking Italian food"
               hint={d.generateTopicHint}
             />
             <TextArea
               label={d.generateList}
               name="wordList"
-              defaultValue={result.input?.wordList?.join(", ") ?? ""}
+              defaultValue={result.input?.wordList?.join(", ") ?? prior?.wordList?.join(", ") ?? ""}
               placeholder="boil, fry, chop, stir, slice, season"
               hint={d.generateListHint}
             />
@@ -213,36 +245,56 @@ export function GenerateUnit({
               >
                 {d.discard}
               </SmallButton>
-              <label className="flex items-center gap-2 text-[12.5px] font-semibold">
-                <input
-                  type="checkbox"
-                  checked={visible}
-                  onChange={(event) => setVisible(event.target.checked)}
-                  className="size-4 accent-[#EA580C]"
-                />
-                {d.reviewVisibleOnSave}
-              </label>
+              {replacing ? null : (
+                <label className="flex items-center gap-2 text-[12.5px] font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={visible}
+                    onChange={(event) => setVisible(event.target.checked)}
+                    className="size-4 accent-[#EA580C]"
+                  />
+                  {d.reviewVisibleOnSave}
+                </label>
+              )}
               <SmallButton
                 tone="primary"
                 disabled={saving || blocking.length > 0}
-                onClick={() =>
+                onClick={() => {
+                  if (
+                    replacing &&
+                    !window.confirm(d.regenerateConfirm(replacing.unitName))
+                  ) {
+                    return;
+                  }
                   startSaving(async () => {
                     setSaveError(null);
-                    const outcome = await saveGeneratedUnit(areaId, active, {
-                      difficulty,
-                      visible,
-                      generationInput: result.input ?? null,
-                      edited,
-                    });
+                    const outcome = replacing
+                      ? await regenerateUnit(replacing.unitId, active, {
+                          difficulty,
+                          generationInput: result.input ?? null,
+                          edited,
+                        })
+                      : await saveGeneratedUnit(areaId, active, {
+                          difficulty,
+                          visible,
+                          generationInput: result.input ?? null,
+                          edited,
+                        });
                     if ("error" in outcome) {
                       setSaveError(outcome.error);
                       return;
                     }
                     router.push(`${base}/unit/${outcome.unitId}`);
-                  })
-                }
+                  });
+                }}
               >
-                {saving ? d.reviewSaving : d.reviewSave}
+                {replacing
+                  ? saving
+                    ? d.regenerateSaving
+                    : d.regenerateSave
+                  : saving
+                    ? d.reviewSaving
+                    : d.reviewSave}
               </SmallButton>
             </div>
           }

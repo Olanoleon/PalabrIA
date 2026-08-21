@@ -17,6 +17,80 @@ export type PersistOptions = {
   edited: boolean;
 };
 
+/**
+ * Replaces a unit's teachable content in place, keeping the unit itself.
+ *
+ * The row survives, so UnitProgress — a learner's best score, attempts and pass
+ * date — survives with it. Per-activity attempt history does not: the old
+ * Activity rows are deleted and their ActivityAttempt records cascade away,
+ * because those answers were to questions that no longer exist.
+ */
+export async function replaceGeneratedUnit(
+  unitId: string,
+  draft: GeneratedUnit,
+  options: PersistOptions,
+): Promise<{ unitId: string } | { error: string }> {
+  const issues = validateGeneratedUnit(draft, { wordCount: draft.words.length });
+  if (hasBlockingIssue(issues)) {
+    return { error: issues.find((i) => i.level === "error")!.message };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // Activities first: they reference the words.
+    await tx.activity.deleteMany({ where: { unitId } });
+    await tx.word.deleteMany({ where: { unitId } });
+
+    await tx.unit.update({
+      where: { id: unitId },
+      data: {
+        name: draft.title,
+        subtitle: draft.subtitle,
+        subtitleEn: draft.subtitleEs,
+        difficulty: options.difficulty,
+        wordCount: draft.words.length,
+        introParagraph: draft.introParagraph,
+        introParagraphEs: draft.introParagraphEs,
+        generationInput: options.generationInput as never,
+        generatedAt: new Date(),
+        editedAfterGen: options.edited,
+        // sortOrder and isVisible are deliberately untouched: regenerating the
+        // content is not a reason to move the unit or reveal a hidden one.
+      },
+    });
+
+    const wordIds = new Map<string, string>();
+    for (const [index, word] of draft.words.entries()) {
+      const row = await tx.word.create({
+        data: { ...word, unitId, sortOrder: index },
+      });
+      wordIds.set(word.text.toLowerCase(), row.id);
+    }
+
+    for (const [index, activity] of draft.activities.entries()) {
+      const wordId = wordIds.get(activity.word.toLowerCase());
+      if (!wordId) continue;
+      await tx.activity.create({
+        data: {
+          unitId,
+          wordId,
+          type: activity.type,
+          prompt: activity.prompt,
+          promptEs: activity.promptEs,
+          sentence: activity.type === "TYPE_WHAT_YOU_HEAR" ? null : activity.sentence,
+          options: activity.type === "TYPE_WHAT_YOU_HEAR" ? [] : activity.options,
+          answerIndex: activity.type === "TYPE_WHAT_YOU_HEAR" ? 0 : activity.answerIndex,
+          note: activity.note,
+          noteEs: activity.noteEs,
+          mono: activity.type === "IPA_MATCH",
+          sortOrder: index,
+        },
+      });
+    }
+  });
+
+  return { unitId };
+}
+
 export async function persistGeneratedUnit(
   areaId: string,
   draft: GeneratedUnit,

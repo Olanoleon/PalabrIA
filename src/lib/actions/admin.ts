@@ -18,7 +18,7 @@ import { evaluateBadges } from "@/lib/progress";
 import { GenerationError, generateUnit } from "@/lib/openai";
 import { MAX_WORDS, MIN_WORDS, type GeneratedUnit } from "@/lib/unit-schema";
 import { validateGeneratedUnit, type Issue } from "@/lib/unit-validate";
-import { persistGeneratedUnit } from "@/lib/unit-persist";
+import { persistGeneratedUnit, replaceGeneratedUnit } from "@/lib/unit-persist";
 import { getSettings } from "@/lib/billing";
 import type { Difficulty } from "@/generated/prisma";
 
@@ -522,6 +522,34 @@ export async function saveGeneratedUnit(
   if (!area) return { error: "Esa área no existe o no puedes editarla." };
 
   const result = await persistGeneratedUnit(areaId, draft, options);
+  if ("error" in result) return result;
+
+  revalidateAdmin();
+  revalidatePath("/path");
+  return result;
+}
+
+/**
+ * Replaces an existing unit's content with a reviewed draft. Learner best
+ * scores survive; per-activity answer history does not.
+ */
+export async function regenerateUnit(
+  unitId: string,
+  draft: GeneratedUnit,
+  options: {
+    difficulty: Difficulty;
+    generationInput: unknown;
+    edited: boolean;
+  },
+): Promise<{ unitId: string } | { error: string }> {
+  const user = await actor();
+  await assertUnitInScope(user, unitId);
+
+  const result = await replaceGeneratedUnit(unitId, draft, {
+    ...options,
+    // Visibility belongs to the unit, not to this generation.
+    visible: true,
+  });
   if ("error" in result) return result;
 
   revalidateAdmin();
