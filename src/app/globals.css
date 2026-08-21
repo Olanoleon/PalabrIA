@@ -23,6 +23,13 @@
   --color-brand-ink: #fff7ed;
   --color-highlight: #ffe3b8;
 
+  /* AI actions. The palette is deliberately warm, so this leans purple-600
+     rather than blue-violet, which would fight the paper ground. */
+  --color-ai: #9333ea;
+  --color-ai-deep: #7e22ce;
+  --color-ai-soft: #f3e8ff;
+  --color-ai-ink: #faf5ff;
+
   --color-pass: #15803d;
   --color-pass-soft: #d8ebdf;
   --color-pass-deep: #14532d;

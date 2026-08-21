@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
 import { adminContext, areaForAdmin, contentTree } from "@/lib/admin-data";
@@ -9,6 +8,7 @@ import {
 } from "@/components/admin/shell";
 import { SUPER_NAV } from "@/components/admin/admin-nav";
 import { ContentPanel } from "@/components/admin/content-panel";
+import { GenerateUnitLink } from "@/components/admin/generate-unit-link";
 import { LeaveOrgMode } from "@/components/admin/leave-org-mode";
 
 export default async function SuperAreaPage({
@@ -35,12 +35,7 @@ export default async function SuperAreaPage({
         )
       }
       actions={
-        <Link
-          href={`/super/content/${areaId}/generate`}
-          className="press rounded-xl border-2 border-ink bg-brand px-[14px] py-[9px] text-[13px] font-bold text-brand-ink hard-1"
-        >
-          Crear unidad con IA
-        </Link>
+        <GenerateUnitLink areaId={areaId} base="/super" />
       }
     >
       <ContentPanel areas={areas} base="/super" />

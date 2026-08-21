@@ -77,6 +77,7 @@ export function Message({ state }: { state: ActionState }) {
 
 const TONES = {
   primary: "border-ink bg-brand text-brand-ink hard-1",
+  ai: "border-ink bg-ai text-ai-ink hard-1",
   secondary: "border-ink bg-surface text-ink hard-1",
   soft: "border-ink bg-brand-soft text-ink hard-1",
   danger: "border-ink bg-ink text-paper hard-1",

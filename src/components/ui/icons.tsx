@@ -147,6 +147,28 @@ export const CopyIcon = (p: Props) => (
   <Stroke {...p} size={p.size ?? 16} strokeWidth={1.8} d="M9 9V6.5A1.5 1.5 0 0110.5 5h7A1.5 1.5 0 0119 6.5v7a1.5 1.5 0 01-1.5 1.5H15M5 10.5A1.5 1.5 0 016.5 9h7A1.5 1.5 0 0115 10.5v7A1.5 1.5 0 0113.5 19h-7A1.5 1.5 0 015 17.5v-7z" />
 );
 
+/**
+ * Sparkles — the conventional mark for an AI action. Two four-pointed stars,
+ * drawn in the same stroke weight as the rest of the set.
+ */
+export const SparkleIcon = ({ size = 16, className }: Props) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M10 3.5l1.5 4.1 4.1 1.5-4.1 1.5L10 14.7l-1.5-4.1L4.4 9.1l4.1-1.5L10 3.5z" />
+    <path d="M17.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z" />
+  </svg>
+);
+
 export const AreaGlyph = ({ iconKey, size = 22 }: { iconKey: string; size?: number }) => {
   const paths: Record<string, string> = {
     body: "M12 3.5a2 2 0 100 4 2 2 0 000-4M8 9h8M12 9v6M9.5 20l2.5-4 2.5 4",

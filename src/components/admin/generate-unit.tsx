@@ -8,6 +8,7 @@ import {
   type GenerationResult,
 } from "@/lib/actions/admin";
 import { Panel, Tag } from "@/components/admin/pieces";
+import { SparkleIcon } from "@/components/ui/icons";
 import { Field, Select, SmallButton, TextArea } from "@/components/admin/form-bits";
 import { cn } from "@/lib/cn";
 import type { GeneratedUnit } from "@/lib/unit-schema";
@@ -121,7 +122,13 @@ export function GenerateUnit({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <SmallButton type="submit" tone="primary" disabled={generating}>
+            <SmallButton
+              type="submit"
+              tone="ai"
+              disabled={generating}
+              className="inline-flex items-center gap-2"
+            >
+              <SparkleIcon size={15} />
               {generating
                 ? "Generando…"
                 : active
