@@ -11,7 +11,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma";
-import { SEED_AREAS, SEED_BADGES, TEMPLATE_NAME } from "./seed-content";
+import { ensureBadges, ensureTemplate } from "./seed-template";
 import type { XpReason } from "../src/generated/prisma";
 
 const prisma = new PrismaClient();
@@ -80,81 +80,12 @@ async function main() {
   });
 
   // ── Badges ────────────────────────────────────────────────────────────────
-  await prisma.badge.createMany({ data: SEED_BADGES });
-  const badges = await prisma.badge.findMany();
+  const badges = await ensureBadges(prisma);
   const badgeId = (key: string) => badges.find((b) => b.key === key)!.id;
 
   // ── Global template ───────────────────────────────────────────────────────
   console.log("→ building the global template");
-  const template = await prisma.globalTemplate.create({
-    data: { name: TEMPLATE_NAME },
-  });
-
-  for (const [areaIndex, area] of SEED_AREAS.entries()) {
-    const createdArea = await prisma.area.create({
-      data: {
-        scope: "GLOBAL",
-        templateId: template.id,
-        name: area.name,
-        nameEs: area.nameEs,
-        description: area.description,
-        iconKey: area.iconKey,
-        tint: area.tint,
-        sortOrder: areaIndex,
-        isVisible: true,
-      },
-    });
-
-    for (const [unitIndex, unit] of area.units.entries()) {
-      const createdUnit = await prisma.unit.create({
-        data: {
-          areaId: createdArea.id,
-          name: unit.name,
-          subtitle: unit.subtitle,
-          subtitleEn: unit.subtitleEn,
-          sortOrder: unitIndex,
-          isVisible: true,
-          difficulty: unit.difficulty,
-          wordCount: unit.words.length,
-          introParagraph: unit.introParagraph,
-          introParagraphEs: unit.introParagraphEs,
-        },
-      });
-
-      const wordIds = new Map<string, string>();
-      for (const [wordIndex, word] of unit.words.entries()) {
-        const created = await prisma.word.create({
-          data: { ...word, unitId: createdUnit.id, sortOrder: wordIndex },
-        });
-        wordIds.set(word.text.toLowerCase(), created.id);
-      }
-
-      for (const [activityIndex, activity] of unit.activities.entries()) {
-        const wordId = wordIds.get(activity.word.toLowerCase());
-        if (!wordId) {
-          throw new Error(
-            `Activity in "${unit.name}" references unknown word "${activity.word}"`,
-          );
-        }
-        await prisma.activity.create({
-          data: {
-            unitId: createdUnit.id,
-            wordId,
-            type: activity.type,
-            prompt: activity.prompt,
-            promptEs: activity.promptEs,
-            sentence: activity.sentence ?? null,
-            options: activity.options ?? [],
-            answerIndex: activity.answerIndex ?? 0,
-            note: activity.note,
-            noteEs: activity.noteEs,
-            mono: activity.mono ?? false,
-            sortOrder: activityIndex,
-          },
-        });
-      }
-    }
-  }
+  const { id: templateId } = await ensureTemplate(prisma);
 
   // ── Organizations ─────────────────────────────────────────────────────────
   console.log("→ creating organizations and replicating the template");
@@ -168,7 +99,7 @@ async function main() {
   });
 
   for (const org of [arkus, camil]) {
-    await replicate(prisma, template.id, org.id);
+    await replicate(prisma, templateId, org.id);
   }
 
   // An administrator would have revealed these; do it here so the demo learner

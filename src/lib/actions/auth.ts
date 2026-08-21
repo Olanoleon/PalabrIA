@@ -20,6 +20,7 @@ import {
   verifyPassword,
 } from "@/lib/auth";
 import { homeFor } from "@/lib/rbac";
+import { ENFORCE_PASSWORD_CHANGE } from "@/lib/config";
 import { sendPasswordReset, sendTwoFactorCode } from "@/lib/resend";
 import { t, type Lang } from "@/lib/i18n";
 
@@ -81,7 +82,11 @@ export async function signIn(
     data: { lastLoginAt: new Date() },
   });
   await startSession(user);
-  redirect(user.mustChangePassword ? "/new-password" : homeFor(user.role));
+  redirect(
+    ENFORCE_PASSWORD_CHANGE && user.mustChangePassword
+      ? "/new-password"
+      : homeFor(user.role),
+  );
 }
 
 export async function verifyTwoFactor(
@@ -102,7 +107,11 @@ export async function verifyTwoFactor(
   });
   await clearPending();
   await startSession(user);
-  redirect(user.mustChangePassword ? "/new-password" : homeFor(user.role));
+  redirect(
+    ENFORCE_PASSWORD_CHANGE && user.mustChangePassword
+      ? "/new-password"
+      : homeFor(user.role),
+  );
 }
 
 export async function resendTwoFactor(

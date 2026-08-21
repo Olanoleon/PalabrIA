@@ -8,6 +8,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { currentUser, type CurrentUser } from "@/lib/auth";
+import { ENFORCE_PASSWORD_CHANGE } from "@/lib/config";
 import {
   Forbidden,
   areaScopeFor,
@@ -26,7 +27,9 @@ export { Forbidden, homeFor };
 export async function requireUser(): Promise<CurrentUser> {
   const user = await currentUser();
   if (!user) redirect("/login");
-  if (user.mustChangePassword) redirect("/new-password");
+  if (ENFORCE_PASSWORD_CHANGE && user.mustChangePassword) {
+    redirect("/new-password");
+  }
   return user;
 }
 

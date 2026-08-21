@@ -12,7 +12,8 @@ export async function replicate(
   prisma: PrismaClient,
   templateId: string,
   orgId: string,
-) {
+): Promise<{ areas: number; units: number; words: number; activities: number }> {
+  const counts = { areas: 0, units: 0, words: 0, activities: 0 };
   const areas = await prisma.area.findMany({
     where: { scope: "GLOBAL", templateId },
     orderBy: { sortOrder: "asc" },
@@ -42,6 +43,7 @@ export async function replicate(
         sourceAreaId: area.id,
       },
     });
+    counts.areas++;
 
     for (const unit of area.units) {
       const unitCopy = await prisma.unit.create({
@@ -59,6 +61,7 @@ export async function replicate(
           sourceUnitId: unit.id,
         },
       });
+      counts.units++;
 
       const wordIdByOriginal = new Map<string, string>();
       for (const word of unit.words) {
@@ -79,6 +82,7 @@ export async function replicate(
           },
         });
         wordIdByOriginal.set(word.id, created.id);
+        counts.words++;
       }
 
       for (const activity of unit.activities) {
@@ -100,7 +104,9 @@ export async function replicate(
             sortOrder: activity.sortOrder,
           },
         });
+        counts.activities++;
       }
     }
   }
+  return counts;
 }

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { homeFor } from "@/lib/rbac";
+import { ENFORCE_PASSWORD_CHANGE } from "@/lib/config";
 import { currentDict } from "@/lib/lang";
 import { NewPasswordForm } from "./form";
 
@@ -11,7 +12,11 @@ import { NewPasswordForm } from "./form";
 export default async function NewPasswordPage() {
   const user = await currentUser();
   if (!user) redirect("/login");
-  if (!user.mustChangePassword) redirect(homeFor(user.role));
+  // Reachable on purpose even when nothing forces it: a user may choose to
+  // replace a default password. Only bounce if there is nothing to change.
+  if (!user.mustChangePassword && !ENFORCE_PASSWORD_CHANGE) {
+    redirect(homeFor(user.role));
+  }
 
   const { lang, d } = await currentDict();
 
