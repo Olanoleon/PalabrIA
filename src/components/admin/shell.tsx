@@ -1,9 +1,11 @@
-import Link from "next/link";
 import { Wordmark } from "@/components/ui/wordmark";
 import { SignOutButton } from "@/components/learner/sign-out-button";
 import { LangToggle } from "@/components/ui/lang-toggle";
-import { cn } from "@/lib/cn";
 import type { Lang } from "@/lib/i18n";
+import {
+  AdminBottomNav,
+  type AdminNavItem,
+} from "@/components/admin/admin-bottom-nav";
 import { adminT } from "@/lib/i18n-admin";
 
 export type NavItem = { href: string; label: string };
@@ -17,7 +19,6 @@ export function AdminShell({
   title,
   subtitle,
   nav,
-  active,
   banner,
   actions,
   children,
@@ -25,15 +26,17 @@ export function AdminShell({
   lang: Lang;
   title: string;
   subtitle?: string;
-  nav: NavItem[];
-  active: string;
+  nav: AdminNavItem[];
+  /** Accepted for call-site clarity; the bar derives its own active tab. */
+  active?: string;
   banner?: React.ReactNode;
   actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="min-h-dvh bg-canvas">
-      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-5 sm:px-6">
+      {/* pb-28 keeps the fixed bar from covering the end of the page. */}
+      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pb-28 pt-5 sm:px-6">
         <header className="flex flex-wrap items-center gap-3">
           <Wordmark />
           <span className="rounded-full border-[1.5px] border-ink bg-surface px-[10px] py-1 text-[11px] font-bold uppercase tracking-[0.08em]">
@@ -48,35 +51,16 @@ export function AdminShell({
 
         {banner}
 
-        <nav className="flex flex-wrap gap-2">
-          {nav.map((item) => {
-            const isActive =
-              item.href === active ||
-              (item.href !== nav[0]?.href && active.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "press rounded-xl border-2 border-ink px-[14px] py-[9px] text-[13px] font-bold",
-                  isActive
-                    ? "bg-brand text-brand-ink flat-1"
-                    : "bg-surface text-ink hard-1",
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-          {actions ? <div className="ml-auto flex gap-2">{actions}</div> : null}
-        </nav>
+        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
 
         {subtitle ? (
           <p className="text-[13px] text-muted-2">{subtitle}</p>
         ) : null}
 
-        <main className="flex flex-col gap-5 pb-10">{children}</main>
+        <main className="flex flex-col gap-5">{children}</main>
       </div>
+
+      <AdminBottomNav items={nav} />
     </div>
   );
 }

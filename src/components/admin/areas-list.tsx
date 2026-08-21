@@ -70,7 +70,9 @@ export function AreasList({
             <li
               key={area.id}
               className={cn(
-                "flex items-center gap-4 rounded-2xl border-2 p-3 sm:p-4",
+                // Row on a wide screen; stacked below sm, where a fixed action
+                // column squeezed the text into two-word ribbons.
+                "flex flex-col gap-3 rounded-2xl border-2 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4",
                 area.isVisible
                   ? "border-ink bg-surface flat-1"
                   : "border-dashed border-muted-line bg-hidden",
@@ -78,7 +80,7 @@ export function AreasList({
             >
               {/* Reorder: deliberately quiet, and a fixed column so it cannot
                   be pushed around by the text beside it. */}
-              <div className="flex flex-none flex-col gap-1">
+              <div className="flex flex-none gap-1 sm:flex-col">
                 <SmallButton
                   tone="quiet"
                   disabled={index === 0}
@@ -116,7 +118,7 @@ export function AreasList({
                   </Tag>
                   {area.fromTemplate ? <Tag>{d.tagFromTemplate}</Tag> : null}
                 </div>
-                <p className="mt-[2px] truncate text-[12.5px] text-muted-2">
+                <p className="mt-[2px] line-clamp-2 text-[12.5px] text-muted-2 sm:truncate">
                   {area.description}
                 </p>
                 <p className="mt-[2px] text-[11.5px] text-muted">
@@ -127,7 +129,7 @@ export function AreasList({
                 </p>
               </div>
 
-              <div className="flex flex-none items-center gap-2">
+              <div className="flex flex-none items-center gap-2 sm:ml-auto">
                 <SmallButton
                   tone={area.isVisible ? "secondary" : "soft"}
                   onClick={() => {

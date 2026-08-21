@@ -25,7 +25,7 @@ export default async function SuperUnitPage({
     <AdminShell
       lang={lang}
       title={adminT(lang).titlePlatform}
-      nav={superNav(lang)}
+      nav={superNav(lang, Boolean(org))}
       active="/super/content"
       banner={
         org ? (

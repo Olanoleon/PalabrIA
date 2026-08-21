@@ -52,7 +52,9 @@ export function AreaDetail({
   return (
     <div className="flex flex-col gap-5">
       <Panel className={cn(!area.isVisible && "border-dashed bg-hidden")}>
-        <div className="flex flex-wrap items-start gap-4">
+        {/* Stacked below sm: side by side, the buttons stole enough width to
+            wrap the title and squeeze the description into a ribbon. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="font-display text-[24px] font-semibold tracking-[-0.03em]">
@@ -131,17 +133,17 @@ export function AreaDetail({
               <li
                 key={unit.id}
                 className={cn(
-                  "flex items-center gap-4 rounded-2xl border-2 p-3",
+                  "flex flex-col gap-3 rounded-2xl border-2 p-3 sm:flex-row sm:items-center sm:gap-4",
                   unit.isVisible
                     ? "border-ink bg-surface flat-1"
                     : "border-dashed border-muted-line bg-hidden",
                 )}
               >
-                <span className="w-5 flex-none text-center font-display text-[15px] font-bold text-muted">
+                <span className="hidden w-5 flex-none text-center font-display text-[15px] font-bold text-muted sm:block">
                   {index + 1}
                 </span>
 
-                <div className="flex flex-none flex-col gap-1">
+                <div className="flex flex-none gap-1 sm:flex-col">
                   <SmallButton
                     tone="quiet"
                     disabled={index === 0}
@@ -186,7 +188,7 @@ export function AreaDetail({
                   </p>
                 </div>
 
-                <div className="flex flex-none items-center gap-2">
+                <div className="flex flex-none items-center gap-2 sm:ml-auto">
                   <SmallButton
                     tone={unit.isVisible ? "secondary" : "soft"}
                     onClick={() => {

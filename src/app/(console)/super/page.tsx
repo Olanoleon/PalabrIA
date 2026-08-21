@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/i18n";
 
 export default async function SuperDashboard() {
   const user = await requireRole("SUPER_ADMIN");
-  const { lang } = await adminContext(user);
+  const { lang, org } = await adminContext(user);
   const metrics = await platformMetrics();
 
   const editRate = metrics.generatedUnits
@@ -17,7 +17,7 @@ export default async function SuperDashboard() {
     : 0;
 
   return (
-    <AdminShell lang={lang} title={adminT(lang).titlePlatform} nav={superNav(lang)} active="/super">
+    <AdminShell lang={lang} title={adminT(lang).titlePlatform} nav={superNav(lang, Boolean(org))} active="/super">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           value={metrics.activeOrganizations}
