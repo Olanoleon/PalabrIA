@@ -9,6 +9,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import {
   AREA_COMPLETE_XP,
+  CONTENT_REFRESH_XP,
   EFFORT_DAILY_CAP,
   EFFORT_XP,
   FLAWLESS_XP,
@@ -57,6 +58,8 @@ export type ResultSummary = {
    * explain the gamification once rather than on every result.
    */
   firstXpEver: boolean;
+  /** True when this run caught the learner up on regenerated content. */
+  caughtUpOnNewContent: boolean;
   newBadges: string[];
   streak: number;
   missedWords: string[];
@@ -164,6 +167,16 @@ export async function recordPractice(
     breakdown.push({ reason: "FLAWLESS", delta: FLAWLESS_XP });
   }
 
+  // Coming back to a unit that was regenerated after you had already passed it.
+  // Gated on the version stamp, so it is once per regeneration, not per attempt;
+  // and on having passed before, since a learner who never saw the old content
+  // has lost nothing and is owed nothing.
+  const caughtUpOnNewContent =
+    !!existing?.passedAt && existing.seenContentVersion < unit.contentVersion;
+  if (caughtUpOnNewContent) {
+    breakdown.push({ reason: "CONTENT_REFRESH", delta: CONTENT_REFRESH_XP });
+  }
+
   // Effort XP for a failed run, capped per unit per day so a learner cannot
   // farm it by replaying the same practice.
   if (!passed) {
@@ -228,6 +241,7 @@ export async function recordPractice(
         xpAwarded: unitXp,
         flawless,
         passedAt: passed ? now : null,
+        seenContentVersion: unit.contentVersion,
       },
       update: {
         bestScore,
@@ -235,6 +249,8 @@ export async function recordPractice(
         xpAwarded: (existing?.xpAwarded ?? 0) + unitXp,
         flawless: existing?.flawless || flawless,
         passedAt: existing?.passedAt ?? (passed ? now : null),
+        // Stamped on every run, so the invitation retires once acted on.
+        seenContentVersion: unit.contentVersion,
       },
     });
 
@@ -291,6 +307,7 @@ export async function recordPractice(
     level,
     leveledUpTo: level > previousLevel ? level : null,
     firstXpEver,
+    caughtUpOnNewContent,
     newBadges,
     streak: streak.count,
     missedWords: [...new Set(graded.filter((g) => !g.correct).map((g) => g.word))],

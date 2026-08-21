@@ -7,14 +7,14 @@ import { OrganizationsPanel } from "@/components/admin/organizations-panel";
 
 export default async function SuperOrganizationsPage() {
   const user = await requireRole("SUPER_ADMIN");
-  const { lang, orgId } = await adminContext(user);
+  const { lang, org, orgId } = await adminContext(user);
   const organizations = await organizationRows();
 
   return (
     <AdminShell
       lang={lang}
       title={adminT(lang).titlePlatform}
-      nav={superNav(lang)}
+      nav={superNav(lang, Boolean(org))}
       active="/super/organizations"
     >
       <OrganizationsPanel

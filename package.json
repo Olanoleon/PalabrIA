@@ -19,7 +19,7 @@
     "verify:progress": "tsx --conditions=react-server scripts/verify-progress.mts",
     "verify:billing": "tsx --conditions=react-server scripts/verify-billing.mts",
     "verify:isolation": "tsx --conditions=react-server scripts/verify-isolation.mts",
-    "verify": "npm run verify:progress && npm run verify:billing && npm run verify:isolation",
+    "verify": "npm run verify:progress && npm run verify:billing && npm run verify:isolation && npm run verify:regenerate",
     "start:migrate": "prisma migrate deploy && next start -p ${PORT:-3000}",
     "session": "tsx scripts/mint-session.mts",
     "db:generate": "prisma generate",
@@ -27,7 +27,9 @@
     "db:sql": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/neon-bootstrap.sql",
     "db:check": "tsx scripts/db-check.mts",
     "seed:owner": "tsx scripts/seed-owner.mts",
-    "try:generate": "tsx --conditions=react-server scripts/try-generate.mts"
+    "try:generate": "tsx --conditions=react-server scripts/try-generate.mts",
+    "seed:areas": "tsx --conditions=react-server scripts/seed-areas.mts",
+    "verify:regenerate": "tsx --conditions=react-server scripts/verify-regenerate.mts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

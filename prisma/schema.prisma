@@ -71,6 +71,7 @@ enum ActivityType {
 enum XpReason {
   UNIT_PASS
   UNIT_IMPROVE
+  CONTENT_REFRESH
   ATTEMPT_EFFORT
   FLAWLESS
   AREA_COMPLETE
@@ -274,6 +275,13 @@ model Unit {
   introParagraph    String     @default("")
   introParagraphEs  String     @default("")
 
+  /**
+   * Bumped only when a regeneration replaces this unit's content. A learner
+   * whose UnitProgress.seenContentVersion is behind this has passed material
+   * that no longer exists, and is invited back.
+   */
+  contentVersion  Int        @default(1)
+
   sourceUnitId    String?
   generationInput Json?
   generatedAt     DateTime?
@@ -346,6 +354,9 @@ model UnitProgress {
 
   bestScore  Int      @default(0)
   attempts   Int      @default(0)
+  // Defaults to 1, matching Unit.contentVersion, so existing progress is not
+  // retroactively marked as behind the moment this column is added.
+  seenContentVersion Int @default(1)
   xpAwarded  Int      @default(0)
   flawless   Boolean  @default(false)
   passedAt   DateTime?

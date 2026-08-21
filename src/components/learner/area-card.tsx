@@ -45,6 +45,11 @@ export function AreaCard({
           {area.name}
         </div>
         <div className="text-[11.5px] text-muted-2">{meta}</div>
+        {area.updatedUnits > 0 ? (
+          <div className="mt-[2px] inline-flex w-fit items-center gap-[5px] rounded-full border-[1.5px] border-brand bg-brand-soft px-[8px] py-[2px] text-[10.5px] font-bold text-brand-dark">
+            {d.updatedAreaNote(area.updatedUnits)}
+          </div>
+        ) : null}
       </div>
       <ChevronRight size={15} className="text-ink" />
     </Link>

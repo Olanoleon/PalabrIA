@@ -83,7 +83,11 @@ export default async function PathPage() {
         )}
       </div>
 
-      <div className="relative z-40 -mt-[10px] px-[14px] pb-[6px]">
+      {/*
+        Outside the scrolling list so it is always reachable, and inset from the
+        area cards so its narrower width reads as a different kind of thing.
+      */}
+      <div className="relative z-40 shrink-0 px-8 pb-2 pt-1">
         <BoardTeaser
           lang={lang}
           rows={board.rows}

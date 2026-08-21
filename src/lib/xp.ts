@@ -25,6 +25,14 @@ export const EFFORT_XP = 5;
 export const EFFORT_DAILY_CAP = 3;
 export const FLAWLESS_XP = 15;
 export const AREA_COMPLETE_XP = 50;
+/**
+ * For returning to a unit whose content was regenerated after you passed it.
+ *
+ * Deliberately small — well under a unit's own value — because it exists to
+ * make the trip worth taking, not to be a way of earning. It cannot be repeated:
+ * the version stamp means one award per regeneration.
+ */
+export const CONTENT_REFRESH_XP = 10;
 export const STREAK_DAY_XP = 5;
 export const STREAK_MILESTONE_XP = 25;
 export const STREAK_MILESTONE_EVERY = 7;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { deleteUnit, setUnitVisible, updateUnitMeta, updateWord } from "@/lib/actions/admin";
 import { Panel, Tag } from "@/components/admin/pieces";
 import { ActionForm, Field, SmallButton, TextArea } from "@/components/admin/form-bits";
+import { SparkleIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { adminT } from "@/lib/i18n-admin";
 import type { Lang } from "@/lib/i18n";
@@ -85,6 +86,13 @@ export function UnitEditor({
             >
               {unit.isVisible ? d.hide : d.show}
             </SmallButton>
+            <Link
+              href={`${base}/unit/${unit.id}/regenerate`}
+              className="press inline-flex items-center gap-2 rounded-xl border-2 border-ink bg-ai px-3 py-[8px] text-[12.5px] font-bold text-ai-ink hard-1"
+            >
+              <SparkleIcon size={14} />
+              {d.regenerateLink}
+            </Link>
             <Link
               href={`${base}/content/${unit.area.id}`}
               className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
@@ -226,6 +234,13 @@ export function UnitEditor({
           <pre className="overflow-x-auto rounded-xl border-2 border-ink bg-locked p-3 font-mono text-[11.5px]">
             {JSON.stringify(unit.generationInput, null, 2)}
           </pre>
+          <Link
+            href={`${base}/unit/${unit.id}/regenerate`}
+            className="press mt-3 inline-flex items-center gap-2 rounded-xl border-2 border-ink bg-ai px-3 py-[8px] text-[12.5px] font-bold text-ai-ink hard-1"
+          >
+            <SparkleIcon size={14} />
+            {d.regenerateLink}
+          </Link>
         </Panel>
       ) : null}
 

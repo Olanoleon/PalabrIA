@@ -8,13 +8,13 @@ import { senderAddress, usingDefaultSender } from "@/lib/resend";
 
 export default async function SuperSettingsPage() {
   const user = await requireRole("SUPER_ADMIN");
-  const { lang, settings } = await adminContext(user);
+  const { lang, org, settings } = await adminContext(user);
 
   return (
     <AdminShell
       lang={lang}
       title={adminT(lang).titlePlatform}
-      nav={superNav(lang)}
+      nav={superNav(lang, Boolean(org))}
       active="/super/settings"
     >
       <SettingsPanel

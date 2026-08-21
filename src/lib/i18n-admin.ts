@@ -12,6 +12,7 @@ export const ADMIN_ES = {
   navPanel: "Panel",
   navLearners: "Aprendices",
   navContent: "Contenido",
+  navGlobal: "Global",
   navOrganizations: "Organizaciones",
   navPayments: "Pagos",
   navSettings: "Ajustes",
@@ -126,6 +127,16 @@ export const ADMIN_ES = {
 
   // ── AI generation ─────────────────────────────────────────────────────────
   generateLink: "Crear unidad con IA",
+  regenerateLink: "Regenerar con IA",
+  regenerateTitle: "Regenerar el contenido de la unidad",
+  regenerateOf: (name: string) => `Unidad: ${name}`,
+  regenerateWarn:
+    "Se reemplazan las palabras, el párrafo y las actividades de esta unidad. La mejor marca de cada aprendiz se conserva; el detalle de sus respuestas anteriores no, porque eran a preguntas que dejan de existir.",
+  regenerateSave: "Reemplazar contenido",
+  regenerateSaving: "Reemplazando…",
+  regenerateConfirm: (name: string) =>
+    `¿Reemplazar el contenido de "${name}"? No se puede deshacer.`,
+  regenerateBack: "Volver a la unidad",
   generateTitle: "Generar unidad con IA",
   generateArea: (area: string) => `Área: ${area}`,
   generateWords: "Número de palabras",
@@ -307,6 +318,7 @@ export const ADMIN_EN: AdminDict = {
   navPanel: "Overview",
   navLearners: "Learners",
   navContent: "Content",
+  navGlobal: "Global",
   navOrganizations: "Organizations",
   navPayments: "Payments",
   navSettings: "Settings",
@@ -413,6 +425,16 @@ export const ADMIN_EN: AdminDict = {
     `Delete "${name}"? Every learner's progress in this unit is deleted too.`,
 
   generateLink: "Create unit with AI",
+  regenerateLink: "Regenerate with AI",
+  regenerateTitle: "Regenerate the unit's content",
+  regenerateOf: (name) => `Unit: ${name}`,
+  regenerateWarn:
+    "This replaces the words, paragraph and activities of this unit. Each learner's best score is kept; the detail of their previous answers is not, because those questions cease to exist.",
+  regenerateSave: "Replace content",
+  regenerateSaving: "Replacing…",
+  regenerateConfirm: (name) =>
+    `Replace the content of "${name}"? This cannot be undone.`,
+  regenerateBack: "Back to the unit",
   generateTitle: "Generate a unit with AI",
   generateArea: (area) => `Area: ${area}`,
   generateWords: "Number of words",

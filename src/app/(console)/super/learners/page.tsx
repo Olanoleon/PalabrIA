@@ -12,7 +12,7 @@ import { Panel, Empty } from "@/components/admin/pieces";
  */
 export default async function SuperLearnersPage() {
   const user = await requireRole("SUPER_ADMIN");
-  const { lang } = await adminContext(user);
+  const { lang, org } = await adminContext(user);
   const organizations = await organizationRows();
 
   const perOrg = await Promise.all(
@@ -26,7 +26,7 @@ export default async function SuperLearnersPage() {
     <AdminShell
       lang={lang}
       title={adminT(lang).titlePlatform}
-      nav={superNav(lang)}
+      nav={superNav(lang, Boolean(org))}
       active="/super/learners"
     >
       {organizations.length === 0 ? (

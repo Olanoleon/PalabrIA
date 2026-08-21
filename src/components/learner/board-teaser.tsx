@@ -31,23 +31,23 @@ export function BoardTeaser({
   return (
     <Link
       href="/leaderboard"
-      className="press flex items-center gap-[11px] rounded-[20px] border-2 border-ink bg-ink px-[14px] py-3 text-paper shadow-[0_-6px_24px_rgba(27,22,17,0.18)]"
+      className="press flex items-center gap-[10px] rounded-[18px] border-2 border-ink bg-ink px-3 py-[10px] text-paper shadow-[0_-8px_26px_rgba(27,22,17,0.22)]"
     >
-      <span className="grid size-[34px] flex-none place-items-center rounded-[10px] bg-brand font-display text-[14px] font-bold">
+      <span className="grid size-[30px] flex-none place-items-center rounded-[9px] bg-brand font-display text-[13px] font-bold">
         {me ? me.rank : "–"}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block font-display text-[14.5px] font-semibold tracking-[-0.01em]">
+        <span className="block font-display text-[13.5px] font-semibold tracking-[-0.01em]">
           {d.boardTop}
         </span>
-        <span className="block truncate text-[11px] text-[#B8AEA2]">{subtitle}</span>
+        <span className="block truncate text-[10.5px] text-[#B8AEA2]">{subtitle}</span>
       </span>
       <span className="flex items-center">
         {rows.slice(0, 3).map((row) => (
           <Avatar
             key={row.learnerId}
             name={row.name}
-            size={26}
+            size={23}
             className="-ml-[7px]"
           />
         ))}
