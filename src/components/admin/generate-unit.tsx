@@ -77,6 +77,27 @@ export function GenerateUnit({
       <Panel
         title="Generar unidad con IA"
         description={`Área: ${areaName}`}
+        actions={
+          <button
+            type="button"
+            onClick={() => {
+              // A generated draft cost a paid model call, so leaving with one
+              // unsaved is worth a confirmation rather than a silent loss.
+              if (
+                active &&
+                !window.confirm(
+                  "Se descartará la unidad generada y no se guardará. ¿Salir del área?",
+                )
+              ) {
+                return;
+              }
+              router.push(`${base}/content/${areaId}`);
+            }}
+            className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
+          >
+            Volver al área
+          </button>
+        }
       >
         <form action={generate} className="flex flex-col gap-4">
           <input type="hidden" name="areaId" value={areaId} />
@@ -160,7 +181,23 @@ export function GenerateUnit({
           title="Revisa antes de guardar"
           description="Puedes editar cualquier campo. Se guarda solo cuando lo apruebas."
           actions={
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <SmallButton
+                onClick={() => {
+                  if (
+                    !window.confirm("¿Descartar esta unidad generada?")
+                  ) {
+                    return;
+                  }
+                  // Keep `adopted` pointing at this result: clearing it would
+                  // make the render-phase guard re-adopt the same draft.
+                  setDraft(null);
+                  setSaveError(null);
+                  setEdited(false);
+                }}
+              >
+                Descartar
+              </SmallButton>
               <label className="flex items-center gap-2 text-[12.5px] font-semibold">
                 <input
                   type="checkbox"
