@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { t, type Lang } from "@/lib/i18n";
 import { ProgressRing } from "@/components/ui/primitives";
+import {
+  Celebrations,
+  type Celebration,
+} from "@/components/learner/celebration";
 import type { ResultSummary } from "@/lib/progress";
 
 const CONFETTI_COLORS = ["#EA580C", "#15803D", "#F59E0B", "#FFFFFF", "#C2410C"];
@@ -72,6 +76,20 @@ export function ResultView({
   const d = t(lang);
   const router = useRouter();
   const pass = result.passed;
+
+  // Explanation before celebration when both land on the same run — which is
+  // the common case, since level 2 is within reach of a first passed unit.
+  const celebrations: Celebration[] = [];
+  if (result.firstXpEver) {
+    celebrations.push({ kind: "first-xp", xp: result.xpAwarded });
+  }
+  if (result.leveledUpTo) {
+    celebrations.push({
+      kind: "level-up",
+      level: result.leveledUpTo,
+      totalXp: result.totalXp,
+    });
+  }
   const confetti = useConfetti(pass, `${unitId}:${result.score}:${result.attempt}`);
 
   // The last unit of an area has nothing to unlock, so a failing run there
@@ -94,6 +112,7 @@ export function ResultView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-[18px] pb-[14px] pt-5">
+      <Celebrations queue={celebrations} lang={lang} />
       <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-auto px-[5px] pb-[5px] text-center">
         <ProgressRing
           size={172}
@@ -167,12 +186,6 @@ export function ResultView({
             </span>
           </div>
         </div>
-
-        {result.leveledUpTo ? (
-          <div className="w-full rounded-2xl border-2 border-ink bg-brand-soft px-4 py-3 text-[13.5px] font-bold">
-            {d.levelUp(result.leveledUpTo)}
-          </div>
-        ) : null}
 
         {result.newBadges.length ? (
           <div className="w-full rounded-2xl border-2 border-dashed border-ink bg-cream px-4 py-3 text-[13px] font-semibold">

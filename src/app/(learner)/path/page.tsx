@@ -1,6 +1,7 @@
 import { learnerContext, monthlyBoard, visibleAreas, badgeState } from "@/lib/learner-data";
 import { LearnerHeader, LevelBar } from "@/components/learner/header-chips";
 import { AreaCard } from "@/components/learner/area-card";
+import { FirstTapHint } from "@/components/learner/first-tap-hint";
 import { BoardTeaser } from "@/components/learner/board-teaser";
 import { PayBanner } from "@/components/learner/pay-banner";
 import { NoteCard } from "@/components/ui/primitives";
@@ -68,9 +69,17 @@ export default async function PathPage() {
         {areas.length === 0 ? (
           <NoteCard>{d.areasEmpty}</NoteCard>
         ) : (
-          areas.map((area, index) => (
-            <AreaCard key={area.id} area={area} lang={lang} index={index} />
-          ))
+          areas.map((area, index) =>
+            // Only the first card hints: nudging all of them would read as a
+            // page-wide animation rather than an invitation to tap.
+            index === 0 ? (
+              <FirstTapHint key={area.id} storageKey="pal_hint_path">
+                <AreaCard area={area} lang={lang} index={index} />
+              </FirstTapHint>
+            ) : (
+              <AreaCard key={area.id} area={area} lang={lang} index={index} />
+            ),
+          )
         )}
       </div>
 

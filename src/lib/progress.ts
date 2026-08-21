@@ -52,6 +52,11 @@ export type ResultSummary = {
   totalXp: number;
   level: number;
   leveledUpTo: number | null;
+  /**
+   * True only on the very first award a learner ever receives, so the app can
+   * explain the gamification once rather than on every result.
+   */
+  firstXpEver: boolean;
   newBadges: string[];
   streak: number;
   missedWords: string[];
@@ -204,6 +209,9 @@ export async function recordPractice(
   }
 
   const xpAwarded = breakdown.reduce((sum, b) => sum + b.delta, 0);
+  // Checked before the ledger is written, so "first ever" means first ever.
+  const priorAwards = await prisma.xpLedger.count({ where: { learnerId } });
+  const firstXpEver = priorAwards === 0 && xpAwarded > 0;
   const previousLevel = levelFromXp(learner.xp).level;
   const totalXp = learner.xp + xpAwarded;
   const level = levelFromXp(totalXp).level;
@@ -282,6 +290,7 @@ export async function recordPractice(
     totalXp,
     level,
     leveledUpTo: level > previousLevel ? level : null,
+    firstXpEver,
     newBadges,
     streak: streak.count,
     missedWords: [...new Set(graded.filter((g) => !g.correct).map((g) => g.word))],

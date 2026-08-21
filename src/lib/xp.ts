@@ -53,11 +53,16 @@ export function unitAward(
 
 // ── Levels ──────────────────────────────────────────────────────────────────
 //
-// Soft exponential: bands widen from 220 XP to ~740 XP, so early levels arrive
-// quickly and later ones take months of consistency. No wall.
+// Soft exponential: 25 / 115 / 280 / 528 / 862 … so level 2 is an onboarding
+// moment, the early levels still arrive quickly, and later ones take months of
+// consistency. No wall.
 
-const LEVEL_COEFFICIENT = 220;
-const LEVEL_EXPONENT = 1.6;
+// Level 1 is deliberately tiny: 25 XP is less than a single passed unit earns
+// even at the 70% pass mark, so every learner levels up on their first pass and
+// meets the gamification while it is still being explained to them. The steep
+// exponent then restores meaning to the later levels.
+const LEVEL_COEFFICIENT = 25;
+const LEVEL_EXPONENT = 2.2;
 
 /** Cumulative XP required to reach `level`. Level 1 starts at 0. */
 export function xpForLevel(level: number): number {
