@@ -1,26 +1,189 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Design tokens extracted from the Claude Design source (Lexica Learner v2).
+ * Neobrutalist: one ink colour for every border and shadow, hard offset shadows,
+ * no blur. The palette is deliberately single-mode — the design commits to a
+ * warm paper look, so there is no dark variant to swap in.
+ */
+@theme {
+  --color-ink: #1b1611;
+  --color-paper: #fdf9f3;
+  --color-canvas: #efe7db;
+  --color-surface: #ffffff;
+  --color-cream: #fff9ef;
+  --color-locked: #f4eee4;
+  --color-rule: #e4dacb;
+
+  --color-brand: #ea580c;
+  --color-brand-deep: #c2410c;
+  --color-brand-dark: #9a3412;
+  --color-brand-soft: #ffedd5;
+  --color-brand-mid: #fdba74;
+  --color-brand-ink: #fff7ed;
+  --color-highlight: #ffe3b8;
+
+  --color-pass: #15803d;
+  --color-pass-soft: #d8ebdf;
+  --color-pass-deep: #14532d;
+  --color-mint: #e3f0e8;
+
+  --color-muted: #8c8177;
+  --color-muted-2: #6b6157;
+  --color-muted-3: #a79e93;
+  --color-muted-line: #c9bfb2;
+  --color-body: #4a3f35;
+  --color-body-2: #3a2f25;
+
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --animate-wave: wave 0.6s ease-in-out infinite;
+  --animate-pop: pop 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  --animate-rise: rise 260ms ease-out;
+  --animate-nudge: nudge 3.4s ease-in-out infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.28);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes pop {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes rise {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes burst {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.3);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1);
+    opacity: 0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * Base styles must sit in @layer base: Tailwind v4 emits utilities inside a
+ * cascade layer, and unlayered rules would beat every utility class no matter
+ * how specific — an unlayered `a { color }` silently repainted every card title.
+ */
+@layer base {
+  html,
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Anchors inherit by default; text links opt in with a colour utility. */
+  a {
+    color: inherit;
+  }
+}
+
+/*
+ * The signature press: the element moves into its own shadow. Applied as a
+ * utility so every tappable surface behaves identically.
+ */
+@utility press {
+  transition:
+    transform 90ms ease-out,
+    box-shadow 90ms ease-out;
+
+  &:active {
+    transform: translate(2px, 2px);
+  }
+}
+
+@utility hard-1 {
+  box-shadow: 3px 3px 0 var(--color-ink);
+  &:active {
+    box-shadow: 1px 1px 0 var(--color-ink);
+  }
+}
+@utility hard-2 {
+  box-shadow: 4px 4px 0 var(--color-ink);
+  &:active {
+    box-shadow: 2px 2px 0 var(--color-ink);
+  }
+}
+@utility hard-3 {
+  box-shadow: 5px 5px 0 var(--color-ink);
+  &:active {
+    box-shadow: 2px 2px 0 var(--color-ink);
+  }
+}
+@utility hard-4 {
+  box-shadow: 6px 6px 0 var(--color-ink);
+}
+
+/* Static hard shadows for surfaces that are not pressable. */
+@utility flat-1 {
+  box-shadow: 3px 3px 0 var(--color-ink);
+}
+@utility flat-2 {
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+@utility flat-3 {
+  box-shadow: 5px 5px 0 var(--color-ink);
+}
+
+/* The phone-width column every learner screen lives in. */
+@utility screen-shell {
+  width: 100%;
+  max-width: 460px;
+  margin-inline: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

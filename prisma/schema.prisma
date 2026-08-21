@@ -1,0 +1,402 @@
+// PalabrIA — multi-tenant vocabulary learning platform.
+//
+// Two content trees live in this schema and must never leak into each other:
+//   GlobalTemplate -> Area(scope: GLOBAL) -> Unit -> Word / Activity
+//   Organization   -> Area(scope: ORG)    -> Unit -> Word / Activity
+// Org areas are deep copies stamped with sourceAreaId/sourceUnitId for provenance
+// only; nothing ever writes back up to the template.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Runtime connection. On Neon this is the *pooled* string (host contains
+  // `-pooler`), which is what a serverless app should hold open.
+  url      = env("DATABASE_URL")
+  // Migrations and introspection need a direct connection: PgBouncer in
+  // transaction mode cannot run the advisory locks and DDL that Prisma issues.
+  // Locally this is simply the same value as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
+  // Only `prisma migrate dev` uses this; `migrate deploy` never touches it.
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum Role {
+  LEARNER
+  ORG_ADMIN
+  SUPER_ADMIN
+}
+
+enum UiLang {
+  es
+  en
+}
+
+enum BillingStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  OVERRIDE_ACTIVE
+  DISABLED
+}
+
+enum ReviewState {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum AreaScope {
+  GLOBAL
+  ORG
+}
+
+enum Difficulty {
+  VERY_EASY
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ActivityType {
+  FILL_BLANK
+  IPA_MATCH
+  TYPE_WHAT_YOU_HEAR
+}
+
+enum XpReason {
+  UNIT_PASS
+  UNIT_IMPROVE
+  ATTEMPT_EFFORT
+  FLAWLESS
+  AREA_COMPLETE
+  STREAK_DAY
+  STREAK_MILESTONE
+}
+
+enum TokenPurpose {
+  TWO_FACTOR
+  PASSWORD_RESET
+}
+
+// ── Platform ────────────────────────────────────────────────────────────────
+
+model PlatformSettings {
+  id            Int      @id @default(1)
+  brebKey       String   @default("")
+  monthlyAmount Int      @default(25000)
+  currency      String   @default("COP")
+  graceDays     Int      @default(5)
+  openaiModel   String   @default("gpt-5")
+  updatedAt     DateTime @updatedAt
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  learners Learner[]
+  areas    Area[]
+}
+
+// ── Identity ────────────────────────────────────────────────────────────────
+
+model User {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  passwordHash       String
+  name               String
+  role               Role
+  uiLang             UiLang   @default(es)
+  mustChangePassword Boolean  @default(true)
+  isActive           Boolean  @default(true)
+  lastLoginAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  orgId String?
+  org   Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  learner Learner?
+  tokens  AuthToken[]
+
+  @@index([orgId])
+}
+
+model AuthToken {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   TokenPurpose
+  codeHash  String
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  @@index([userId, purpose])
+}
+
+// ── Learner ─────────────────────────────────────────────────────────────────
+
+model Learner {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgId  String
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  team     String?
+  timezone String  @default("America/Bogota")
+
+  xp             Int       @default(0)
+  streakCount    Int       @default(0)
+  streakLastDay  String?   // YYYY-MM-DD in the learner's own timezone
+  lastActiveAt   DateTime?
+
+  billingStatus      BillingStatus @default(TRIAL)
+  paidThrough        DateTime?
+  statusOverrideBy   String?
+  statusOverrideNote String?
+  statusOverrideAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  progress UnitProgress[]
+  attempts ActivityAttempt[]
+  ledger   XpLedger[]
+  badges   LearnerBadge[]
+  payments Payment[]
+  audits   BillingAudit[]
+
+  @@index([orgId])
+  @@index([billingStatus])
+}
+
+// ── Billing ─────────────────────────────────────────────────────────────────
+
+model Payment {
+  id          String      @id @default(cuid())
+  learnerId   String
+  learner     Learner     @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  amount      Int
+  currency    String
+  reference   String?
+  declaredAt  DateTime    @default(now())
+  periodStart DateTime
+  periodEnd   DateTime
+  // What paidThrough held before this declaration extended it. A rejection
+  // restores exactly this, so a learner who was already suspended does not end
+  // up with a fresher expiry than they started with.
+  previousPaidThrough DateTime?
+  reviewState ReviewState @default(PENDING)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  note        String?
+
+  @@index([learnerId])
+  @@index([reviewState])
+  @@index([declaredAt])
+}
+
+model BillingAudit {
+  id        String        @id @default(cuid())
+  learnerId String
+  learner   Learner       @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  from      BillingStatus
+  to        BillingStatus
+  reason    String
+  actorId   String?
+  createdAt DateTime      @default(now())
+
+  @@index([learnerId])
+}
+
+// ── Content ─────────────────────────────────────────────────────────────────
+
+model GlobalTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  areas Area[]
+}
+
+model Area {
+  id          String    @id @default(cuid())
+  scope       AreaScope
+  templateId  String?
+  template    GlobalTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  orgId       String?
+  org         Organization?   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  name        String
+  nameEs      String?
+  description String   @default("")
+  iconKey     String   @default("sparkle")
+  tint        String   @default("#FFEDD5")
+  sortOrder   Int      @default(0)
+  isVisible   Boolean  @default(false)
+
+  sourceAreaId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  units Unit[]
+
+  @@index([orgId, sortOrder])
+  @@index([templateId, sortOrder])
+}
+
+model Unit {
+  id     String @id @default(cuid())
+  areaId String
+  area   Area   @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  name              String
+  subtitle          String     @default("")
+  subtitleEn        String     @default("")
+  sortOrder         Int        @default(0)
+  isVisible         Boolean    @default(true)
+  difficulty        Difficulty @default(EASY)
+  wordCount         Int        @default(6)
+  introParagraph    String     @default("")
+  introParagraphEs  String     @default("")
+
+  sourceUnitId    String?
+  generationInput Json?
+  generatedAt     DateTime?
+  editedAfterGen   Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  words      Word[]
+  activities Activity[]
+  progress   UnitProgress[]
+  ledger     XpLedger[]
+
+  @@index([areaId, sortOrder])
+}
+
+model Word {
+  id     String @id @default(cuid())
+  unitId String
+  unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  text                String
+  translation         String
+  definition          String
+  definitionEs        String
+  ipa                 String
+  syllables           String @default("")
+  stress              String @default("")
+  pos                 String @default("")
+  exampleSentence     String
+  exampleSentenceEs   String @default("")
+  sortOrder           Int    @default(0)
+
+  activities Activity[]
+
+  @@index([unitId, sortOrder])
+}
+
+model Activity {
+  id     String @id @default(cuid())
+  unitId String
+  unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  wordId String
+  word   Word   @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  type        ActivityType
+  prompt      String
+  promptEs    String
+  sentence    String?
+  options     Json         @default("[]")
+  answerIndex Int          @default(0)
+  note        String       @default("")
+  noteEs      String       @default("")
+  mono        Boolean      @default(false)
+  sortOrder   Int          @default(0)
+
+  attempts ActivityAttempt[]
+
+  @@index([unitId, sortOrder])
+}
+
+// ── Progress & gamification ─────────────────────────────────────────────────
+
+model UnitProgress {
+  id        String @id @default(cuid())
+  learnerId String
+  learner   Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  unitId    String
+  unit      Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  bestScore  Int      @default(0)
+  attempts   Int      @default(0)
+  xpAwarded  Int      @default(0)
+  flawless   Boolean  @default(false)
+  passedAt   DateTime?
+  updatedAt  DateTime @updatedAt
+
+  @@unique([learnerId, unitId])
+  @@index([unitId])
+}
+
+model ActivityAttempt {
+  id         String   @id @default(cuid())
+  learnerId  String
+  learner    Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  correct    Boolean
+  answeredAt DateTime @default(now())
+
+  @@index([learnerId, answeredAt])
+  @@index([activityId])
+}
+
+model XpLedger {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  delta     Int
+  reason    XpReason
+  unitId    String?
+  unit      Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([learnerId, createdAt])
+}
+
+model Badge {
+  id     String @id @default(cuid())
+  key    String @unique // bd1 … bd6
+  order  Int    @default(0)
+  svgPath String
+
+  learners LearnerBadge[]
+}
+
+model LearnerBadge {
+  id        String   @id @default(cuid())
+  learnerId String
+  learner   Learner  @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt  DateTime @default(now())
+
+  @@unique([learnerId, badgeId])
+}

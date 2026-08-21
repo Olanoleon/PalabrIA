@@ -4,23 +4,59 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force",
+    "typecheck": "tsc --noEmit",
+    "db:start": "tsx scripts/local-db.mts start",
+    "db:stop": "tsx scripts/local-db.mts stop",
+    "verify:progress": "tsx --conditions=react-server scripts/verify-progress.mts",
+    "verify:billing": "tsx --conditions=react-server scripts/verify-billing.mts",
+    "verify:isolation": "tsx --conditions=react-server scripts/verify-isolation.mts",
+    "verify": "npm run verify:progress && npm run verify:billing && npm run verify:isolation",
+    "start:migrate": "prisma migrate deploy && next start -p ${PORT:-3000}",
+    "session": "tsx scripts/mint-session.mts",
+    "db:generate": "prisma generate",
+    "db:status": "prisma migrate status",
+    "db:sql": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/neon-bootstrap.sql",
+    "db:check": "tsx scripts/db-check.mts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.9",
     "next": "16.3.1",
+    "openai": "^7.5.0",
+    "pg": "^8.23.0",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "resend": "^6.21.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
+    "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
+    "prisma": "^6.19.3",
+    "server-only": "^0.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.12",
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
