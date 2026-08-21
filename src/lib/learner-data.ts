@@ -272,9 +272,24 @@ export async function unitDetail(
   };
 }
 
+/** Fisher-Yates. Server-side, so the order cannot be predicted by the client. */
+function shuffled<T>(items: T[]): T[] {
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 /**
  * Practice questions. Answer keys are deliberately left out: the client posts
  * answers back and the server grades them.
+ *
+ * Options are shuffled on every load. Both the seeded content and the model's
+ * output tend to put the correct answer first, which is trivially learnable —
+ * and because grading compares the chosen *text*, not its position, shuffling
+ * here cannot desynchronise from the stored answer.
  */
 export type PracticeQuestion = {
   id: string;
@@ -304,7 +319,7 @@ export async function practiceQuestions(
     prompt: a.prompt,
     promptEs: a.promptEs,
     sentence: a.sentence,
-    options: Array.isArray(a.options) ? (a.options as string[]) : [],
+    options: shuffled(Array.isArray(a.options) ? (a.options as string[]) : []),
     mono: a.mono,
     wordLength: a.word.text.length,
     // The dictation type needs the word client-side to speak it and to build

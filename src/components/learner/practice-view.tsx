@@ -24,7 +24,7 @@ function shuffle<T>(items: T[], seed: number): T[] {
 
 const FILLER_LETTERS = ["e", "r", "s", "t", "h", "a", "n", "o"];
 
-type Answer = { optionIndex?: number; typed?: string };
+type Answer = { optionText?: string; typed?: string };
 
 export function PracticeView({
   unitId,
@@ -133,7 +133,11 @@ export function PracticeView({
       advance();
       return;
     }
-    const answer: Answer = typing ? { typed } : { optionIndex: picked ?? undefined };
+    // Send the option's text, not its position: the server shuffled these, so
+    // an index would mean nothing to it.
+    const answer: Answer = typing
+      ? { typed }
+      : { optionText: picked === null ? undefined : question.options[picked] };
     setAnswers((prev) => ({ ...prev, [question.id]: answer }));
     startTransition(async () => {
       const outcome = await checkAnswer(question.id, answer, lang);

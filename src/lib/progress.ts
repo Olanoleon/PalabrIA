@@ -23,8 +23,13 @@ import type { XpReason } from "@/generated/prisma";
 
 export type SubmittedAnswer = {
   activityId: string;
-  /** Index of the chosen option, for the two multiple-choice types. */
-  optionIndex?: number;
+  /**
+   * The chosen option's text, for the two multiple-choice types.
+   *
+   * Text rather than an index: options are shuffled per practice load, so an
+   * index would refer to an order the server does not know.
+   */
+  optionText?: string;
   /** Spelled answer, for "type what you hear". */
   typed?: string;
 };
@@ -75,10 +80,15 @@ function gradeOne(
       correct: typed.length > 0 && typed === word.trim().toLowerCase(),
     };
   }
+  const options = Array.isArray(activity.options)
+    ? (activity.options as string[])
+    : [];
+  const correctText = options[activity.answerIndex];
+  const chosen = (answer.optionText ?? "").trim();
   return {
     activityId: activity.id,
     word,
-    correct: answer.optionIndex === activity.answerIndex,
+    correct: chosen.length > 0 && chosen === (correctText ?? "").trim(),
   };
 }
 

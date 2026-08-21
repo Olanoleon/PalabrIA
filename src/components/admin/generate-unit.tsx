@@ -130,7 +130,7 @@ export function GenerateUnit({
             </SmallButton>
             {generating ? (
               <span className="text-[12.5px] text-muted-2">
-                Puede tardar hasta un minuto.
+                Suele tardar entre uno y dos minutos.
               </span>
             ) : null}
           </div>

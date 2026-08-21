@@ -145,6 +145,22 @@ describe("validateGeneratedUnit", () => {
     expect(hasBlockingIssue(issues)).toBe(true);
   });
 
+  it("blocks a dictation whose answer is more than one word", () => {
+    // The letter keypad has no space key, so "cutting board" is untypeable.
+    const draft = unit([...SIX.slice(0, 5), "cutting board"]);
+    draft.activities[2] = activity("cutting board", "TYPE_WHAT_YOU_HEAR");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("no space key"))).toBe(true);
+  });
+
+  it("allows a multi-word entry on the multiple-choice types", () => {
+    const draft = unit([...SIX.slice(0, 5), "cutting board"]);
+    draft.activities[0] = activity("cutting board", "FILL_BLANK");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(false);
+  });
+
   it("only warns about a dictation that came back with options", () => {
     const draft = unit(SIX);
     draft.activities[2].options = ["a", "b"];

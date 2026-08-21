@@ -32,15 +32,24 @@ const area = await prisma.area.findFirstOrThrow({
 });
 const [unit, nextUnit] = area.units;
 
-/** Builds answers where the first `correctCount` questions are right. */
+/**
+ * Builds answers where the first `correctCount` questions are right.
+ *
+ * Answers carry the chosen option's TEXT, matching what the practice screen
+ * sends: options are shuffled per load, so an index would be meaningless.
+ */
 function answersFor(correctCount: number) {
   return unit.activities.map((activity, index) => {
     const right = index < correctCount;
     if (activity.type === "TYPE_WHAT_YOU_HEAR") {
       return { activityId: activity.id, typed: right ? activity.word.text : "zzzz" };
     }
-    const wrong = (activity.answerIndex + 1) % Math.max(2, (activity.options as string[]).length);
-    return { activityId: activity.id, optionIndex: right ? activity.answerIndex : wrong };
+    const options = activity.options as string[];
+    const wrongIndex = (activity.answerIndex + 1) % Math.max(2, options.length);
+    return {
+      activityId: activity.id,
+      optionText: right ? options[activity.answerIndex] : options[wrongIndex],
+    };
   });
 }
 
@@ -117,7 +126,10 @@ r = await recordPractice(learner.id, nextUnit.id, [
   })).map((a) =>
     a.type === "TYPE_WHAT_YOU_HEAR"
       ? { activityId: a.id, typed: a.word.text }
-      : { activityId: a.id, optionIndex: a.answerIndex },
+      : {
+          activityId: a.id,
+          optionText: (a.options as string[])[a.answerIndex],
+        },
   ),
 ]);
 check("area completion bonus awarded", r.xpBreakdown.some((b) => b.reason === "AREA_COMPLETE"), true);

@@ -20,7 +20,7 @@ import type { Difficulty } from "@/generated/prisma";
 export { MAX_WORDS, MIN_WORDS };
 export type { GeneratedActivity, GeneratedUnit } from "@/lib/unit-schema";
 
-const TIMEOUT_MS = 90_000;
+const TIMEOUT_MS = 150_000;
 
 export const DIFFICULTY_BRIEF: Record<Difficulty, string> = {
   VERY_EASY:
@@ -88,8 +88,8 @@ function prompt(input: GenerationInput): string {
     ``,
     `Rules:`,
     `- No duplicate words. Every word must be distinct in lemma, not just in spelling.`,
-    `- "ipa" is American English IPA between slashes, e.g. /ˈaɪ.braʊ/.`,
-    `- "syllables" marks the stressed syllable in caps and separates with a middle dot, e.g. EYE·brow. Single-syllable words are just the word.`,
+    `- "ipa" is American English IPA between slashes, e.g. /ˈaɪ.braʊ/. Use American conventions consistently: ɚ rather than ər, and no length marks (ː).`,
+    `- "syllables" splits the word's ORDINARY SPELLING, not its pronunciation, marking the stressed syllable in caps and separating with a middle dot: EYE·brow, SEA·son, MAR·i·nate. Never write phonetic symbols here. Single-syllable words are just the word.`,
     `- "stress" is the stressed syllable on its own, lowercase.`,
     `- "pos" is the part of speech in Spanish (sustantivo, verbo, adjetivo, adverbio).`,
     `- "definition" is English, "definitionEs" is Spanish; both must define the word as used in this unit's context.`,
@@ -99,9 +99,13 @@ function prompt(input: GenerationInput): string {
     `Activities — generate exactly three kinds, in this proportion:`,
     `- FILL_BLANK: "sentence" contains ______ where the word belongs, quoted with curly quotes. "options" holds 4 candidate words, one correct. Set answerIndex to the correct index.`,
     `- IPA_MATCH: "options" holds 4 IPA transcriptions (or 4 words when the prompt gives the IPA), one correct.`,
-    `- TYPE_WHAT_YOU_HEAR: the learner spells the word from audio. "options" must be an empty array, answerIndex 0, "sentence" null.`,
-    `Produce about ${Math.max(4, Math.min(10, input.wordCount))} activities covering as many distinct words as possible, at least one of each kind.`,
+    `- TYPE_WHAT_YOU_HEAR: the learner spells the word from audio. "options" must be an empty array, answerIndex 0, "sentence" null. Only ever choose a SINGLE-WORD entry for this type — the learner spells it on a letter keypad that has no space key.`,
+    // Size the activity set off the words the unit will actually contain: an
+    // explicit list outranks the requested count, so using wordCount alone
+    // under-produces whenever the list is longer.
+    `Produce about ${Math.max(4, Math.min(10, Math.max(input.wordCount, input.wordList?.length ?? 0)))} activities covering as many distinct words as possible, at least one of each kind.`,
     `- "prompt" is English instruction text, "promptEs" its Spanish twin. "note"/"noteEs" explain the answer in one sentence after the learner answers.`,
+    `- Vary which position holds the correct answer across activities; do not always put it first. (The app shuffles options anyway, but the stored data should not be lopsided.)`,
   );
   return lines.join("\n");
 }

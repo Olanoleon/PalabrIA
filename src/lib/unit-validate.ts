@@ -110,6 +110,14 @@ export function validateGeneratedUnit(
           message: `"Type what you hear" for "${a.word}" came back with options; they will be dropped.`,
         });
       }
+      // The learner spells these on a letter keypad that has no space key, so a
+      // multi-word answer is impossible to enter.
+      if (/\s/.test(a.word.trim())) {
+        issues.push({
+          level: "error",
+          message: `"Type what you hear" cannot use "${a.word}": the letter keypad has no space key, so a multi-word answer cannot be typed.`,
+        });
+      }
       continue;
     }
     if (a.options.length < 2) {

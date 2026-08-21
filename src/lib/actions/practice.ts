@@ -19,7 +19,7 @@ export type CheckResult = {
  */
 export async function checkAnswer(
   activityId: string,
-  answer: { optionIndex?: number; typed?: string },
+  answer: { optionText?: string; typed?: string },
   lang: string,
 ): Promise<CheckResult> {
   const { learner } = await requireLearner();
@@ -37,11 +37,14 @@ export async function checkAnswer(
   });
 
   const options = Array.isArray(activity.options) ? (activity.options as string[]) : [];
+  // Compared by text: the client received the options shuffled, so its notion
+  // of "option 2" is not the stored one.
   const correct =
     activity.type === "TYPE_WHAT_YOU_HEAR"
       ? (answer.typed ?? "").trim().toLowerCase() ===
         activity.word.text.trim().toLowerCase()
-      : answer.optionIndex === activity.answerIndex;
+      : (answer.optionText ?? "").trim() ===
+        (options[activity.answerIndex] ?? "").trim();
 
   return {
     correct,
