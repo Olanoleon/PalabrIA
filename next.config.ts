@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Keeps the production image small: Next copies only the traced files it needs.
-  output: "standalone",
+  // No `output: "standalone"` — Railway runs the app with `next start`, so the
+  // self-contained bundle standalone produces is dead weight (it copies
+  // node_modules again). Re-enable it if this ever moves to a Docker image.
   poweredByHeader: false,
   // Prisma loads its engine by dynamic require; leaving it external keeps the
   // bundler from tracing the whole project to follow that path.
