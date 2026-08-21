@@ -26,7 +26,8 @@
     "db:status": "prisma migrate status",
     "db:sql": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/neon-bootstrap.sql",
     "db:check": "tsx scripts/db-check.mts",
-    "seed:owner": "tsx scripts/seed-owner.mts"
+    "seed:owner": "tsx scripts/seed-owner.mts",
+    "try:generate": "tsx --conditions=react-server scripts/try-generate.mts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
