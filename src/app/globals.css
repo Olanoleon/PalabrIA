@@ -116,6 +116,75 @@
   }
 }
 
+/* Celebration overlays: the ground fades, the panel arrives with weight. */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes panel-in {
+  0% {
+    transform: translateY(22px) scale(0.94);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(0) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* The XP figure lands after the panel, so the eye is already there. */
+@keyframes count-in {
+  0%,
+  18% {
+    transform: scale(0.5) rotate(-8deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.18) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Level-up medal: a slow shine sweep rather than a spin. */
+@keyframes medal-in {
+  0% {
+    transform: scale(0.4) rotate(-20deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.12) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes ring-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
 @keyframes burst {
   0% {
     transform: translate(0, 0) rotate(0deg) scale(0.3);

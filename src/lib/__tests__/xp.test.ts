@@ -61,18 +61,26 @@ describe("unit XP", () => {
 describe("levels", () => {
   it("is a soft exponential with widening bands", () => {
     expect(xpForLevel(1)).toBe(0);
-    expect(xpForLevel(2)).toBe(220);
-    expect(xpForLevel(3)).toBe(667);
-    expect(xpForLevel(4)).toBe(1276);
+    expect(xpForLevel(2)).toBe(25);
+    expect(xpForLevel(3)).toBe(115);
+    expect(xpForLevel(4)).toBe(280);
     const bands = [2, 3, 4, 5, 6].map((n) => xpForLevel(n + 1) - xpForLevel(n));
     expect(bands).toEqual([...bands].sort((a, b) => a - b));
   });
 
-  it("places the design's 840 XP learner at level 3", () => {
-    const info = levelFromXp(840);
-    expect(info.level).toBe(3);
-    expect(info.xpToNext).toBe(1276 - 840);
-    expect(info.progress).toBeCloseTo((840 - 667) / (1276 - 667), 5);
+  it("puts level 2 within reach of a single passed unit", () => {
+    // The weakest possible first pass — a Very Easy unit at exactly 70%, plus
+    // the day's streak — must cross it, so the level-up lands while the
+    // gamification is being introduced.
+    const weakestFirstPass = unitTarget("VERY_EASY", 70) + 5;
+    expect(weakestFirstPass).toBeGreaterThan(xpForLevel(2));
+    expect(levelFromXp(weakestFirstPass).level).toBe(2);
+  });
+
+  it("still makes the later levels demanding", () => {
+    // Level 10 should be a long way past casual use.
+    expect(xpForLevel(10)).toBeGreaterThan(3000);
+    expect(xpForLevel(15)).toBeGreaterThan(8000);
   });
 
   it("never reports level 0 or negative progress", () => {
@@ -82,8 +90,8 @@ describe("levels", () => {
   });
 
   it("levels up exactly at the threshold", () => {
-    expect(levelFromXp(219).level).toBe(1);
-    expect(levelFromXp(220).level).toBe(2);
+    expect(levelFromXp(24).level).toBe(1);
+    expect(levelFromXp(25).level).toBe(2);
   });
 });
 

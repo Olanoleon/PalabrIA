@@ -167,6 +167,22 @@ export const ES = {
   retry: "Reintentar la práctica",
   reviewFirst: "Repasa antes de reintentar",
   levelUp: (n: number) => "¡Subiste al nivel " + n + "!",
+
+  // ── Celebration overlays ──────────────────────────────────────────────────
+  xpIntroTitle: "¡Ganaste tus primeros XP!",
+  xpIntroBody:
+    "Los XP miden lo que aprendes. Aprobar una unidad da XP según su dificultad y tu puntaje, y mejorar tu marca paga la diferencia.",
+  xpIntroStreak: "Practica un día tras otro y tu racha suma XP extra.",
+  xpIntroBoard: "Cada mes compites con tu organización en la tabla.",
+  xpIntroCta: "Entendido",
+  xpIntroEarned: (xp: number) => "+" + xp + " XP",
+  levelUpTitle: (n: number) => "¡Nivel " + n + "!",
+  levelUpBody: (xp: number) =>
+    "Llevas " + xp + " XP. Cada nivel pide un poco más que el anterior.",
+  levelUpNext: (xp: number, n: number) =>
+    "Te faltan " + xp + " XP para el nivel " + n + ".",
+  levelUpCta: "Seguir",
+  tapHint: "Toca un área para empezar",
   newBadge: (n: number) =>
     n === 1 ? "Ganaste una insignia nueva" : "Ganaste " + n + " insignias nuevas",
 
@@ -380,6 +396,19 @@ export const EN: Translated = {
   retry: "Retry the practice",
   reviewFirst: "Review before retrying",
   levelUp: (n) => "You reached level " + n + "!",
+
+  xpIntroTitle: "You earned your first XP!",
+  xpIntroBody:
+    "XP measures what you learn. Passing a unit earns XP based on its difficulty and your score, and beating your record pays the difference.",
+  xpIntroStreak: "Practise day after day and your streak adds extra XP.",
+  xpIntroBoard: "Every month you compete with your organization on the board.",
+  xpIntroCta: "Got it",
+  xpIntroEarned: (xp) => "+" + xp + " XP",
+  levelUpTitle: (n) => "Level " + n + "!",
+  levelUpBody: (xp) => "You have " + xp + " XP. Each level asks a little more than the last.",
+  levelUpNext: (xp, n) => xp + " XP to level " + n + ".",
+  levelUpCta: "Continue",
+  tapHint: "Tap an area to start",
   newBadge: (n) => (n === 1 ? "You earned a new badge" : "You earned " + n + " new badges"),
 
   introTabs: ["Cards", "Reading", "Avatar"],
