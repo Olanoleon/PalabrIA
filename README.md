@@ -62,7 +62,8 @@ and never reach the browser.
 | `AUTH_SECRET` | Signs the session cookie (32+ characters) |
 | `CRON_SECRET` | Shared secret for `/api/cron/billing` |
 | `OPENAI_API_KEY` | AI unit and area generation |
-| `RESEND_API_KEY`, `RESEND_FROM` | 2FA codes, invitations, password resets |
+| `RESEND_API_KEY` | 2FA codes, invitations, password resets |
+| `RESEND_FROM` | Optional. Defaults to Resend's own verified sender; set it after verifying your domain |
 | `APP_URL` | Absolute base for links in emails |
 
 ## Deployment

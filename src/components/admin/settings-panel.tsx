@@ -13,10 +13,14 @@ export function SettingsPanel({
   settings,
   hasOpenAiKey,
   hasResendKey,
+  sender,
+  defaultSender,
 }: {
   settings: Settings;
   hasOpenAiKey: boolean;
   hasResendKey: boolean;
+  sender: string;
+  defaultSender: boolean;
 }) {
   return (
     <>
@@ -86,6 +90,18 @@ export function SettingsPanel({
               <span className="font-bold text-brand-dark">
                 falta — no se envían códigos 2FA ni invitaciones
               </span>
+            )}
+          </li>
+          <li className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-ink bg-cream px-3 py-2">
+            <strong>Remitente</strong>
+            <span className="font-mono text-[11.5px]">{sender}</span>
+            {defaultSender ? (
+              <span className="ml-auto text-[11.5px] text-body">
+                remitente compartido de Resend — verifica tu dominio y define
+                RESEND_FROM para enviar a cualquier destinatario
+              </span>
+            ) : (
+              <span className="ml-auto font-bold text-pass-deep">dominio propio</span>
             )}
           </li>
         </ul>

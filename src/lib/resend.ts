@@ -5,7 +5,18 @@
 import "server-only";
 import { Resend } from "resend";
 
-const FROM = process.env.RESEND_FROM || "PalabrIA <no-reply@palabria.app>";
+/**
+ * Sender address.
+ *
+ * Resend requires a `from` on every send, so there is always a value — but it
+ * needs no configuration: `onboarding@resend.dev` is Resend's own verified
+ * sender and works with nothing but a valid API key. Set RESEND_FROM only once
+ * you have verified your own domain, to stop mail arriving from resend.dev.
+ *
+ * Not a secret. It is an ordinary configuration value.
+ */
+const DEFAULT_FROM = "PalabrIA <onboarding@resend.dev>";
+const FROM = process.env.RESEND_FROM || DEFAULT_FROM;
 
 function client(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -27,7 +38,9 @@ async function send({ to, subject, html }: Mail): Promise<boolean> {
   }
   const { error } = await resend.emails.send({ from: FROM, to, subject, html });
   if (error) {
-    console.error("[resend] send failed", error);
+    // Surface the sender too: the most common failure is an unverified `from`
+    // domain, or resend.dev's own restriction on who it may write to.
+    console.error(`[resend] send failed (from=${FROM}, to=${to}):`, error);
     return false;
   }
   return true;
@@ -85,4 +98,13 @@ export function sendLearnerInvite(to: string, name: string, appUrl: string) {
 
 export function isEmailConfigured(): boolean {
   return !!process.env.RESEND_API_KEY;
+}
+
+/** True when mail goes out under Resend's shared sender rather than our own. */
+export function usingDefaultSender(): boolean {
+  return !process.env.RESEND_FROM;
+}
+
+export function senderAddress(): string {
+  return FROM;
 }
