@@ -17,7 +17,8 @@ import { sendLearnerInvite } from "@/lib/resend";
 import { evaluateBadges } from "@/lib/progress";
 import { GenerationError, generateUnit } from "@/lib/openai";
 import { MAX_WORDS, MIN_WORDS, type GeneratedUnit } from "@/lib/unit-schema";
-import { hasBlockingIssue, validateGeneratedUnit, type Issue } from "@/lib/unit-validate";
+import { validateGeneratedUnit, type Issue } from "@/lib/unit-validate";
+import { persistGeneratedUnit } from "@/lib/unit-persist";
 import { getSettings } from "@/lib/billing";
 import type { Difficulty } from "@/generated/prisma";
 
@@ -502,7 +503,7 @@ export async function generateUnitDraft(
   }
 }
 
-/** Persists a reviewed draft. Blocking validation errors are refused here too. */
+/** Persists a reviewed draft, once the actor is allowed to write to the area. */
 export async function saveGeneratedUnit(
   areaId: string,
   draft: GeneratedUnit,
@@ -520,66 +521,12 @@ export async function saveGeneratedUnit(
   });
   if (!area) return { error: "Esa área no existe o no puedes editarla." };
 
-  const issues = validateGeneratedUnit(draft, { wordCount: draft.words.length });
-  if (hasBlockingIssue(issues)) {
-    return { error: issues.find((i) => i.level === "error")!.message };
-  }
-
-  const count = await prisma.unit.count({ where: { areaId } });
-
-  const unit = await prisma.$transaction(async (tx) => {
-    const created = await tx.unit.create({
-      data: {
-        areaId,
-        name: draft.title,
-        subtitle: draft.subtitle,
-        subtitleEn: draft.subtitleEs,
-        sortOrder: count,
-        isVisible: options.visible,
-        difficulty: options.difficulty,
-        wordCount: draft.words.length,
-        introParagraph: draft.introParagraph,
-        introParagraphEs: draft.introParagraphEs,
-        generationInput: options.generationInput as never,
-        generatedAt: new Date(),
-        editedAfterGen: options.edited,
-      },
-    });
-
-    const wordIds = new Map<string, string>();
-    for (const [index, word] of draft.words.entries()) {
-      const row = await tx.word.create({
-        data: { ...word, unitId: created.id, sortOrder: index },
-      });
-      wordIds.set(word.text.toLowerCase(), row.id);
-    }
-
-    for (const [index, activity] of draft.activities.entries()) {
-      const wordId = wordIds.get(activity.word.toLowerCase());
-      if (!wordId) continue; // validation already flagged it; skip rather than fail
-      await tx.activity.create({
-        data: {
-          unitId: created.id,
-          wordId,
-          type: activity.type,
-          prompt: activity.prompt,
-          promptEs: activity.promptEs,
-          sentence: activity.type === "TYPE_WHAT_YOU_HEAR" ? null : activity.sentence,
-          options: activity.type === "TYPE_WHAT_YOU_HEAR" ? [] : activity.options,
-          answerIndex: activity.type === "TYPE_WHAT_YOU_HEAR" ? 0 : activity.answerIndex,
-          note: activity.note,
-          noteEs: activity.noteEs,
-          mono: activity.type === "IPA_MATCH",
-          sortOrder: index,
-        },
-      });
-    }
-    return created;
-  });
+  const result = await persistGeneratedUnit(areaId, draft, options);
+  if ("error" in result) return result;
 
   revalidateAdmin();
   revalidatePath("/path");
-  return { unitId: unit.id };
+  return result;
 }
 
 // ── Unit editing ────────────────────────────────────────────────────────────
