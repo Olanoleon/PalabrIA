@@ -83,6 +83,11 @@ export function UnitTimeline({
                 >
                   {d.unit} {unit.number}
                 </span>
+                {unit.updated ? (
+                  <span className="rounded-full border-[1.5px] border-brand bg-brand-soft px-[9px] py-[3px] text-[11px] font-bold text-brand-dark">
+                    {d.tagUpdated}
+                  </span>
+                ) : null}
                 <span
                   className={cn(
                     "ml-auto rounded-full border-[1.5px] px-[9px] py-[3px] text-[11px] font-bold",
@@ -111,6 +116,13 @@ export function UnitTimeline({
                     ? unit.subtitleEn
                     : unit.subtitle}
               </span>
+
+              {unit.updated ? (
+                <span className="mt-1 flex items-center gap-[7px] text-[12px] font-semibold text-brand-deep">
+                  {d.updatedUnitNote}
+                  <ChevronRight size={11} />
+                </span>
+              ) : null}
 
               {current ? (
                 <span className="mt-1 flex items-center gap-[7px] text-[12.5px] font-bold text-brand-deep">

@@ -98,6 +98,13 @@ export const ES = {
   ctaStart: "Empezar la intro",
   tagCurrent: "En curso",
   tagLocked: "Bloqueada",
+  tagUpdated: "Actualizada",
+  // Careful not to imply they failed: after a regeneration the words may simply
+  // be different, and a learner who scored 100% can still be behind.
+  updatedUnitNote: "Se actualizó el contenido — vuelve a practicarla",
+  updatedAreaNote: (n: number) =>
+    n === 1 ? "1 unidad actualizada" : n + " unidades actualizadas",
+  refreshBonus: (xp: number) => "+" + xp + " XP por ponerte al día",
   areasEmpty:
     "Tu organización todavía no tiene áreas visibles. Vuelve en un rato.",
 
@@ -331,6 +338,10 @@ export const EN: Translated = {
   ctaStart: "Start the intro",
   tagCurrent: "In progress",
   tagLocked: "Locked",
+  tagUpdated: "Updated",
+  updatedUnitNote: "The content changed — practise it again",
+  updatedAreaNote: (n) => (n === 1 ? "1 updated unit" : n + " updated units"),
+  refreshBonus: (xp) => "+" + xp + " XP for catching up",
   areasEmpty: "Your organization has no visible areas yet. Check back soon.",
 
   card: "Card",

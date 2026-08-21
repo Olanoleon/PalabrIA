@@ -47,21 +47,60 @@ export type AreaCardData = {
   totalWords: number;
   complete: boolean;
   progress: number;
+  /** Passed units whose content has been regenerated since. */
+  updatedUnits: number;
 };
 
-async function scoreMap(learnerId: string): Promise<Map<string, number>> {
+type ProgressRow = {
+  bestScore: number;
+  passed: boolean;
+  seenContentVersion: number;
+};
+
+async function progressMap(learnerId: string): Promise<Map<string, ProgressRow>> {
   const rows = await prisma.unitProgress.findMany({
     where: { learnerId },
-    select: { unitId: true, bestScore: true },
+    select: {
+      unitId: true,
+      bestScore: true,
+      passedAt: true,
+      seenContentVersion: true,
+    },
   });
-  return new Map(rows.map((r) => [r.unitId, r.bestScore]));
+  return new Map(
+    rows.map((r) => [
+      r.unitId,
+      {
+        bestScore: r.bestScore,
+        passed: r.passedAt !== null,
+        seenContentVersion: r.seenContentVersion,
+      },
+    ]),
+  );
+}
+
+function scoresOf(progress: Map<string, ProgressRow>): Map<string, number> {
+  return new Map([...progress].map(([id, p]) => [id, p.bestScore]));
+}
+
+/**
+ * A learner is behind on a unit when they passed it and its content has been
+ * regenerated since. Only then is there anything new for them to see.
+ */
+function isBehind(
+  progress: Map<string, ProgressRow>,
+  unitId: string,
+  contentVersion: number,
+): boolean {
+  const row = progress.get(unitId);
+  return !!row && row.passed && row.seenContentVersion < contentVersion;
 }
 
 export async function visibleAreas(
   orgId: string,
   learnerId: string,
 ): Promise<AreaCardData[]> {
-  const [areas, scores] = await Promise.all([
+  const [areas, progress] = await Promise.all([
     prisma.area.findMany({
       where: { scope: "ORG", orgId, isVisible: true },
       orderBy: { sortOrder: "asc" },
@@ -73,13 +112,15 @@ export async function visibleAreas(
             id: true,
             sortOrder: true,
             isVisible: true,
+            contentVersion: true,
             _count: { select: { words: true } },
           },
         },
       },
     }),
-    scoreMap(learnerId),
+    progressMap(learnerId),
   ]);
+  const scores = scoresOf(progress);
 
   return areas.map((area) => {
     const total = area.units.length;
@@ -97,6 +138,9 @@ export async function visibleAreas(
       totalWords: area.units.reduce((n, u) => n + u._count.words, 0),
       complete: total > 0 && areaComplete(area.units, scores),
       progress: total > 0 ? done / total : 0,
+      updatedUnits: area.units.filter((u) =>
+        isBehind(progress, u.id, u.contentVersion),
+      ).length,
     };
   });
 }
@@ -110,6 +154,8 @@ export type UnitRowData = {
   state: UnitState;
   score: number;
   difficulty: string;
+  /** Passed, but the content has changed since. */
+  updated: boolean;
 };
 
 export type AreaDetail = {
@@ -146,6 +192,7 @@ export async function areaDetail(
           sortOrder: true,
           isVisible: true,
           difficulty: true,
+          contentVersion: true,
           _count: { select: { words: true } },
         },
       },
@@ -153,7 +200,8 @@ export async function areaDetail(
   });
   if (!area) return null;
 
-  const scores = await scoreMap(learnerId);
+  const progress = await progressMap(learnerId);
+  const scores = scoresOf(progress);
   const states = unitStates(area.units, scores);
   const units: UnitRowData[] = states.map((s) => ({
     id: s.unit.id,
@@ -164,6 +212,7 @@ export async function areaDetail(
     state: s.state,
     score: s.score,
     difficulty: s.unit.difficulty,
+    updated: isBehind(progress, s.unit.id, s.unit.contentVersion),
   }));
 
   return {
@@ -239,7 +288,7 @@ export async function unitDetail(
   });
   if (!unit) return null;
 
-  const scores = await scoreMap(learnerId);
+  const scores = scoresOf(await progressMap(learnerId));
   const states = unitStates(unit.area.units, scores);
   const own = states.find((s) => s.unit.id === unitId);
 

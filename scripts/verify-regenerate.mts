@@ -79,7 +79,18 @@ const user = await prisma.user.create({
 });
 const learnerId = user.learner!.id;
 await prisma.unitProgress.create({
-  data: { learnerId, unitId, bestScore: 83, attempts: 4, xpAwarded: 21, passedAt: new Date() },
+  data: {
+    learnerId,
+    unitId,
+    bestScore: 83,
+    attempts: 4,
+    xpAwarded: 21,
+    passedAt: new Date(),
+    // Up to date with the content as it stands before the regeneration.
+    seenContentVersion: (
+      await prisma.unit.findUniqueOrThrow({ where: { id: unitId } })
+    ).contentVersion,
+  },
 });
 const activities = await prisma.activity.findMany({ where: { unitId } });
 for (const activity of activities) {
@@ -104,6 +115,10 @@ if (dictationBadge) {
     data: { learnerId, badgeId: dictationBadge.id },
   });
 }
+
+const versionBefore = (
+  await prisma.unit.findUniqueOrThrow({ where: { id: unitId } })
+).contentVersion;
 
 const wordsBefore = (
   await prisma.word.findMany({ where: { unitId }, orderBy: { sortOrder: "asc" } })
@@ -183,6 +198,87 @@ check(
   "words-learned follows the new word count, not the old",
   learned.reduce((n, r) => n + r.unit._count.words, 0),
   5,
+);
+
+// ── Catching up on regenerated content ─────────────────────────────────────
+const { recordPractice } = await import("../src/lib/progress");
+const { CONTENT_REFRESH_XP } = await import("../src/lib/xp");
+
+const afterRegen = await prisma.unitProgress.findFirstOrThrow({
+  where: { learnerId, unitId },
+});
+const unitNow = await prisma.unit.findUniqueOrThrow({ where: { id: unitId } });
+check("the unit's content version advanced by one", unitNow.contentVersion - versionBefore, 1);
+check("the learner is now behind it", afterRegen.seenContentVersion < unitNow.contentVersion, true);
+
+/** Answers every question of the unit correctly. */
+async function answerAll() {
+  const list = await prisma.activity.findMany({
+    where: { unitId },
+    orderBy: { sortOrder: "asc" },
+    include: { word: true },
+  });
+  return list.map((a) =>
+    a.type === "TYPE_WHAT_YOU_HEAR"
+      ? { activityId: a.id, typed: a.word.text }
+      : { activityId: a.id, optionText: (a.options as string[])[a.answerIndex] },
+  );
+}
+
+const caughtUp = await recordPractice(learnerId, unitId, await answerAll());
+check("the catch-up run reports itself", caughtUp.caughtUpOnNewContent, true);
+check(
+  "the catch-up bonus is awarded",
+  caughtUp.xpBreakdown.filter((b) => b.reason === "CONTENT_REFRESH")
+    .map((b) => b.delta),
+  [CONTENT_REFRESH_XP],
+);
+check(
+  "the learner is no longer behind",
+  (await prisma.unitProgress.findFirstOrThrow({ where: { learnerId, unitId } }))
+    .seenContentVersion,
+  unitNow.contentVersion,
+);
+
+// The farming guard: doing it again must pay nothing extra.
+const again = await recordPractice(learnerId, unitId, await answerAll());
+check("a second run is not a second catch-up", again.caughtUpOnNewContent, false);
+check(
+  "and pays no further catch-up bonus",
+  again.xpBreakdown.filter((b) => b.reason === "CONTENT_REFRESH").length,
+  0,
+);
+
+// A learner who never passed the old content is owed nothing.
+const newcomer = await prisma.user.create({
+  data: {
+    email: `newcomer-${Date.now()}@test.local`,
+    passwordHash: "x",
+    name: "Newcomer",
+    role: "LEARNER",
+    orgId: org.id,
+    learner: { create: { orgId: org.id } },
+  },
+  include: { learner: true },
+});
+const firstTime = await recordPractice(
+  newcomer.learner!.id,
+  unitId,
+  await answerAll(),
+);
+check(
+  "a first-time learner gets no catch-up bonus",
+  firstTime.caughtUpOnNewContent,
+  false,
+);
+check(
+  "but is stamped as current, so they are never invited back for it",
+  (
+    await prisma.unitProgress.findFirstOrThrow({
+      where: { learnerId: newcomer.learner!.id, unitId },
+    })
+  ).seenContentVersion,
+  unitNow.contentVersion,
 );
 
 await prisma.organization.delete({ where: { id: org.id } });

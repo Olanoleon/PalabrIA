@@ -53,6 +53,9 @@ export async function replaceGeneratedUnit(
         generationInput: options.generationInput as never,
         generatedAt: new Date(),
         editedAfterGen: options.edited,
+        // Only regeneration bumps this. Editing a word or fixing a typo in the
+        // unit editor must not summon every learner back.
+        contentVersion: { increment: 1 },
         // sortOrder and isVisible are deliberately untouched: regenerating the
         // content is not a reason to move the unit or reveal a hidden one.
       },

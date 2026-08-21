@@ -9,6 +9,7 @@ import {
   Celebrations,
   type Celebration,
 } from "@/components/learner/celebration";
+import { CONTENT_REFRESH_XP } from "@/lib/xp";
 import type { ResultSummary } from "@/lib/progress";
 
 const CONFETTI_COLORS = ["#EA580C", "#15803D", "#F59E0B", "#FFFFFF", "#C2410C"];
@@ -186,6 +187,12 @@ export function ResultView({
             </span>
           </div>
         </div>
+
+        {result.caughtUpOnNewContent ? (
+          <div className="w-full rounded-2xl border-2 border-ink bg-brand-soft px-4 py-3 text-[13px] font-bold text-brand-dark">
+            {d.refreshBonus(CONTENT_REFRESH_XP)}
+          </div>
+        ) : null}
 
         {result.newBadges.length ? (
           <div className="w-full rounded-2xl border-2 border-dashed border-ink bg-cream px-4 py-3 text-[13px] font-semibold">
