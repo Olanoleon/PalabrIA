@@ -13,8 +13,12 @@ import type { Difficulty } from "@/generated/prisma";
 /** Minimum score that passes a unit and unlocks the next one. */
 export const PASS_THRESHOLD = 70;
 
-/** Lifetime XP ceiling per unit, before the score factor. */
-export const DIFFICULTY_CAP: Record<Difficulty, number> = {
+/**
+ * The XP a unit is worth at the pass mark's reference point, before the score
+ * factor. Not a ceiling — a perfect run is worth 1.2x this, plus the perfection
+ * bonus on top.
+ */
+export const DIFFICULTY_BASE: Record<Difficulty, number> = {
   VERY_EASY: 30,
   EASY: 40,
   MEDIUM: 55,
@@ -23,7 +27,19 @@ export const DIFFICULTY_CAP: Record<Difficulty, number> = {
 
 export const EFFORT_XP = 5;
 export const EFFORT_DAILY_CAP = 3;
-export const FLAWLESS_XP = 15;
+
+/**
+ * Perfection pays a share of the unit's base rather than a flat amount.
+ *
+ * A flat bonus was worth +55% on a Very Easy unit and only +28% on a Hard one,
+ * so perfection paid relatively more for the easiest work — the opposite of the
+ * intended incentive. As a share it is the same premium everywhere.
+ */
+export const FLAWLESS_SHARE = 0.25;
+
+export function flawlessBonus(difficulty: Difficulty): number {
+  return Math.round(DIFFICULTY_BASE[difficulty] * FLAWLESS_SHARE);
+}
 export const AREA_COMPLETE_XP = 50;
 /**
  * For returning to a unit whose content was regenerated after you passed it.
@@ -37,17 +53,28 @@ export const STREAK_DAY_XP = 5;
 export const STREAK_MILESTONE_XP = 25;
 export const STREAK_MILESTONE_EVERY = 7;
 
-/** 70% -> 0.70 … 100% -> 1.10. Quality is rewarded, not just completion. */
+/**
+ * Maps a passing score to a multiplier: 70% -> 0.70, 100% -> 1.20.
+ *
+ * Mildly convex, so each step toward mastery is worth more than the last — on
+ * an Easy unit the three ten-point steps pay 5, 7 and 8 XP. The last points of
+ * a unit are the hardest to win and should be the best paid.
+ */
+const FACTOR_FLOOR = 0.7;
+const FACTOR_RANGE = 0.5;
+const FACTOR_CURVE = 1.3;
+
 export function scoreFactor(score: number): number {
   if (score < PASS_THRESHOLD) return 0;
   const clamped = Math.min(100, score);
-  return 0.7 + ((clamped - PASS_THRESHOLD) / (100 - PASS_THRESHOLD)) * 0.4;
+  const t = (clamped - PASS_THRESHOLD) / (100 - PASS_THRESHOLD);
+  return FACTOR_FLOOR + FACTOR_RANGE * Math.pow(t, FACTOR_CURVE);
 }
 
 /** Lifetime XP a unit is worth at a given best score. */
 export function unitTarget(difficulty: Difficulty, score: number): number {
   if (score < PASS_THRESHOLD) return 0;
-  return Math.round(DIFFICULTY_CAP[difficulty] * scoreFactor(score));
+  return Math.round(DIFFICULTY_BASE[difficulty] * scoreFactor(score));
 }
 
 /** The ratchet: what this attempt pays, given what the unit has already paid. */
