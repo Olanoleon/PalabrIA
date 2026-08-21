@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { t, type Lang } from "@/lib/i18n";
 import { ChevronLeft, ChevronRightBig, SpeakerIcon } from "@/components/ui/icons";
@@ -12,6 +12,9 @@ type Word = UnitDetail["words"][number];
 
 /** Past this many pixels a horizontal drag counts as a swipe, not a tap. */
 const SWIPE_THRESHOLD = 48;
+/** How long the outgoing card takes to leave, and the incoming one to arrive. */
+const EXIT_MS = 190;
+const ENTER_MS = 300;
 /** Beyond this much vertical movement it is a scroll, so leave it alone. */
 const SCROLL_TOLERANCE = 40;
 
@@ -38,17 +41,90 @@ export function CardsMode({
   // The nudge stops for good once the learner discovers the flip themselves.
   const [everFlipped, setEverFlipped] = useState(false);
   const [drag, setDrag] = useState(0);
+  /**
+   * A card change is a three-beat animation rather than a content swap: the
+   * current card leaves in the direction of travel, the next one is placed off
+   * the opposite edge, then it slides in.
+   */
+  const [slide, setSlide] = useState<{
+    dir: 1 | -1;
+    stage: "out" | "placed" | "in";
+  } | null>(null);
   const gesture = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
   const { speak, speaking, state } = useSpeech();
 
   const word = words[index];
-  if (!word) return null;
 
-  const go = (next: number) => {
-    setIndex((next + words.length) % words.length);
-    setFlipped(false);
+  /** dir: 1 moves to the next card, -1 to the previous. */
+  const advance = (dir: 1 | -1) => {
+    if (slide) return; // ignore input while a transition is in flight
     setDrag(0);
-    if (next >= words.length - 1) onSeen();
+    setSlide({ dir, stage: "out" });
+  };
+
+  useEffect(() => {
+    if (!slide) return;
+
+    if (slide.stage === "out") {
+      const id = setTimeout(() => {
+        setIndex((current) => {
+          const next = (current + slide.dir + words.length) % words.length;
+          if (next >= words.length - 1) onSeen();
+          return next;
+        });
+        setFlipped(false);
+        setSlide({ dir: slide.dir, stage: "placed" });
+      }, EXIT_MS);
+      return () => clearTimeout(id);
+    }
+
+    if (slide.stage === "placed") {
+      // Two frames: one to paint the card at the far edge without a transition,
+      // the next to start it moving. One frame is not reliably enough.
+      let inner = 0;
+      const outer = requestAnimationFrame(() => {
+        inner = requestAnimationFrame(() =>
+          setSlide({ dir: slide.dir, stage: "in" }),
+        );
+      });
+      return () => {
+        cancelAnimationFrame(outer);
+        cancelAnimationFrame(inner);
+      };
+    }
+
+    const id = setTimeout(() => setSlide(null), ENTER_MS);
+    return () => clearTimeout(id);
+  }, [slide, words.length, onSeen]);
+
+  /** Where the card sits: mid-transition, mid-drag, or at rest. */
+  const slideStyle = (): React.CSSProperties => {
+    if (slide?.stage === "out") {
+      return {
+        transform: `translateX(${-slide.dir * 115}%) rotate(${-slide.dir * 3}deg)`,
+        opacity: 0,
+        transition: `transform ${EXIT_MS}ms cubic-bezier(.4,0,1,1), opacity ${EXIT_MS}ms linear`,
+      };
+    }
+    if (slide?.stage === "placed") {
+      return {
+        transform: `translateX(${slide.dir * 115}%) rotate(${slide.dir * 3}deg)`,
+        opacity: 0,
+        transition: "none",
+      };
+    }
+    if (slide?.stage === "in") {
+      return {
+        transform: "translateX(0) rotate(0deg)",
+        opacity: 1,
+        transition: `transform ${ENTER_MS}ms cubic-bezier(.2,.9,.3,1), opacity ${Math.round(ENTER_MS * 0.7)}ms linear`,
+      };
+    }
+    return {
+      transform: `translateX(${drag}px)`,
+      opacity: 1,
+      transition: drag === 0 ? "transform 260ms cubic-bezier(.2,.8,.3,1)" : "none",
+    };
   };
 
   const flip = () => {
@@ -58,6 +134,7 @@ export function CardsMode({
   };
 
   const onPointerDown = (event: React.PointerEvent) => {
+    if (slide) return;
     gesture.current = { x: event.clientX, y: event.clientY, dragging: false };
   };
 
@@ -74,9 +151,9 @@ export function CardsMode({
     }
     if (Math.abs(dx) > 6) {
       start.dragging = true;
-      // Resist past the threshold so the card follows the finger without
-      // sliding away — it snaps back or advances on release.
-      setDrag(Math.sign(dx) * Math.min(Math.abs(dx), SWIPE_THRESHOLD * 1.6) * 0.6);
+      // Follows the finger nearly 1:1 so the drag reads as moving the card,
+      // with mild resistance at the extremes.
+      setDrag(Math.sign(dx) * Math.min(Math.abs(dx) * 0.9, 160));
     }
   };
 
@@ -91,8 +168,11 @@ export function CardsMode({
       if (!start.dragging) flip();
       return;
     }
-    go(dx < 0 ? index + 1 : index - 1);
+    advance(dx < 0 ? 1 : -1);
   };
+
+  // Guarded after the hooks above, which must run on every render.
+  if (!word) return null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -119,20 +199,14 @@ export function CardsMode({
             event.preventDefault();
             flip();
           }
-          if (event.key === "ArrowRight") go(index + 1);
-          if (event.key === "ArrowLeft") go(index - 1);
+          if (event.key === "ArrowRight") advance(1);
+          if (event.key === "ArrowLeft") advance(-1);
         }}
         // pan-y keeps vertical scrolling with the page while we take the
         // horizontal axis for swiping.
         className="h-[352px] cursor-pointer touch-pan-y select-none [perspective:1300px]"
       >
-        <div
-          className="size-full [transform-style:preserve-3d]"
-          style={{
-            transform: `translateX(${drag}px)`,
-            transition: drag === 0 ? "transform 260ms cubic-bezier(.2,.8,.3,1)" : "none",
-          }}
-        >
+        <div className="size-full [transform-style:preserve-3d]" style={slideStyle()}>
         <div
           className={cn(
             "size-full [transform-style:preserve-3d]",
@@ -228,7 +302,7 @@ export function CardsMode({
       <div className="flex items-center gap-[10px]">
         <button
           type="button"
-          onClick={() => go(index - 1)}
+          onClick={() => advance(-1)}
           aria-label="anterior"
           className="press grid size-[46px] place-items-center rounded-[14px] border-2 border-ink bg-surface hard-1"
         >
@@ -247,7 +321,7 @@ export function CardsMode({
         </div>
         <button
           type="button"
-          onClick={() => go(index + 1)}
+          onClick={() => advance(1)}
           aria-label="siguiente"
           className="press grid size-[46px] place-items-center rounded-[14px] border-2 border-ink bg-brand-mid hard-1"
         >
