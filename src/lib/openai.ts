@@ -89,7 +89,7 @@ function prompt(input: GenerationInput): string {
     `Rules:`,
     `- No duplicate words. Every word must be distinct in lemma, not just in spelling.`,
     `- "ipa" is American English IPA between slashes, e.g. /ˈaɪ.braʊ/. Use American conventions consistently: ɚ rather than ər, and no length marks (ː).`,
-    `- "syllables" splits the word's ORDINARY SPELLING, not its pronunciation, marking the stressed syllable in caps and separating with a middle dot: EYE·brow, SEA·son, MAR·i·nate. Never write phonetic symbols here. Single-syllable words are just the word.`,
+    `- "syllables" splits the word's ORDINARY SPELLING, not its pronunciation, marking the stressed syllable in caps and separating with a middle dot: EYE·brow, SEA·son, MAR·i·nate. Never write phonetic symbols here. Single-syllable words are just the word, in lower case.`,
     `- "stress" is the stressed syllable on its own, lowercase.`,
     `- "pos" is the part of speech in Spanish (sustantivo, verbo, adjetivo, adverbio).`,
     `- "definition" is English, "definitionEs" is Spanish; both must define the word as used in this unit's context.`,
@@ -145,6 +145,13 @@ export async function generateUnit(
       },
     });
     raw = response.choices[0]?.message?.content;
+    // Token usage is the only handle on what generation costs. Logging it here
+    // makes that visible in the server logs for every unit an admin creates.
+    if (response.usage) {
+      console.info(
+        `[openai] ${model} · ${response.usage.prompt_tokens} in / ${response.usage.completion_tokens} out / ${response.usage.total_tokens} total`,
+      );
+    }
   } catch (error) {
     const err = error as { status?: number; name?: string; message?: string };
     if (err.name === "APIConnectionTimeoutError" || err.status === 408) {

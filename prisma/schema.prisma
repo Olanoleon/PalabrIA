@@ -91,7 +91,7 @@ model PlatformSettings {
   monthlyAmount Int      @default(25000)
   currency      String   @default("COP")
   graceDays     Int      @default(5)
-  openaiModel   String   @default("gpt-5")
+  openaiModel   String   @default("gpt-5.6-luna")
   updatedAt     DateTime @updatedAt
 }
 

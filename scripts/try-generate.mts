@@ -62,9 +62,16 @@ try {
 
   console.log(`\nactivities (${unit.activities.length}):`);
   for (const a of unit.activities) {
-    const answer = a.options.length ? ` → ${a.options[a.answerIndex]}` : "";
-    console.log(`  ${a.type.padEnd(20)} ${a.word.padEnd(14)}${answer}`);
+    console.log(`  ${a.type.padEnd(20)} ${a.word}`);
     if (a.sentence) console.log(`  ${" ".repeat(20)} ${a.sentence}`);
+    if (a.options.length) {
+      // Distractor quality is the thing a weaker model degrades first, so show
+      // every option, not just the answer.
+      const shown = a.options.map((o, i) =>
+        i === a.answerIndex ? `[${o}]` : o,
+      );
+      console.log(`  ${" ".repeat(20)} ${shown.join("   ")}`);
+    }
   }
 
   const issues = validateGeneratedUnit(unit, {
