@@ -8,6 +8,7 @@ import {
 } from "@/components/admin/shell";
 import { SUPER_NAV } from "@/components/admin/admin-nav";
 import { UnitEditor } from "@/components/admin/unit-editor";
+import { Breadcrumb } from "@/components/admin/breadcrumb";
 import { LeaveOrgMode } from "@/components/admin/leave-org-mode";
 
 export default async function SuperUnitPage({
@@ -33,6 +34,13 @@ export default async function SuperUnitPage({
         )
       }
     >
+      <Breadcrumb
+        trail={[
+          { label: "Contenido", href: "/super/content" },
+          { label: unit.area.name, href: `/super/content/${unit.area.id}` },
+          { label: unit.name },
+        ]}
+      />
       <UnitEditor unit={unit} base="/super" />
     </AdminShell>
   );

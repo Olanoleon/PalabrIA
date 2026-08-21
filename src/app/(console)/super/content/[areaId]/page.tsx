@@ -1,15 +1,12 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { adminContext, areaForAdmin, contentTree } from "@/lib/admin-data";
-import {
-  AdminShell,
-  GlobalModeBanner,
-  OrgModeBanner,
-} from "@/components/admin/shell";
+import { adminContext, contentTree } from "@/lib/admin-data";
+import { AdminShell } from "@/components/admin/shell";
 import { SUPER_NAV } from "@/components/admin/admin-nav";
-import { ContentPanel } from "@/components/admin/content-panel";
-import { GenerateUnitLink } from "@/components/admin/generate-unit-link";
+import { AreaDetail } from "@/components/admin/area-detail";
+import { GlobalModeBanner, OrgModeBanner } from "@/components/admin/shell";
 import { LeaveOrgMode } from "@/components/admin/leave-org-mode";
+import { Breadcrumb } from "@/components/admin/breadcrumb";
 
 export default async function SuperAreaPage({
   params,
@@ -17,9 +14,8 @@ export default async function SuperAreaPage({
   const { areaId } = await params;
   const user = await requireRole("SUPER_ADMIN");
   const { lang, org } = await adminContext(user);
-  const area = await areaForAdmin(user, areaId);
+  const area = (await contentTree(user)).find((a) => a.id === areaId);
   if (!area) notFound();
-  const areas = (await contentTree(user)).filter((a) => a.id === areaId);
 
   return (
     <AdminShell
@@ -34,11 +30,14 @@ export default async function SuperAreaPage({
           <GlobalModeBanner />
         )
       }
-      actions={
-        <GenerateUnitLink areaId={areaId} base="/super" />
-      }
     >
-      <ContentPanel areas={areas} base="/super" />
+      <Breadcrumb
+        trail={[
+          { label: "Contenido", href: "/super/content" },
+          { label: area.name },
+        ]}
+      />
+      <AreaDetail area={area} base="/super" />
     </AdminShell>
   );
 }

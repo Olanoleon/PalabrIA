@@ -2,7 +2,8 @@ import { requireRole } from "@/lib/rbac";
 import { adminContext, contentTree } from "@/lib/admin-data";
 import { AdminShell } from "@/components/admin/shell";
 import { ADMIN_NAV } from "@/components/admin/admin-nav";
-import { ContentPanel } from "@/components/admin/content-panel";
+import { AreasList } from "@/components/admin/areas-list";
+import { Breadcrumb } from "@/components/admin/breadcrumb";
 
 export default async function AdminContentPage() {
   const user = await requireRole("ORG_ADMIN");
@@ -13,11 +14,11 @@ export default async function AdminContentPage() {
     <AdminShell
       lang={lang}
       title={org?.name ?? "Organización"}
-      subtitle="Este es el contenido de tu organización. La plantilla global no se ve desde aquí."
       nav={ADMIN_NAV}
       active="/admin/content"
     >
-      <ContentPanel areas={areas} base="/admin" />
+      <Breadcrumb trail={[{ label: "Contenido" }]} />
+      <AreasList areas={areas} base="/admin" />
     </AdminShell>
   );
 }

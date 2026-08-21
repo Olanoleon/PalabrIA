@@ -1,19 +1,12 @@
 import { requireRole } from "@/lib/rbac";
 import { adminContext, contentTree } from "@/lib/admin-data";
-import {
-  AdminShell,
-  GlobalModeBanner,
-  OrgModeBanner,
-} from "@/components/admin/shell";
+import { AdminShell } from "@/components/admin/shell";
 import { SUPER_NAV } from "@/components/admin/admin-nav";
-import { ContentPanel } from "@/components/admin/content-panel";
+import { AreasList } from "@/components/admin/areas-list";
+import { GlobalModeBanner, OrgModeBanner } from "@/components/admin/shell";
 import { LeaveOrgMode } from "@/components/admin/leave-org-mode";
+import { Breadcrumb } from "@/components/admin/breadcrumb";
 
-/**
- * Content management in whichever of the Super Admin's two contexts is active:
- * the Global Template, or one organization's own copy (Organization Mode). The
- * banner makes which one unmistakable.
- */
 export default async function SuperContentPage() {
   const user = await requireRole("SUPER_ADMIN");
   const { lang, org } = await adminContext(user);
@@ -33,7 +26,8 @@ export default async function SuperContentPage() {
         )
       }
     >
-      <ContentPanel areas={areas} base="/super" />
+      <Breadcrumb trail={[{ label: "Contenido" }]} />
+      <AreasList areas={areas} base="/super" />
     </AdminShell>
   );
 }

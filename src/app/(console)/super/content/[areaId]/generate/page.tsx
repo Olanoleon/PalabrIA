@@ -8,6 +8,7 @@ import {
 } from "@/components/admin/shell";
 import { SUPER_NAV } from "@/components/admin/admin-nav";
 import { GenerateUnit } from "@/components/admin/generate-unit";
+import { Breadcrumb } from "@/components/admin/breadcrumb";
 import { LeaveOrgMode } from "@/components/admin/leave-org-mode";
 
 export default async function SuperGeneratePage({
@@ -33,6 +34,13 @@ export default async function SuperGeneratePage({
         )
       }
     >
+      <Breadcrumb
+        trail={[
+          { label: "Contenido", href: "/super/content" },
+          { label: area.name, href: `/super/content/${area.id}` },
+          { label: "Nueva unidad con IA" },
+        ]}
+      />
       <GenerateUnit areaId={area.id} areaName={area.name} base="/super" />
     </AdminShell>
   );
