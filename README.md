@@ -32,7 +32,8 @@ npm run db:seed      # global template, two organizations, demo learners
 npm run dev
 ```
 
-Then open http://localhost:3000. Seeded accounts (the password is the email):
+Then open http://localhost:3000. Demo accounts — the password is the email
+itself:
 
 | Role | Email |
 | --- | --- |
@@ -43,6 +44,42 @@ Then open http://localhost:3000. Seeded accounts (the password is the email):
 
 Admin accounts require a 2FA code emailed via Resend. Without `RESEND_API_KEY`
 the code is printed to the server log in development.
+
+### Two seeds, and which to use
+
+| | `npm run db:seed` | `npm run seed:owner` |
+| --- | --- | --- |
+| Effect | **clears the demo tables first** | purely additive |
+| Idempotent | no | yes |
+| Safe against a deployment | **no** | yes |
+| Creates | the demo cast: 2 organizations, 7 learners, a populated leaderboard, Ana's progress | the Super Admin, the "Leo's Friends" organization from the template, and one test learner |
+
+Use `db:seed` on a throwaway local database when you want data to look at.
+Use `seed:owner` on anything real — it upserts, so running it twice changes
+nothing, and it never deletes.
+
+Running both locally is useful: the demo organizations give you a populated
+leaderboard and unit progress, while "Leo's Friends" stays clean like a fresh
+deployment.
+
+`seed:owner` reads its credentials from the environment when set, so nothing has
+to live in the repository:
+
+```bash
+OWNER_EMAIL= OWNER_PASSWORD= OWNER_NAME= OWNER_ORG=
+LEARNER_EMAIL= LEARNER_PASSWORD= LEARNER_NAME=
+```
+
+### Careful with the destructive scripts
+
+`db:seed`, `db:reset` and the three `verify:*` suites all **write to whatever
+database they are pointed at** — `db:reset` drops the schema outright, and the
+verify suites reset progress, flip billing states, and create then delete an
+organization. Never aim them at a deployment.
+
+One trap makes that easy to get wrong: Prisma migrations read `directUrl`, not
+`url`, so overriding only `DATABASE_URL` on the command line leaves commands
+silently pointed at whatever `DIRECT_URL` still says. Change both, in `.env`.
 
 `npm run db:start` runs an actual PostgreSQL server rather than `prisma dev`,
 whose lightweight shim desynchronises its wire protocol under concurrent
@@ -64,7 +101,9 @@ and never reach the browser.
 | `OPENAI_API_KEY` | AI unit and area generation |
 | `RESEND_API_KEY` | 2FA codes, invitations, password resets |
 | `RESEND_FROM` | Optional. Defaults to Resend's own verified sender; set it after verifying your domain |
-| `APP_URL` | Absolute base for links in emails |
+| `APP_URL` | Absolute base for links in emails. A **wrong** value is worse than none — unset, links are built from the incoming request's host |
+| `PORT` | Port the server listens on. Must match the port the platform routes to, or the edge returns 502 |
+| `ENFORCE_PASSWORD_CHANGE` | `true` requires an account created with a default password to replace it before reaching the app. Off during the initial phase |
 
 ## Deployment
 
@@ -143,6 +182,17 @@ npm run verify           # integration checks against the running database
 unlocks, badges), `verify:billing` (the lifecycle, declarations, rejection
 rollback, overrides) and `verify:isolation` (the PRD's mandatory tenant and
 template independence rules).
+
+## The password-change switch
+
+The PRD requires that an administrator-created account — whose initial password
+is the user's own email address — replaces it at first sign-in. That is gated on
+`ENFORCE_PASSWORD_CHANGE`, currently off.
+
+While it is off, those accounts keep their default password indefinitely, so
+anyone who knows a learner's email address can sign in as them. Accounts are
+still flagged in the database, so setting the variable to `true` takes effect
+immediately and retroactively, with no migration and no code change.
 
 ## Not in this version
 
