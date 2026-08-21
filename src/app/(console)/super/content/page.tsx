@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/rbac";
 import { adminContext, contentTree } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { SUPER_NAV } from "@/components/admin/admin-nav";
+import { superNav } from "@/components/admin/admin-nav";
 import { AreasList } from "@/components/admin/areas-list";
 import { GlobalModeBanner, OrgModeBanner } from "@/components/admin/shell";
 import { LeaveOrgMode } from "@/components/admin/leave-org-mode";
@@ -15,19 +16,19 @@ export default async function SuperContentPage() {
   return (
     <AdminShell
       lang={lang}
-      title="Plataforma"
-      nav={SUPER_NAV}
+      title={adminT(lang).titlePlatform}
+      nav={superNav(lang)}
       active="/super/content"
       banner={
         org ? (
-          <OrgModeBanner orgName={org.name} onLeaveHref={<LeaveOrgMode />} />
+          <OrgModeBanner orgName={org.name} onLeaveHref={<LeaveOrgMode lang={lang} />} lang={lang} />
         ) : (
-          <GlobalModeBanner />
+          <GlobalModeBanner lang={lang} />
         )
       }
     >
-      <Breadcrumb trail={[{ label: "Contenido" }]} />
-      <AreasList areas={areas} base="/super" />
+      <Breadcrumb trail={[{ label: adminT(lang).navContent }]} />
+      <AreasList areas={areas} base="/super" lang={lang} />
     </AdminShell>
   );
 }

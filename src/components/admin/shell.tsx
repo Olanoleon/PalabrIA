@@ -4,6 +4,7 @@ import { SignOutButton } from "@/components/learner/sign-out-button";
 import { LangToggle } from "@/components/ui/lang-toggle";
 import { cn } from "@/lib/cn";
 import type { Lang } from "@/lib/i18n";
+import { adminT } from "@/lib/i18n-admin";
 
 export type NavItem = { href: string; label: string };
 
@@ -40,9 +41,8 @@ export function AdminShell({
           </span>
           <div className="ml-auto flex items-center gap-3">
             <LangToggle lang={lang} />
-            <div className="w-[150px]">
-              <SignOutButton lang={lang} />
-            </div>
+            {/* Sized to its content: a fixed width clipped "Cerrar sesión". */}
+            <SignOutButton lang={lang} className="px-4 py-[10px] text-[13px]" />
           </div>
         </header>
 
@@ -85,11 +85,11 @@ export function AdminShell({
 export function OrgModeBanner({
   orgName,
   onLeaveHref,
-  leaveLabel,
+  lang,
 }: {
   orgName: string;
   onLeaveHref: React.ReactNode;
-  leaveLabel?: string;
+  lang: Lang;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-ink bg-ink px-4 py-3 text-paper flat-2">
@@ -99,25 +99,20 @@ export function OrgModeBanner({
       <span className="font-display text-[16px] font-semibold tracking-[-0.01em]">
         {orgName}
       </span>
-      <span className="text-[12px] text-[#B8AEA2]">
-        {leaveLabel ??
-          "Los cambios afectan solo a esta organización. La plantilla global no se toca."}
-      </span>
+      <span className="text-[12px] text-[#B8AEA2]">{adminT(lang).orgModeNote}</span>
       <span className="ml-auto">{onLeaveHref}</span>
     </div>
   );
 }
 
-export function GlobalModeBanner() {
+export function GlobalModeBanner({ lang }: { lang: Lang }) {
+  const d = adminT(lang);
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-dashed border-ink bg-cream px-4 py-3">
       <span className="rounded-full border-[1.5px] border-ink bg-brand-soft px-[10px] py-1 text-[10.5px] font-bold uppercase tracking-[0.1em]">
-        Plantilla global
+        {d.globalModeTag}
       </span>
-      <span className="text-[12.5px] text-body">
-        Editas la plantilla base. Los cambios se aplican a las organizaciones que
-        se creen a partir de ahora, no a las que ya existen.
-      </span>
+      <span className="text-[12.5px] text-body">{d.globalModeNote}</span>
     </div>
   );
 }

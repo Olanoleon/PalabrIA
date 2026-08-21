@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/rbac";
 import { adminContext, learnerRows } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { ADMIN_NAV } from "@/components/admin/admin-nav";
+import { adminNav } from "@/components/admin/admin-nav";
 import { LearnersPanel } from "@/components/admin/learners-panel";
 
 export default async function AdminLearnersPage() {
@@ -13,8 +14,8 @@ export default async function AdminLearnersPage() {
   return (
     <AdminShell
       lang={lang}
-      title={org?.name ?? "Organización"}
-      nav={ADMIN_NAV}
+      title={org?.name ?? adminT(lang).titleOrg}
+      nav={adminNav(lang)}
       active="/admin/learners"
     >
       <LearnersPanel learners={learners} lang={lang} />

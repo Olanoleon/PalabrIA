@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/rbac";
 import { adminContext } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { SUPER_NAV } from "@/components/admin/admin-nav";
+import { superNav } from "@/components/admin/admin-nav";
 import { SettingsPanel } from "@/components/admin/settings-panel";
 import { senderAddress, usingDefaultSender } from "@/lib/resend";
 
@@ -12,8 +13,8 @@ export default async function SuperSettingsPage() {
   return (
     <AdminShell
       lang={lang}
-      title="Plataforma"
-      nav={SUPER_NAV}
+      title={adminT(lang).titlePlatform}
+      nav={superNav(lang)}
       active="/super/settings"
     >
       <SettingsPanel
@@ -22,6 +23,7 @@ export default async function SuperSettingsPage() {
         hasResendKey={Boolean(process.env.RESEND_API_KEY)}
         sender={senderAddress()}
         defaultSender={usingDefaultSender()}
+        lang={lang}
       />
     </AdminShell>
   );

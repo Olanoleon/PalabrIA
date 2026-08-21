@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/rbac";
 import { adminContext, learnerRows, organizationRows } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { SUPER_NAV } from "@/components/admin/admin-nav";
+import { superNav } from "@/components/admin/admin-nav";
 import { LearnersPanel } from "@/components/admin/learners-panel";
 import { Panel, Empty } from "@/components/admin/pieces";
 
@@ -24,8 +25,8 @@ export default async function SuperLearnersPage() {
   return (
     <AdminShell
       lang={lang}
-      title="Plataforma"
-      nav={SUPER_NAV}
+      title={adminT(lang).titlePlatform}
+      nav={superNav(lang)}
       active="/super/learners"
     >
       {organizations.length === 0 ? (

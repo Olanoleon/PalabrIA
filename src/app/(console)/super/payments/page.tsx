@@ -4,8 +4,9 @@ import {
   pendingPayments,
   recentPaymentDecisions,
 } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { SUPER_NAV } from "@/components/admin/admin-nav";
+import { superNav } from "@/components/admin/admin-nav";
 import { PaymentsPanel } from "@/components/admin/payments-panel";
 
 export default async function SuperPaymentsPage() {
@@ -19,8 +20,8 @@ export default async function SuperPaymentsPage() {
   return (
     <AdminShell
       lang={lang}
-      title="Plataforma"
-      nav={SUPER_NAV}
+      title={adminT(lang).titlePlatform}
+      nav={superNav(lang)}
       active="/super/payments"
     >
       <PaymentsPanel pending={pending} decided={decided} lang={lang} />

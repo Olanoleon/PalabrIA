@@ -13,22 +13,28 @@ import { Field, Select, SmallButton, TextArea } from "@/components/admin/form-bi
 import { cn } from "@/lib/cn";
 import type { GeneratedUnit } from "@/lib/unit-schema";
 import type { Difficulty } from "@/generated/prisma";
+import { adminT } from "@/lib/i18n-admin";
+import type { Lang } from "@/lib/i18n";
 
-const DIFFICULTIES: Array<{ value: Difficulty; label: string; hint: string }> = [
-  { value: "VERY_EASY", label: "Muy fácil", hint: "A1 · frases cortas" },
-  { value: "EASY", label: "Fácil", hint: "A2 · conectores simples" },
-  { value: "MEDIUM", label: "Media", hint: "B1 · subordinadas" },
-  { value: "HARD", label: "Difícil", hint: "B2–C1 · sintaxis rica" },
-];
-
-const ERROR_HELP: Record<string, string> = {
-  not_configured:
-    "Falta OPENAI_API_KEY en el servidor. Configúrala en Railway y vuelve a intentar.",
-  timeout: "El modelo tardó demasiado. Reintenta: se conservan tus datos.",
-  invalid_response:
-    "La respuesta no cumplió el formato esperado. Reintenta o ajusta los datos.",
-  api_error: "OpenAI devolvió un error. Reintenta en un momento.",
-  empty: "El modelo no devolvió contenido. Reintenta.",
+const ERROR_HELP: Record<Lang, Record<string, string>> = {
+  es: {
+    not_configured:
+      "Falta OPENAI_API_KEY en el servidor. Configúrala en Railway y vuelve a intentar.",
+    timeout: "El modelo tardó demasiado. Reintenta: se conservan tus datos.",
+    invalid_response:
+      "La respuesta no cumplió el formato esperado. Reintenta o ajusta los datos.",
+    api_error: "OpenAI devolvió un error. Reintenta en un momento.",
+    empty: "El modelo no devolvió contenido. Reintenta.",
+  },
+  en: {
+    not_configured:
+      "OPENAI_API_KEY is not set on the server. Configure it in Railway and try again.",
+    timeout: "The model took too long. Retry — your inputs are kept.",
+    invalid_response:
+      "The answer did not match the expected shape. Retry or adjust the inputs.",
+    api_error: "OpenAI returned an error. Try again in a moment.",
+    empty: "The model returned nothing. Retry.",
+  },
 };
 
 /**
@@ -40,11 +46,20 @@ export function GenerateUnit({
   areaId,
   areaName,
   base,
+  lang,
 }: {
   areaId: string;
   areaName: string;
   base: "/admin" | "/super";
+  lang: Lang;
 }) {
+  const d = adminT(lang);
+  const DIFFICULTIES: Array<{ value: Difficulty; label: string }> = [
+    { value: "VERY_EASY", label: d.difficultyVeryEasyLong },
+    { value: "EASY", label: d.difficultyEasyLong },
+    { value: "MEDIUM", label: d.difficultyMediumLong },
+    { value: "HARD", label: d.difficultyHardLong },
+  ];
   const router = useRouter();
   const [result, generate, generating] = useActionState<GenerationResult, FormData>(
     generateUnitDraft,
@@ -75,8 +90,8 @@ export function GenerateUnit({
   return (
     <div className="flex flex-col gap-5">
       <Panel
-        title="Generar unidad con IA"
-        description={`Área: ${areaName}`}
+        title={d.generateTitle}
+        description={d.generateArea(areaName)}
         actions={
           <button
             type="button"
@@ -86,7 +101,7 @@ export function GenerateUnit({
               if (
                 active &&
                 !window.confirm(
-                  "Se descartará la unidad generada y no se guardará. ¿Salir del área?",
+                  d.generateBackConfirm,
                 )
               ) {
                 return;
@@ -95,7 +110,7 @@ export function GenerateUnit({
             }}
             className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
           >
-            Volver al área
+            {d.generateBack}
           </button>
         }
       >
@@ -103,23 +118,23 @@ export function GenerateUnit({
           <input type="hidden" name="areaId" value={areaId} />
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
-              label="Número de palabras"
+              label={d.generateWords}
               name="wordCount"
               type="number"
               min={4}
               max={12}
               defaultValue={result.input?.wordCount ?? 6}
               required
-              hint="Entre 4 y 12. Es la restricción de mayor prioridad."
+              hint={d.generateWordsHint}
             />
             <Select
-              label="Dificultad del párrafo"
+              label={d.generateDifficulty}
               name="difficulty"
               defaultValue={result.input?.difficulty ?? "EASY"}
             >
               {DIFFICULTIES.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label} — {option.hint}
+                  {option.label}
                 </option>
               ))}
             </Select>
@@ -127,18 +142,18 @@ export function GenerateUnit({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
-              label="Tema"
+              label={d.generateTopic}
               name="topic"
               defaultValue={result.input?.topic ?? ""}
               placeholder="Cooking Italian food"
-              hint="Usa un tema o una lista de palabras."
+              hint={d.generateTopicHint}
             />
             <TextArea
-              label="Lista de palabras"
+              label={d.generateList}
               name="wordList"
               defaultValue={result.input?.wordList?.join(", ") ?? ""}
               placeholder="boil, fry, chop, stir, slice, season"
-              hint="Si la lista es más larga que el número pedido, manda la lista."
+              hint={d.generateListHint}
             />
           </div>
 
@@ -151,14 +166,14 @@ export function GenerateUnit({
             >
               <SparkleIcon size={15} />
               {generating
-                ? "Generando…"
+                ? d.generating
                 : active
-                  ? "Regenerar unidad"
-                  : "Generar unidad"}
+                  ? d.generateAgain
+                  : d.generateSubmit}
             </SmallButton>
             {generating ? (
               <span className="text-[12.5px] text-muted-2">
-                Suele tardar entre uno y dos minutos.
+                {d.generateWait}
               </span>
             ) : null}
           </div>
@@ -166,9 +181,9 @@ export function GenerateUnit({
           {result.error ? (
             <div className="rounded-xl border-2 border-ink bg-cream px-3 py-2 text-[12.5px] font-medium text-brand-dark">
               {result.error}
-              {result.errorCode && ERROR_HELP[result.errorCode] ? (
+              {result.errorCode && ERROR_HELP[lang][result.errorCode] ? (
                 <span className="mt-1 block font-normal text-body">
-                  {ERROR_HELP[result.errorCode]}
+                  {ERROR_HELP[lang][result.errorCode]}
                 </span>
               ) : null}
             </div>
@@ -178,14 +193,14 @@ export function GenerateUnit({
 
       {active ? (
         <Panel
-          title="Revisa antes de guardar"
-          description="Puedes editar cualquier campo. Se guarda solo cuando lo apruebas."
+          title={d.reviewTitle}
+          description={d.reviewNote}
           actions={
             <div className="flex flex-wrap items-center gap-3">
               <SmallButton
                 onClick={() => {
                   if (
-                    !window.confirm("¿Descartar esta unidad generada?")
+                    !window.confirm(d.reviewDiscardConfirm)
                   ) {
                     return;
                   }
@@ -196,7 +211,7 @@ export function GenerateUnit({
                   setEdited(false);
                 }}
               >
-                Descartar
+                {d.discard}
               </SmallButton>
               <label className="flex items-center gap-2 text-[12.5px] font-semibold">
                 <input
@@ -205,7 +220,7 @@ export function GenerateUnit({
                   onChange={(event) => setVisible(event.target.checked)}
                   className="size-4 accent-[#EA580C]"
                 />
-                Visible al guardar
+                {d.reviewVisibleOnSave}
               </label>
               <SmallButton
                 tone="primary"
@@ -227,7 +242,7 @@ export function GenerateUnit({
                   })
                 }
               >
-                {saving ? "Guardando…" : "Guardar unidad"}
+                {saving ? d.reviewSaving : d.reviewSave}
               </SmallButton>
             </div>
           }
@@ -246,7 +261,7 @@ export function GenerateUnit({
                     )}
                   >
                     <Tag tone={issue.level === "error" ? "warn" : "neutral"}>
-                      {issue.level === "error" ? "bloqueante" : "aviso"}
+                      {issue.level === "error" ? d.issueBlocking : d.issueWarning}
                     </Tag>{" "}
                     {issue.message}
                   </li>
@@ -262,7 +277,7 @@ export function GenerateUnit({
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Field
-                label="Título"
+                label={d.draftTitle}
                 value={active.title}
                 onChange={(event) => {
                   setDraft({ ...active, title: event.target.value });
@@ -270,7 +285,7 @@ export function GenerateUnit({
                 }}
               />
               <Field
-                label="Subtítulo (español)"
+                label={d.draftSubtitle}
                 value={active.subtitle}
                 onChange={(event) => {
                   setDraft({ ...active, subtitle: event.target.value });
@@ -280,7 +295,7 @@ export function GenerateUnit({
             </div>
 
             <TextArea
-              label="Párrafo en inglés"
+              label={d.unitParagraphEn}
               value={active.introParagraph}
               onChange={(event) => {
                 setDraft({ ...active, introParagraph: event.target.value });
@@ -288,7 +303,7 @@ export function GenerateUnit({
               }}
             />
             <TextArea
-              label="Párrafo en español"
+              label={d.unitParagraphEs}
               value={active.introParagraphEs}
               onChange={(event) => {
                 setDraft({ ...active, introParagraphEs: event.target.value });
@@ -298,7 +313,7 @@ export function GenerateUnit({
 
             <div className="flex flex-col gap-3">
               <h3 className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted">
-                {active.words.length} palabras
+                {d.draftWords(active.words.length)}
               </h3>
               {active.words.map((word, index) => (
                 <div
@@ -306,7 +321,7 @@ export function GenerateUnit({
                   className="grid gap-3 rounded-2xl border-2 border-ink bg-cream p-3 sm:grid-cols-3"
                 >
                   <Field
-                    label="Palabra"
+                    label={d.wordWord}
                     value={word.text}
                     onChange={(event) => {
                       const words = active.words.slice();
@@ -316,7 +331,7 @@ export function GenerateUnit({
                     }}
                   />
                   <Field
-                    label="IPA"
+                    label={d.wordIpa}
                     value={word.ipa}
                     onChange={(event) => {
                       const words = active.words.slice();
@@ -326,7 +341,7 @@ export function GenerateUnit({
                     }}
                   />
                   <Field
-                    label="Traducción"
+                    label={d.wordTranslation}
                     value={word.translation}
                     onChange={(event) => {
                       const words = active.words.slice();
@@ -337,7 +352,7 @@ export function GenerateUnit({
                   />
                   <TextArea
                     className="sm:col-span-2"
-                    label="Definición (español)"
+                    label={d.wordDefEs}
                     value={word.definitionEs}
                     onChange={(event) => {
                       const words = active.words.slice();
@@ -347,7 +362,7 @@ export function GenerateUnit({
                     }}
                   />
                   <Field
-                    label="Ejemplo"
+                    label={d.wordExampleEn}
                     value={word.exampleSentence}
                     onChange={(event) => {
                       const words = active.words.slice();
@@ -362,7 +377,7 @@ export function GenerateUnit({
 
             <div className="flex flex-col gap-2">
               <h3 className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted">
-                {active.activities.length} actividades
+                {d.draftActivities(active.activities.length)}
               </h3>
               {active.activities.map((activity, index) => (
                 <div

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/rbac";
 import { adminContext, platformMetrics } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { SUPER_NAV } from "@/components/admin/admin-nav";
+import { superNav } from "@/components/admin/admin-nav";
 import { Panel, StatTile } from "@/components/admin/pieces";
 import { formatMoney } from "@/lib/i18n";
 
@@ -16,7 +17,7 @@ export default async function SuperDashboard() {
     : 0;
 
   return (
-    <AdminShell lang={lang} title="Plataforma" nav={SUPER_NAV} active="/super">
+    <AdminShell lang={lang} title={adminT(lang).titlePlatform} nav={superNav(lang)} active="/super">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           value={metrics.activeOrganizations}

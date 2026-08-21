@@ -1,16 +1,24 @@
 import type { NavItem } from "@/components/admin/shell";
+import { adminT } from "@/lib/i18n-admin";
+import type { Lang } from "@/lib/i18n";
 
-export const ADMIN_NAV: NavItem[] = [
-  { href: "/admin", label: "Panel" },
-  { href: "/admin/learners", label: "Aprendices" },
-  { href: "/admin/content", label: "Contenido" },
-];
+export function adminNav(lang: Lang): NavItem[] {
+  const d = adminT(lang);
+  return [
+    { href: "/admin", label: d.navPanel },
+    { href: "/admin/learners", label: d.navLearners },
+    { href: "/admin/content", label: d.navContent },
+  ];
+}
 
-export const SUPER_NAV: NavItem[] = [
-  { href: "/super", label: "Panel" },
-  { href: "/super/organizations", label: "Organizaciones" },
-  { href: "/super/learners", label: "Aprendices" },
-  { href: "/super/payments", label: "Pagos" },
-  { href: "/super/content", label: "Contenido" },
-  { href: "/super/settings", label: "Ajustes" },
-];
+export function superNav(lang: Lang): NavItem[] {
+  const d = adminT(lang);
+  return [
+    { href: "/super", label: d.navPanel },
+    { href: "/super/organizations", label: d.navOrganizations },
+    { href: "/super/learners", label: d.navLearners },
+    { href: "/super/payments", label: d.navPayments },
+    { href: "/super/content", label: d.navContent },
+    { href: "/super/settings", label: d.navSettings },
+  ];
+}

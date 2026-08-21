@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
+import { adminT } from "@/lib/i18n-admin";
 import { adminContext, areaForAdmin } from "@/lib/admin-data";
 import {
   AdminShell,
   GlobalModeBanner,
   OrgModeBanner,
 } from "@/components/admin/shell";
-import { SUPER_NAV } from "@/components/admin/admin-nav";
+import { superNav } from "@/components/admin/admin-nav";
 import { GenerateUnit } from "@/components/admin/generate-unit";
 import { Breadcrumb } from "@/components/admin/breadcrumb";
 import { LeaveOrgMode } from "@/components/admin/leave-org-mode";
@@ -23,25 +24,25 @@ export default async function SuperGeneratePage({
   return (
     <AdminShell
       lang={lang}
-      title="Plataforma"
-      nav={SUPER_NAV}
+      title={adminT(lang).titlePlatform}
+      nav={superNav(lang)}
       active="/super/content"
       banner={
         org ? (
-          <OrgModeBanner orgName={org.name} onLeaveHref={<LeaveOrgMode />} />
+          <OrgModeBanner orgName={org.name} onLeaveHref={<LeaveOrgMode lang={lang} />} lang={lang} />
         ) : (
-          <GlobalModeBanner />
+          <GlobalModeBanner lang={lang} />
         )
       }
     >
       <Breadcrumb
         trail={[
-          { label: "Contenido", href: "/super/content" },
+          { label: adminT(lang).navContent, href: "/super/content" },
           { label: area.name, href: `/super/content/${area.id}` },
-          { label: "Nueva unidad con IA" },
+          { label: adminT(lang).generateLink },
         ]}
       />
-      <GenerateUnit areaId={area.id} areaName={area.name} base="/super" />
+      <GenerateUnit areaId={area.id} areaName={area.name} base="/super" lang={lang} />
     </AdminShell>
   );
 }

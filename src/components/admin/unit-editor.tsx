@@ -5,6 +5,8 @@ import { deleteUnit, setUnitVisible, updateUnitMeta, updateWord } from "@/lib/ac
 import { Panel, Tag } from "@/components/admin/pieces";
 import { ActionForm, Field, SmallButton, TextArea } from "@/components/admin/form-bits";
 import { cn } from "@/lib/cn";
+import { adminT } from "@/lib/i18n-admin";
+import type { Lang } from "@/lib/i18n";
 
 type UnitData = {
   id: string;
@@ -47,10 +49,13 @@ type UnitData = {
 export function UnitEditor({
   unit,
   base,
+  lang,
 }: {
   unit: UnitData;
   base: "/admin" | "/super";
+  lang: Lang;
 }) {
+  const d = adminT(lang);
   const options = (raw: unknown): string[] =>
     Array.isArray(raw) ? (raw as string[]) : [];
 
@@ -58,103 +63,111 @@ export function UnitEditor({
     <div className="flex flex-col gap-5">
       <Panel
         title={unit.name}
-        description={`${unit.area.name} · ${unit.words.length} palabras · ${unit.activities.length} actividades`}
+        description={d.unitMeta(unit.area.name, unit.words.length, unit.activities.length)}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Tag tone={unit.isVisible ? "pass" : "neutral"}>
-              {unit.isVisible ? "visible" : "oculta"}
+              {unit.isVisible ? d.tagVisible : d.tagHidden}
             </Tag>
-            {unit.generatedAt ? <Tag tone="brand">generada con IA</Tag> : null}
-            {unit.editedAfterGen ? <Tag>editada</Tag> : null}
+            {unit.generatedAt ? <Tag tone="brand">{d.tagAiGenerated}</Tag> : null}
+            {unit.editedAfterGen ? <Tag>{d.tagEdited}</Tag> : null}
             <SmallButton
               tone={unit.isVisible ? "secondary" : "soft"}
-              onClick={() => setUnitVisible(unit.id, !unit.isVisible)}
+              onClick={() => {
+                if (
+                  unit.isVisible &&
+                  !window.confirm(d.hideUnitConfirm(unit.name))
+                ) {
+                  return;
+                }
+                setUnitVisible(unit.id, !unit.isVisible);
+              }}
             >
-              {unit.isVisible ? "Ocultar" : "Mostrar"}
+              {unit.isVisible ? d.hide : d.show}
             </SmallButton>
             <Link
               href={`${base}/content/${unit.area.id}`}
               className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
             >
-              Volver al área
+              {d.unitBackToArea}
             </Link>
           </div>
         }
       >
         <ActionForm
           action={updateUnitMeta}
-          submitLabel="Guardar unidad"
+          submitLabel={d.unitSave}
           hidden={{ unitId: unit.id }}
         >
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Nombre" name="name" defaultValue={unit.name} required />
+            <Field label={d.name} name="name" defaultValue={unit.name} required />
             <Field
-              label="Subtítulo (español)"
+              label={d.unitSubtitleEs}
               name="subtitle"
               defaultValue={unit.subtitle}
             />
             <Field
-              label="Subtítulo (inglés)"
+              label={d.unitSubtitleEn}
               name="subtitleEn"
               defaultValue={unit.subtitleEn}
             />
           </div>
           <TextArea
-            label="Párrafo en inglés"
+            label={d.unitParagraphEn}
             name="introParagraph"
             defaultValue={unit.introParagraph}
           />
           <TextArea
-            label="Párrafo en español"
+            label={d.unitParagraphEs}
             name="introParagraphEs"
             defaultValue={unit.introParagraphEs}
           />
         </ActionForm>
       </Panel>
 
-      <Panel title="Palabras">
+      <Panel title={d.wordsTitle}>
         <div className="flex flex-col gap-4">
           {unit.words.map((word) => (
             <ActionForm
               key={word.id}
               action={updateWord}
-              submitLabel="Guardar palabra"
+              submitLabel={d.wordSave}
               tone="soft"
               hidden={{ wordId: word.id }}
               className="rounded-2xl border-2 border-ink bg-cream p-3"
             >
               <div className="grid gap-3 sm:grid-cols-4">
-                <Field label="Palabra" name="text" defaultValue={word.text} required />
-                <Field label="IPA" name="ipa" defaultValue={word.ipa} />
-                <Field label="Sílabas" name="syllables" defaultValue={word.syllables} />
-                <Field label="Acento" name="stress" defaultValue={word.stress} />
+                <Field label={d.wordWord} name="text" defaultValue={word.text} required />
+                <Field label={d.wordIpa} name="ipa" defaultValue={word.ipa} />
+                <Field label={d.wordSyllables} name="syllables" defaultValue={word.syllables} />
+                <Field label={d.wordStress} name="stress" defaultValue={word.stress} />
                 <Field
-                  label="Traducción"
+                  label={d.wordTranslation}
                   name="translation"
                   defaultValue={word.translation}
                 />
-                <Field label="Categoría" name="pos" defaultValue={word.pos} />
+                <Field label={d.wordPos} name="pos" defaultValue={word.pos} />
                 <Field
                   className="sm:col-span-2"
-                  label="Definición (inglés)"
+                  label={d.wordDefEn}
                   name="definition"
                   defaultValue={word.definition}
                 />
                 <Field
                   className="sm:col-span-2"
-                  label="Definición (español)"
+                  label={d.wordDefEs}
                   name="definitionEs"
                   defaultValue={word.definitionEs}
                 />
                 <Field
                   className="sm:col-span-2"
-                  label="Ejemplo (inglés)"
+                  label={d.wordExampleEn}
                   name="exampleSentence"
                   defaultValue={word.exampleSentence}
                 />
                 <Field
                   className="sm:col-span-2"
-                  label="Ejemplo (español)"
+                  label={d.wordExampleEs}
                   name="exampleSentenceEs"
                   defaultValue={word.exampleSentenceEs}
                 />
@@ -165,8 +178,8 @@ export function UnitEditor({
       </Panel>
 
       <Panel
-        title="Actividades"
-        description="Se generan con la unidad; edítalas regenerando o ajustando las palabras."
+        title={d.activitiesTitle}
+        description={d.activitiesNote}
       >
         <div className="flex flex-col gap-2">
           {unit.activities.map((activity) => (
@@ -207,8 +220,8 @@ export function UnitEditor({
 
       {unit.generationInput ? (
         <Panel
-          title="Petición original"
-          description="Se conserva para poder regenerar con los mismos datos."
+          title={d.originalRequest}
+          description={d.originalRequestNote}
         >
           <pre className="overflow-x-auto rounded-xl border-2 border-ink bg-locked p-3 font-mono text-[11.5px]">
             {JSON.stringify(unit.generationInput, null, 2)}
@@ -216,18 +229,17 @@ export function UnitEditor({
         </Panel>
       ) : null}
 
-      <Panel title="Zona de riesgo">
+      <Panel title={d.dangerZone}>
         <div className="flex flex-wrap items-center gap-3">
           <p className="flex-1 text-[12.5px] text-body">
-            Ocultar es reversible y conserva el progreso. Eliminar borra la unidad y
-            el progreso de los aprendices en ella.
+            {d.dangerNote}
           </p>
           <SmallButton
             tone="danger"
             onClick={async () => {
               if (
                 !window.confirm(
-                  `¿Eliminar "${unit.name}"? También se borra el progreso de los aprendices en esta unidad.`,
+                  d.deleteUnitConfirm(unit.name),
                 )
               ) {
                 return;
@@ -235,7 +247,7 @@ export function UnitEditor({
               await deleteUnit(unit.id);
             }}
           >
-            Eliminar unidad
+            {d.deleteUnit}
           </SmallButton>
         </div>
       </Panel>

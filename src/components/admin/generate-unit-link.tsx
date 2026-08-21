@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { SparkleIcon } from "@/components/ui/icons";
+import { adminT } from "@/lib/i18n-admin";
+import type { Lang } from "@/lib/i18n";
 
 /**
  * Entry point to AI unit generation. Purple rather than the brand orange so an
@@ -9,9 +11,11 @@ import { SparkleIcon } from "@/components/ui/icons";
 export function GenerateUnitLink({
   areaId,
   base,
+  lang,
 }: {
   areaId: string;
   base: "/admin" | "/super";
+  lang: Lang;
 }) {
   return (
     <Link
@@ -19,7 +23,7 @@ export function GenerateUnitLink({
       className="press inline-flex items-center gap-2 rounded-xl border-2 border-ink bg-ai px-[14px] py-[9px] text-[13px] font-bold text-ai-ink hard-1"
     >
       <SparkleIcon size={16} />
-      Crear unidad con IA
+      {adminT(lang).generateLink}
     </Link>
   );
 }

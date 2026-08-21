@@ -4,6 +4,7 @@ import { decidePayment } from "@/lib/actions/super";
 import { Panel, Tag, Empty, TableScroll, Td, Th } from "@/components/admin/pieces";
 import { ActionForm, Field } from "@/components/admin/form-bits";
 import { formatDate, formatMoney, type Lang } from "@/lib/i18n";
+import { adminT } from "@/lib/i18n-admin";
 
 type Pending = {
   id: string;
@@ -45,14 +46,15 @@ export function PaymentsPanel({
   decided: Decided[];
   lang: Lang;
 }) {
+  const d = adminT(lang);
   return (
     <>
       <Panel
-        title="Pagos por revisar"
-        description="El aprendiz ya tiene acceso. Rechazar lo devuelve al estado anterior."
+        title={d.payQueueTitle}
+        description={d.payQueueNote}
       >
         {pending.length === 0 ? (
-          <Empty>No hay pagos pendientes.</Empty>
+          <Empty>{d.payQueueEmpty}</Empty>
         ) : (
           <div className="flex flex-col gap-3">
             {pending.map((payment) => (
@@ -73,9 +75,11 @@ export function PaymentsPanel({
                   </span>
                 </div>
                 <p className="mt-1 text-[12px] text-muted-2">
-                  Reportado {formatDate(payment.declaredAt, lang)} · cubre{" "}
-                  {formatDate(payment.periodStart, lang)} →{" "}
-                  {formatDate(payment.periodEnd, lang)}
+                  {d.payReported(formatDate(payment.declaredAt, lang))} ·{" "}
+                  {d.payCovers(
+                    formatDate(payment.periodStart, lang),
+                    formatDate(payment.periodEnd, lang),
+                  )}
                   {payment.reference ? (
                     <>
                       {" · ref "}
@@ -87,19 +91,19 @@ export function PaymentsPanel({
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <ActionForm
                     action={decidePayment}
-                    submitLabel="Confirmar"
+                    submitLabel={d.payConfirm}
                     tone="primary"
                     hidden={{ paymentId: payment.id, decision: "CONFIRMED" }}
                   >
-                    <Field label="Nota (opcional)" name="note" />
+                    <Field label={d.payNoteOptional} name="note" />
                   </ActionForm>
                   <ActionForm
                     action={decidePayment}
-                    submitLabel="Rechazar"
+                    submitLabel={d.payReject}
                     tone="danger"
                     hidden={{ paymentId: payment.id, decision: "REJECTED" }}
                   >
-                    <Field label="Motivo" name="note" required />
+                    <Field label={d.reason} name="note" required />
                   </ActionForm>
                 </div>
               </div>
@@ -108,18 +112,18 @@ export function PaymentsPanel({
         )}
       </Panel>
 
-      <Panel title="Decisiones recientes">
+      <Panel title={d.payDecisionsTitle}>
         {decided.length === 0 ? (
-          <Empty>Sin decisiones todavía.</Empty>
+          <Empty>{d.payDecisionsEmpty}</Empty>
         ) : (
           <TableScroll>
             <thead>
               <tr>
-                <Th>Aprendiz</Th>
-                <Th>Organización</Th>
-                <Th>Monto</Th>
-                <Th>Decisión</Th>
-                <Th>Nota</Th>
+                <Th>{d.colLearner}</Th>
+                <Th>{d.colOrganization}</Th>
+                <Th>{d.colAmount}</Th>
+                <Th>{d.colDecision}</Th>
+                <Th>{d.colNote}</Th>
               </tr>
             </thead>
             <tbody>
@@ -130,7 +134,7 @@ export function PaymentsPanel({
                   <Td>{formatMoney(payment.amount, payment.currency, lang)}</Td>
                   <Td>
                     <Tag tone={payment.reviewState === "CONFIRMED" ? "pass" : "neutral"}>
-                      {payment.reviewState === "CONFIRMED" ? "confirmado" : "rechazado"}
+                      {payment.reviewState === "CONFIRMED" ? d.payConfirmed : d.payRejected}
                     </Tag>
                     {payment.reviewedAt ? (
                       <div className="mt-1 text-[11px] text-muted-2">

@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/rbac";
 import { adminContext, atRiskLearners, orgMetrics } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { ADMIN_NAV } from "@/components/admin/admin-nav";
+import { adminNav } from "@/components/admin/admin-nav";
 import { Panel, StatTile, Tag, Empty } from "@/components/admin/pieces";
 import { formatDate } from "@/lib/i18n";
 
@@ -28,8 +29,8 @@ export default async function AdminDashboard() {
   return (
     <AdminShell
       lang={lang}
-      title={org?.name ?? "Organización"}
-      nav={ADMIN_NAV}
+      title={org?.name ?? adminT(lang).titleOrg}
+      nav={adminNav(lang)}
       active="/admin"
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

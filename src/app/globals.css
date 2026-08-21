@@ -13,6 +13,10 @@
   --color-surface: #ffffff;
   --color-cream: #fff9ef;
   --color-locked: #f4eee4;
+  /* Content hidden from learners. Deliberately darker than the canvas page
+     ground so a hidden row reads as switched off rather than merely pale. */
+  --color-hidden: #ded7cb;
+  --color-hidden-ink: #6f6659;
   --color-rule: #e4dacb;
 
   --color-brand: #ea580c;

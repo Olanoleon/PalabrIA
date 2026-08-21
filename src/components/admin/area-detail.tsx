@@ -18,13 +18,8 @@ import {
 import { GenerateUnitLink } from "@/components/admin/generate-unit-link";
 import { cn } from "@/lib/cn";
 import type { ContentArea } from "@/lib/admin-data";
-
-const DIFFICULTY_LABEL: Record<string, string> = {
-  VERY_EASY: "muy fácil",
-  EASY: "fácil",
-  MEDIUM: "media",
-  HARD: "difícil",
-};
+import { adminT } from "@/lib/i18n-admin";
+import type { Lang } from "@/lib/i18n";
 
 /**
  * Screen two: one area and the units inside it.
@@ -37,17 +32,26 @@ const DIFFICULTY_LABEL: Record<string, string> = {
 export function AreaDetail({
   area,
   base,
+  lang,
 }: {
   area: ContentArea;
   base: "/admin" | "/super";
+  lang: Lang;
 }) {
+  const d = adminT(lang);
+  const difficultyLabel: Record<string, string> = {
+    VERY_EASY: d.difficultyVeryEasy,
+    EASY: d.difficultyEasy,
+    MEDIUM: d.difficultyMedium,
+    HARD: d.difficultyHard,
+  };
   const [editing, setEditing] = useState(false);
   const visibleUnits = area.units.filter((u) => u.isVisible).length;
   const totalWords = area.units.reduce((n, u) => n + u.wordCount, 0);
 
   return (
     <div className="flex flex-col gap-5">
-      <Panel>
+      <Panel className={cn(!area.isVisible && "border-dashed bg-hidden")}>
         <div className="flex flex-wrap items-start gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -55,36 +59,42 @@ export function AreaDetail({
                 {area.name}
               </h1>
               <Tag tone={area.isVisible ? "pass" : "neutral"}>
-                {area.isVisible ? "visible" : "oculta"}
+                {area.isVisible ? d.tagVisible : d.tagHidden}
               </Tag>
-              {area.fromTemplate ? <Tag>de plantilla</Tag> : null}
+              {area.fromTemplate ? <Tag>{d.tagFromTemplate}</Tag> : null}
             </div>
             <p className="mt-1 max-w-[60ch] text-[13px] leading-[1.5] text-body">
               {area.description}
             </p>
             <p className="mt-1 text-[12px] text-muted">
-              {area.units.length} unidad(es) · {visibleUnits} visible(s) ·{" "}
-              {totalWords} palabras
+              {d.areaStats(area.units.length, visibleUnits, totalWords)}
             </p>
           </div>
 
           <div className="flex flex-none flex-wrap items-center gap-2">
             <SmallButton onClick={() => setEditing((v) => !v)}>
-              {editing ? "Cerrar" : "Editar área"}
+              {editing ? d.close : d.areaEdit}
             </SmallButton>
             <SmallButton
               tone={area.isVisible ? "secondary" : "soft"}
-              onClick={() => setAreaVisible(area.id, !area.isVisible)}
+              onClick={() => {
+                if (
+                  area.isVisible &&
+                  !window.confirm(d.hideAreaConfirm(area.name))
+                ) {
+                  return;
+                }
+                setAreaVisible(area.id, !area.isVisible);
+              }}
             >
-              {area.isVisible ? "Ocultar área" : "Mostrar área"}
+              {area.isVisible ? d.areaHide : d.areaShow}
             </SmallButton>
           </div>
         </div>
 
         {!area.isVisible ? (
           <p className="mt-3 rounded-xl border-2 border-dashed border-ink bg-cream px-3 py-2 text-[12.5px] text-body">
-            Esta área está oculta: sus unidades no aparecen en la ruta de los
-            aprendices. El progreso y el XP se conservan.
+            {d.areaHiddenNote}
           </p>
         ) : null}
 
@@ -92,16 +102,16 @@ export function AreaDetail({
           <div className="mt-4 border-t border-rule pt-4">
             <ActionForm
               action={renameArea}
-              submitLabel="Guardar área"
+              submitLabel={d.areaSave}
               hidden={{ areaId: area.id }}
               onDone={() => setEditing(false)}
             >
-              <Field label="Nombre" name="name" defaultValue={area.name} required />
+              <Field label={d.name} name="name" defaultValue={area.name} required />
               <TextArea
-                label="Descripción"
+                label={d.description}
                 name="description"
                 defaultValue={area.description}
-                hint="Es lo que el aprendiz ve bajo el nombre del área."
+                hint={d.areaDescHint}
               />
             </ActionForm>
           </div>
@@ -109,14 +119,12 @@ export function AreaDetail({
       </Panel>
 
       <Panel
-        title="Unidades"
-        description="Ocultar nunca borra: el progreso, el XP y el contenido se conservan."
-        actions={<GenerateUnitLink areaId={area.id} base={base} />}
+        title={d.unitsTitle}
+        description={d.unitsNote}
+        actions={<GenerateUnitLink areaId={area.id} base={base} lang={lang} />}
       >
         {area.units.length === 0 ? (
-          <Empty>
-            Esta área no tiene unidades todavía. Genera la primera con IA.
-          </Empty>
+          <Empty>{d.unitsEmpty}</Empty>
         ) : (
           <ul className="flex flex-col gap-2">
             {area.units.map((unit, index) => (
@@ -126,7 +134,7 @@ export function AreaDetail({
                   "flex items-center gap-4 rounded-2xl border-2 p-3",
                   unit.isVisible
                     ? "border-ink bg-surface flat-1"
-                    : "border-dashed border-muted-line bg-locked",
+                    : "border-dashed border-muted-line bg-hidden",
                 )}
               >
                 <span className="w-5 flex-none text-center font-display text-[15px] font-bold text-muted">
@@ -138,7 +146,7 @@ export function AreaDetail({
                     tone="quiet"
                     disabled={index === 0}
                     onClick={() => reorderUnit(unit.id, "up")}
-                    aria-label={`Subir ${unit.name}`}
+                    aria-label={`${d.moveUp}: ${unit.name}`}
                     className="px-2 py-[2px] leading-none"
                   >
                     ↑
@@ -147,7 +155,7 @@ export function AreaDetail({
                     tone="quiet"
                     disabled={index === area.units.length - 1}
                     onClick={() => reorderUnit(unit.id, "down")}
-                    aria-label={`Bajar ${unit.name}`}
+                    aria-label={`${d.moveDown}: ${unit.name}`}
                     className="px-2 py-[2px] leading-none"
                   >
                     ↓
@@ -156,30 +164,48 @@ export function AreaDetail({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{unit.name}</span>
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        !unit.isVisible && "text-hidden-ink",
+                      )}
+                    >
+                      {unit.name}
+                    </span>
                     <Tag tone={unit.isVisible ? "pass" : "neutral"}>
-                      {unit.isVisible ? "visible" : "oculta"}
+                      {unit.isVisible ? d.tagVisible : d.tagHidden}
                     </Tag>
-                    {unit.generated ? <Tag tone="brand">IA</Tag> : null}
+                    {unit.generated ? <Tag tone="brand">{d.tagAi}</Tag> : null}
                   </div>
                   <p className="mt-[2px] text-[11.5px] text-muted">
-                    {DIFFICULTY_LABEL[unit.difficulty] ?? unit.difficulty} ·{" "}
-                    {unit.wordCount} palabras · {unit.activityCount} actividades
+                    {d.unitStats(
+                      difficultyLabel[unit.difficulty] ?? unit.difficulty,
+                      unit.wordCount,
+                      unit.activityCount,
+                    )}
                   </p>
                 </div>
 
                 <div className="flex flex-none items-center gap-2">
                   <SmallButton
                     tone={unit.isVisible ? "secondary" : "soft"}
-                    onClick={() => setUnitVisible(unit.id, !unit.isVisible)}
+                    onClick={() => {
+                      if (
+                        unit.isVisible &&
+                        !window.confirm(d.hideUnitConfirm(unit.name))
+                      ) {
+                        return;
+                      }
+                      setUnitVisible(unit.id, !unit.isVisible);
+                    }}
                   >
-                    {unit.isVisible ? "Ocultar" : "Mostrar"}
+                    {unit.isVisible ? d.hide : d.show}
                   </SmallButton>
                   <Link
                     href={`${base}/unit/${unit.id}`}
                     className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
                   >
-                    Editar
+                    {d.edit}
                   </Link>
                 </div>
               </li>

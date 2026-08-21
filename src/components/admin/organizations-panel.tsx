@@ -14,6 +14,8 @@ import {
 import { Panel, Tag, Empty } from "@/components/admin/pieces";
 import { ActionForm, Field, SmallButton } from "@/components/admin/form-bits";
 import { cn } from "@/lib/cn";
+import { adminT } from "@/lib/i18n-admin";
+import type { Lang } from "@/lib/i18n";
 
 type OrgRow = {
   id: string;
@@ -27,20 +29,23 @@ type OrgRow = {
 export function OrganizationsPanel({
   organizations,
   activeOrgId,
+  lang,
 }: {
   organizations: OrgRow[];
   activeOrgId: string | null;
+  lang: Lang;
 }) {
+  const d = adminT(lang);
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
 
   return (
     <Panel
-      title="Organizaciones"
-      description="Al crear una, la plantilla global se replica como copia independiente (oculta)."
+      title={d.orgsTitle}
+      description={d.orgsNote}
       actions={
         <SmallButton tone="primary" onClick={() => setCreating((v) => !v)}>
-          {creating ? "Cerrar" : "Crear organización"}
+          {creating ? d.close : d.orgCreate}
         </SmallButton>
       }
     >
@@ -48,11 +53,11 @@ export function OrganizationsPanel({
         <div className="mb-5 rounded-2xl border-2 border-dashed border-ink bg-cream p-4">
           <ActionForm
             action={createOrganization}
-            submitLabel="Crear y replicar plantilla"
+            submitLabel={d.orgCreateSubmit}
             onDone={() => setCreating(false)}
           >
             <Field
-              label="Nombre"
+              label={d.name}
               name="name"
               required
               minLength={2}
@@ -63,7 +68,7 @@ export function OrganizationsPanel({
       ) : null}
 
       {organizations.length === 0 ? (
-        <Empty>Todavía no hay organizaciones.</Empty>
+        <Empty>{d.orgsEmpty}</Empty>
       ) : (
         <div className="flex flex-col gap-3">
           {organizations.map((org) => (
@@ -83,15 +88,14 @@ export function OrganizationsPanel({
                       {org.name}
                     </h3>
                     <Tag tone={org.isActive ? "pass" : "neutral"}>
-                      {org.isActive ? "activa" : "inactiva"}
+                      {org.isActive ? d.orgActive : d.orgInactive}
                     </Tag>
                     {activeOrgId === org.id ? (
-                      <Tag tone="brand">en Organization Mode</Tag>
+                      <Tag tone="brand">{d.orgInMode}</Tag>
                     ) : null}
                   </div>
                   <p className="mt-1 text-[12.5px] text-muted-2">
-                    {org._count.learners} aprendices · {org._count.areas} áreas ·{" "}
-                    {org.users.length} administradores
+                    {d.orgStats(org._count.learners, org._count.areas, org.users.length)}
                   </p>
                 </div>
 
@@ -100,16 +104,16 @@ export function OrganizationsPanel({
                     tone="primary"
                     onClick={() => enterOrganizationMode(org.id)}
                   >
-                    Entrar al contenido
+                    {d.orgEnter}
                   </SmallButton>
                   <SmallButton
                     tone={org.isActive ? "secondary" : "soft"}
                     onClick={() => setOrganizationActive(org.id, !org.isActive)}
                   >
-                    {org.isActive ? "Desactivar" : "Reactivar"}
+                    {org.isActive ? d.deactivate : d.reactivate}
                   </SmallButton>
                   <SmallButton onClick={() => setOpen(open === org.id ? null : org.id)}>
-                    {open === org.id ? "Cerrar" : "Administrar"}
+                    {open === org.id ? d.close : d.orgManage}
                   </SmallButton>
                 </div>
               </div>
@@ -118,20 +122,20 @@ export function OrganizationsPanel({
                 <div className="mt-4 flex flex-col gap-4 border-t border-rule pt-4">
                   <ActionForm
                     action={renameOrganization}
-                    submitLabel="Renombrar"
+                    submitLabel={d.orgRename}
                     tone="soft"
                     hidden={{ orgId: org.id }}
                   >
-                    <Field label="Nombre" name="name" defaultValue={org.name} />
+                    <Field label={d.name} name="name" defaultValue={org.name} />
                   </ActionForm>
 
                   <div>
                     <h4 className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted">
-                      Administradores
+                      {d.orgAdmins}
                     </h4>
                     {org.users.length === 0 ? (
                       <p className="text-[12.5px] text-muted-2">
-                        Sin administradores todavía.
+                        {d.orgNoAdmins}
                       </p>
                     ) : (
                       <ul className="mb-3 flex flex-col gap-2">
@@ -142,20 +146,20 @@ export function OrganizationsPanel({
                           >
                             <strong>{admin.name}</strong>
                             <span className="text-muted-2">{admin.email}</span>
-                            {!admin.isActive ? <Tag tone="danger">inactivo</Tag> : null}
+                            {!admin.isActive ? <Tag tone="danger">{d.adminInactive}</Tag> : null}
                             <span className="ml-auto flex gap-2">
                               <SmallButton
                                 tone={admin.isActive ? "secondary" : "soft"}
                                 onClick={() => setUserActive(admin.id, !admin.isActive)}
                               >
-                                {admin.isActive ? "Desactivar" : "Reactivar"}
+                                {admin.isActive ? d.deactivate : d.reactivate}
                               </SmallButton>
                               <SmallButton
                                 tone="danger"
                                 onClick={async () => {
                                   if (
                                     !window.confirm(
-                                      `¿Eliminar la cuenta de ${admin.name}?`,
+                                      d.orgAdminDeleteConfirm(admin.name),
                                     )
                                   ) {
                                     return;
@@ -163,7 +167,7 @@ export function OrganizationsPanel({
                                   await deleteOrgAdmin(admin.id);
                                 }}
                               >
-                                Eliminar
+                                {d.delete}
                               </SmallButton>
                             </span>
                           </li>
@@ -173,29 +177,28 @@ export function OrganizationsPanel({
 
                     <ActionForm
                       action={createOrgAdmin}
-                      submitLabel="Crear administrador"
+                      submitLabel={d.orgAdminCreate}
                       tone="soft"
                       hidden={{ orgId: org.id }}
                     >
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <Field label="Nombre" name="name" required minLength={2} />
-                        <Field label="Correo" name="email" type="email" required />
+                        <Field label={d.name} name="name" required minLength={2} />
+                        <Field label={d.email} name="email" type="email" required />
                       </div>
                     </ActionForm>
                   </div>
 
                   <div className="rounded-2xl border-2 border-ink bg-cream p-3">
                     <p className="mb-2 text-[12.5px] text-body">
-                      Eliminar la organización borra sus aprendices, su contenido y su
-                      progreso. Escribe <strong>{org.name}</strong> para confirmar.
+                      {d.orgDeleteNote(org.name)}
                     </p>
                     <ActionForm
                       action={deleteOrganization}
-                      submitLabel="Eliminar organización"
+                      submitLabel={d.orgDelete}
                       tone="danger"
                       hidden={{ orgId: org.id }}
                     >
-                      <Field label="Confirmación" name="confirm" required />
+                      <Field label={d.orgDeleteConfirmLabel} name="confirm" required />
                     </ActionForm>
                   </div>
                 </div>

@@ -1,7 +1,8 @@
 import { requireRole } from "@/lib/rbac";
 import { adminContext, organizationRows } from "@/lib/admin-data";
+import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
-import { SUPER_NAV } from "@/components/admin/admin-nav";
+import { superNav } from "@/components/admin/admin-nav";
 import { OrganizationsPanel } from "@/components/admin/organizations-panel";
 
 export default async function SuperOrganizationsPage() {
@@ -12,11 +13,15 @@ export default async function SuperOrganizationsPage() {
   return (
     <AdminShell
       lang={lang}
-      title="Plataforma"
-      nav={SUPER_NAV}
+      title={adminT(lang).titlePlatform}
+      nav={superNav(lang)}
       active="/super/organizations"
     >
-      <OrganizationsPanel organizations={organizations} activeOrgId={orgId} />
+      <OrganizationsPanel
+        organizations={organizations}
+        activeOrgId={orgId}
+        lang={lang}
+      />
     </AdminShell>
   );
 }
