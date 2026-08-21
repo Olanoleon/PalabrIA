@@ -12,7 +12,7 @@ import {
   CONTENT_REFRESH_XP,
   EFFORT_DAILY_CAP,
   EFFORT_XP,
-  FLAWLESS_XP,
+  flawlessBonus,
   PASS_THRESHOLD,
   advanceStreak,
   levelFromXp,
@@ -164,7 +164,7 @@ export async function recordPractice(
   }
 
   if (flawless && !existing?.flawless) {
-    breakdown.push({ reason: "FLAWLESS", delta: FLAWLESS_XP });
+    breakdown.push({ reason: "FLAWLESS", delta: flawlessBonus(unit.difficulty) });
   }
 
   // Coming back to a unit that was regenerated after you had already passed it.

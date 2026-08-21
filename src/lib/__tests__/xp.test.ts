@@ -4,6 +4,8 @@ import {
   levelFromXp,
   localDay,
   streakAlive,
+  flawlessBonus,
+  scoreFactor,
   unitAward,
   unitTarget,
   xpForLevel,
@@ -14,8 +16,34 @@ describe("unit XP", () => {
     expect(unitTarget("EASY", 70)).toBe(28);
   });
 
-  it("pays 44 for an easy unit at 100%", () => {
-    expect(unitTarget("EASY", 100)).toBe(44);
+  it("pays 48 for an easy unit at 100%", () => {
+    expect(unitTarget("EASY", 100)).toBe(48);
+  });
+
+  it("pays progressively more for each step toward mastery", () => {
+    // The last points of a unit are the hardest to win, so they must be the
+    // best paid — a linear factor would make 70->80 worth as much as 90->100.
+    const steps = [70, 80, 90, 100].map((s) => unitTarget("EASY", s));
+    const gains = steps.slice(1).map((v, i) => v - steps[i]);
+    expect(gains).toEqual([...gains].sort((a, b) => a - b));
+    expect(new Set(gains).size).toBeGreaterThan(1);
+  });
+
+  it("pays a perfect run 1.2x the unit base", () => {
+    expect(scoreFactor(70)).toBeCloseTo(0.7);
+    expect(scoreFactor(100)).toBeCloseTo(1.2);
+    // A score above 100 cannot buy more than a perfect one.
+    expect(scoreFactor(120)).toBeCloseTo(1.2);
+  });
+
+  it("pays the same perfection premium at every difficulty", () => {
+    // A flat bonus was worth +55% on a Very Easy unit and +28% on a Hard one,
+    // which paid perfection best where it was easiest to reach.
+    const premiums = (["VERY_EASY", "EASY", "MEDIUM", "HARD"] as const).map(
+      (d) =>
+        (unitTarget(d, 100) + flawlessBonus(d)) / unitTarget(d, 95) - 1,
+    );
+    for (const p of premiums) expect(p).toBeCloseTo(premiums[0], 1);
   });
 
   it("pays nothing below the pass threshold", () => {
@@ -23,8 +51,8 @@ describe("unit XP", () => {
     expect(unitAward("EASY", 69, 0)).toBe(0);
   });
 
-  it("pays 83 for a hard unit at 100%", () => {
-    expect(unitTarget("HARD", 100)).toBe(83);
+  it("pays 90 for a hard unit at 100%", () => {
+    expect(unitTarget("HARD", 100)).toBe(90);
   });
 
   it("ratchets: 70 -> 90 -> 100 sums to the same total as one 100% run", () => {
@@ -33,7 +61,7 @@ describe("unit XP", () => {
       awarded += unitAward("EASY", score, awarded);
     }
     expect(awarded).toBe(unitTarget("EASY", 100));
-    expect(awarded).toBe(44);
+    expect(awarded).toBe(48);
   });
 
   it("pays each improvement exactly once", () => {
