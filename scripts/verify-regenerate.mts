@@ -81,16 +81,37 @@ const learnerId = user.learner!.id;
 await prisma.unitProgress.create({
   data: { learnerId, unitId, bestScore: 83, attempts: 4, xpAwarded: 21, passedAt: new Date() },
 });
-const firstActivity = await prisma.activity.findFirstOrThrow({ where: { unitId } });
-await prisma.activityAttempt.create({
-  data: { learnerId, activityId: firstActivity.id, correct: true },
+const activities = await prisma.activity.findMany({ where: { unitId } });
+for (const activity of activities) {
+  await prisma.activityAttempt.create({
+    data: { learnerId, activityId: activity.id, correct: true },
+  });
+}
+
+// XP the learner banked for this unit, and a badge they earned along the way.
+await prisma.xpLedger.createMany({
+  data: [
+    { learnerId, unitId, delta: 21, reason: "UNIT_PASS" },
+    { learnerId, unitId, delta: 15, reason: "FLAWLESS" },
+    { learnerId, delta: 5, reason: "STREAK_DAY" },
+  ],
 });
+await prisma.learner.update({ where: { id: learnerId }, data: { xp: 41 } });
+
+const dictationBadge = await prisma.badge.findFirst({ where: { key: "bd4" } });
+if (dictationBadge) {
+  await prisma.learnerBadge.create({
+    data: { learnerId, badgeId: dictationBadge.id },
+  });
+}
 
 const wordsBefore = (
   await prisma.word.findMany({ where: { unitId }, orderBy: { sortOrder: "asc" } })
 ).map((w) => w.text);
 check("starting words", wordsBefore, ["alpha", "bravo", "charlie", "delta"]);
-check("starting attempt history", await prisma.activityAttempt.count({ where: { learnerId } }), 1);
+check("starting attempt history", await prisma.activityAttempt.count({ where: { learnerId } }), 3);
+check("starting XP ledger rows", await prisma.xpLedger.count({ where: { learnerId } }), 3);
+check("starting badges", await prisma.learnerBadge.count({ where: { learnerId } }), dictationBadge ? 1 : 0);
 
 // ── Regenerate ──────────────────────────────────────────────────────────────
 const result = await replaceGeneratedUnit(
@@ -127,6 +148,41 @@ check(
   "answer history for deleted questions is gone",
   await prisma.activityAttempt.count({ where: { learnerId } }),
   0,
+);
+
+// ── What a learner keeps ───────────────────────────────────────────────────
+// XP is banked in the ledger, which points at the unit but is not deleted with
+// its questions, so nobody loses XP or leaderboard standing over a regeneration.
+check("XP ledger rows survive", await prisma.xpLedger.count({ where: { learnerId } }), 3);
+check(
+  "banked XP still totals the same",
+  (await prisma.xpLedger.aggregate({ where: { learnerId }, _sum: { delta: true } }))._sum.delta,
+  41,
+);
+check(
+  "the learner's XP balance is untouched",
+  (await prisma.learner.findUniqueOrThrow({ where: { id: learnerId } })).xp,
+  41,
+);
+
+// Badges are awarded, never revoked: evaluateBadges only ever inserts. So a
+// badge whose underlying evidence was just deleted is still held.
+check(
+  "badges survive even when their evidence does not",
+  await prisma.learnerBadge.count({ where: { learnerId } }),
+  dictationBadge ? 1 : 0,
+);
+
+// The one number that does move: "words learned" is derived from the passed
+// unit's current size, so changing the word count rewrites history a little.
+const learned = await prisma.unitProgress.findMany({
+  where: { learnerId, bestScore: { gte: 70 } },
+  select: { unit: { select: { _count: { select: { words: true } } } } },
+});
+check(
+  "words-learned follows the new word count, not the old",
+  learned.reduce((n, r) => n + r.unit._count.words, 0),
+  5,
 );
 
 await prisma.organization.delete({ where: { id: org.id } });
