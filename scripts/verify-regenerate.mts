@@ -58,7 +58,12 @@ function draft(words: string[], title: string): GeneratedUnit {
         answerIndex: 0,
         note: "n",
         noteEs: "n",
-        pairs: words.slice(-3).map((text) => ({ en: text, es: `la ${text}` })),
+        // A definition, not the translation ("la <text>"), which validation
+        // now blocks: the exercise is word-to-meaning, not word-to-translation.
+        pairs: words.slice(-3).map((text) => ({
+          en: text,
+          es: `Una cosa que sirve para ${text}.`,
+        })),
       },
     ],
   };

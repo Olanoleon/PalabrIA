@@ -367,18 +367,18 @@ export function PracticeView({
                           : "press border-ink bg-surface hard-1",
                     )}
                   >
-                    <span className="min-w-[86px] flex-none text-[15.5px] font-bold">
-                      {row.en}
-                    </span>
-                    <span
-                      className={cn(
-                        "flex-1 text-[13.5px]",
-                        chosen ? "font-semibold text-ink" : "text-muted-3",
-                      )}
-                    >
-                      {rowVerdict && !rowVerdict.correct
-                        ? rowVerdict.answer
-                        : chosen || d.matchPick}
+                    <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                      <span className="text-[15.5px] font-bold">{row.en}</span>
+                      <span
+                        className={cn(
+                          "text-[12.5px] leading-[1.4]",
+                          chosen ? "font-semibold text-body" : "text-muted-3",
+                        )}
+                      >
+                        {rowVerdict && !rowVerdict.correct
+                          ? rowVerdict.answer
+                          : chosen || d.matchPick}
+                      </span>
                     </span>
                     {rowVerdict ? (
                       <span
@@ -397,7 +397,12 @@ export function PracticeView({
               })}
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            {/*
+              Full width, not chips: these are definitions ("Órgano que bombea
+              la sangre"), not one-word translations, and they have to stay
+              readable on a phone.
+            */}
+            <div className="flex flex-col gap-2">
               {match.meanings.map((meaning) => {
                 const taken = Object.values(shownPairing).includes(meaning);
                 return (
@@ -407,7 +412,7 @@ export function PracticeView({
                     disabled={matchGraded || reviewing || !activeRow}
                     onClick={() => assignMeaning(meaning)}
                     className={cn(
-                      "rounded-xl border-2 border-ink px-[13px] py-[9px] text-[13.5px] font-semibold",
+                      "rounded-xl border-2 border-ink px-[13px] py-[10px] text-left text-[13px] font-semibold leading-[1.4]",
                       taken
                         ? "bg-canvas text-muted-3 opacity-60 shadow-none"
                         : activeRow

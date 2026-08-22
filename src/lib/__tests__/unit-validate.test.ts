@@ -60,7 +60,12 @@ function matchUp(words: string[]): GeneratedUnit["activities"][number] {
     answerIndex: 0,
     note: "n",
     noteEs: "n",
-    pairs: words.map((text) => ({ en: text, es: `la ${text}` })),
+    // A definition, not `la ${text}` — the translation is what the exercise is
+    // deliberately not asking for.
+    pairs: words.map((text) => ({
+      en: text,
+      es: `Una cosa que sirve para ${text}.`,
+    })),
   };
 }
 
@@ -296,6 +301,30 @@ describe("validateGeneratedUnit", () => {
     const issues = validateGeneratedUnit(draft, { wordCount: 6 });
     expect(hasBlockingIssue(issues)).toBe(true);
     expect(issues.some((i) => i.message.includes("exactly 3"))).toBe(true);
+  });
+
+  it("blocks a match-up that pairs a word with its own translation", () => {
+    const draft = unit(SIX);
+    const match = draft.activities.find((a) => a.type === "MATCH_UP")!;
+    // `word()` builds the translation as "la <text>"; pairing against that is
+    // recognition rather than comprehension.
+    match.pairs = (match.pairs ?? []).map((pair) => ({
+      ...pair,
+      es: `la ${pair.en}`,
+    }));
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("instead of a definition"))).toBe(
+      true,
+    );
+  });
+
+  it("warns about a match-up definition too short to be one", () => {
+    const draft = unit(SIX);
+    const match = draft.activities.find((a) => a.type === "MATCH_UP")!;
+    match.pairs = (match.pairs ?? []).map((pair) => ({ ...pair, es: "algo" }));
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(issues.some((i) => i.message.includes("very short"))).toBe(true);
   });
 
   it("blocks a match-up whose meanings repeat, which makes a pairing ambiguous", () => {

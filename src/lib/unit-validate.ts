@@ -142,6 +142,24 @@ export function validateGeneratedUnit(
           message: "Match-up repeats a Spanish meaning, so a pairing is ambiguous.",
         });
       }
+      for (const pair of pairs) {
+        // Pairing a word with its own translation is recognition, not
+        // comprehension — the learner can solve it without understanding
+        // anything. The exercise is word-to-definition.
+        const entry = unit.words.find((w) => normalize(w.text) === normalize(pair.en));
+        if (entry && normalize(pair.es) === normalize(entry.translation)) {
+          issues.push({
+            level: "error",
+            message: `Match-up pairs "${pair.en}" with its translation ("${pair.es}") instead of a definition.`,
+          });
+        }
+        if (pair.es.trim().split(/\s+/).length < 3) {
+          issues.push({
+            level: "warning",
+            message: `Match-up definition for "${pair.en}" is very short ("${pair.es}"); it should describe the word, not name it.`,
+          });
+        }
+      }
       continue;
     }
     if (a.type === "TYPE_WHAT_YOU_HEAR") {
