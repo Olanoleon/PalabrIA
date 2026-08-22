@@ -273,11 +273,14 @@ async function seedPage(page: Page) {
 
 async function main() {
   const totals = { made: 0, skipped: 0, failed: 0 };
+  /** Area names in the order their pages were processed. */
+  const order: Array<{ slug: string; name: string }> = [];
   for (const [i, file] of files.entries()) {
     if (files.length > 1) {
       console.log(`\n${"─".repeat(72)}\npage ${i + 1}/${files.length}: ${file}\n`);
     }
     const page: Page = JSON.parse(readFileSync(file, "utf8"));
+    order.push({ slug: page.org.slug, name: page.area.name });
     const result = await seedPage(page);
     if (result) {
       totals.made += result.made;
@@ -285,6 +288,41 @@ async function main() {
       totals.failed += result.failed;
     }
   }
+  // Renumber the areas the same way the units are renumbered inside them.
+  //
+  // An area takes its position from the count of areas that already exist, so
+  // a page added out of sequence — page 05 arriving after page 06 is built —
+  // lands after the pages that follow it in the curriculum. Only --all knows
+  // the full running order, so only --all can fix it.
+  if (ALL && !DRY) {
+    const bySlug = new Map<string, string[]>();
+    for (const { slug, name } of order) {
+      bySlug.set(slug, [...(bySlug.get(slug) ?? []), name]);
+    }
+    let moved = 0;
+    for (const [slug, names] of bySlug) {
+      const org = await prisma.organization.findFirst({ where: { slug } });
+      if (!org) continue;
+      const rows = await prisma.area.findMany({
+        where: { orgId: org.id },
+        select: { id: true, name: true, sortOrder: true },
+      });
+      const planned = new Map(names.map((n, i) => [n, i]));
+      const ordered = [...rows].sort(
+        (a, b) =>
+          (planned.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
+            (planned.get(b.name) ?? Number.MAX_SAFE_INTEGER) ||
+          a.sortOrder - b.sortOrder,
+      );
+      for (const [index, row] of ordered.entries()) {
+        if (row.sortOrder === index) continue;
+        await prisma.area.update({ where: { id: row.id }, data: { sortOrder: index } });
+        moved++;
+      }
+    }
+    if (moved) console.log(`\n↻ renumbered ${moved} area(s) into curriculum order`);
+  }
+
   if (files.length > 1 && !DRY) {
     console.log(
       `\n${"═".repeat(72)}\nall pages: ${totals.made} generated, ${totals.skipped} skipped, ${totals.failed} failed.`,

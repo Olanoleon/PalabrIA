@@ -1,0 +1,73 @@
+{
+  "source": "CAMIL GE-V-04 · Page 07 · The Human Body — Second Part",
+  "notes": [
+    "The page's four idiom and example sentences ('We have to nail those boards', 'My blood",
+    "pressure and my blood sugar are OK') are excluded: they are phrases, not lexical items.",
+    "Its own area rather than more units on page 06's: that page is the head, face and torso,",
+    "this one is the limbs, the organs and body fluids. Together they would be thirteen units.",
+    "Three words dropped at Leon's call. 'sleep' glossed as lagaña is the worst of them — that",
+    "sense only works inside the phrase 'sleep in your eyes', while the word overwhelmingly",
+    "means dormir, so a learner meeting it here would take away the wrong meaning. 'gall'",
+    "(bilis) is rare on its own and gall bladder already carries it, and 'spermatozoa' is a",
+    "technical near-duplicate of sperm.",
+    "'bottoms' normalised to 'bottom'; the plural is not standard.",
+    "bottom/buttocks (both nalgas) stay in one unit, as do foot/feet — the same irregular",
+    "plural pairing as tooth/teeth on page 06.",
+    "fingers/toes are both dedos but are deliberately NOT paired. Unlike novio/novia, Spanish",
+    "already separates them by phrase (dedos de la mano / dedos del pie) and the hand-or-foot",
+    "context is physically obvious, so splitting them along the anatomy costs nothing.",
+    "'womb' repeats page 06's 'uterus'. Kept: it is a real register difference, everyday",
+    "against clinical, and the two areas never share an exercise.",
+    "VERY_EASY: an A1/A2 course, still its early pages."
+  ],
+  "org": {
+    "name": "Camil",
+    "slug": "camil"
+  },
+  "area": {
+    "name": "Arms, Legs and Inside the Body",
+    "nameEs": "Brazos, piernas y el interior del cuerpo",
+    "description": "Los brazos y las piernas de la mano al pie, y lo que hay por dentro: los órganos, los huesos y los líquidos del cuerpo.",
+    "iconKey": "body",
+    "tint": "#EDE7F6",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Shoulders and arms",
+      "topic": "The arm from the shoulder down to the elbow, and the word for the limbs as a whole",
+      "words": ["extremities", "shoulder", "arm", "armpit", "forearm", "elbow"]
+    },
+    {
+      "name": "Hands and fingers",
+      "topic": "The hand and its parts, from the wrist to the fingertips, and what a hand does when it closes",
+      "words": ["joint", "wrist", "hand", "fist", "fingers", "nails", "knuckles"]
+    },
+    {
+      "name": "Hips and legs",
+      "topic": "From the waist down to the calf: where the leg meets the body and the parts above the ankle. 'bottom' and 'buttocks' are both nalgas and the unit should make the difference in register clear",
+      "words": ["hip", "waist", "bottom", "buttocks", "thigh", "knee", "calf"]
+    },
+    {
+      "name": "Feet, muscles and bones",
+      "topic": "The foot and its parts, and what the whole body is built from underneath. 'foot' and 'feet' are the singular and the irregular plural of the same word, and the unit should make that pairing visible",
+      "words": ["leg", "foot", "feet", "toes", "ankles", "heels", "muscles", "bones", "skin"]
+    },
+    {
+      "name": "Heart, lungs and blood",
+      "topic": "The organs that move blood and air around the body, and the vessels that carry blood away from and back to the heart",
+      "words": ["internal organs", "heart", "lungs", "artery", "vein", "spleen"]
+    },
+    {
+      "name": "Digestion and the organs below",
+      "topic": "The organs that process food and waste, and the reproductive organ. 'bladder' holds urine while 'gall bladder' stores bile — both are in this unit and must be described so they cannot be confused",
+      "words": ["stomach", "intestines", "colon", "liver", "gall bladder", "pancreas", "kidneys", "bladder", "womb"]
+    },
+    {
+      "name": "Body fluids",
+      "topic": "What the body produces: what runs in the veins, what the eyes and mouth make, and what the body gets rid of. Described plainly, as a biology class would",
+      "words": ["body fluids", "blood", "urine", "sperm", "saliva", "tears", "boogers"]
+    }
+  ]
+}

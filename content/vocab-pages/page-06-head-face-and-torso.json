@@ -1,0 +1,67 @@
+{
+  "source": "CAMIL GE-V-03 · Page 06 · The Human Body — First Part",
+  "notes": [
+    "The page's four idiom and example sentences ('I have it on the tip of my tongue') are",
+    "excluded: they are phrases, not lexical items.",
+    "Split from the second part into its own area. Page 06 is the head, face and torso; page",
+    "07 is the limbs, the internal organs and body fluids. One 'Human Body' area holding both",
+    "would be thirteen units long.",
+    "Section labels are kept as vocabulary — 'head', 'marks' and 'trunk' each carry their own",
+    "IPA and Spanish on the page, exactly like 'subjects' on page 04.",
+    "chest/breast are both 'pecho' and stay in one unit: the learner's difficulty is one",
+    "Spanish word splitting into two English ones.",
+    "tooth/teeth stay together too, for a different reason — it is a high-value irregular",
+    "plural, and side by side is the only way the app can show that.",
+    "Two definitions pinned where the English is ambiguous and the Spanish is not: 'gum' is",
+    "the tissue around the teeth (encía), not chewing gum; 'spot' is a mark on the skin",
+    "(mancha), since British 'spot' means pimple and would collide with 'pimple' beside it.",
+    "'marks' also appears in The School as notas. Different sense, different area, and no",
+    "exercise can span two areas, so the two never meet.",
+    "VERY_EASY: an A1/A2 course, still its early pages."
+  ],
+  "org": {
+    "name": "Camil",
+    "slug": "camil"
+  },
+  "area": {
+    "name": "Head, Face and Torso",
+    "nameEs": "La cabeza, la cara y el tronco",
+    "description": "El cuerpo por fuera, de la cabeza a la cintura: la cara y la boca, las marcas de la piel, el cuello y el tronco.",
+    "iconKey": "body",
+    "tint": "#E9F3F7",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "The head",
+      "topic": "The head seen from outside and the parts under it: what covers it, what is at the front, and what you breathe through",
+      "words": ["head", "skull", "brain", "hair", "forehead", "face", "nose", "nostrils"]
+    },
+    {
+      "name": "The face",
+      "topic": "The features of a face: the eyes and the small parts around them, the ear, and the lower face including facial hair",
+      "words": ["eyes", "eyelash", "eyelid", "eyebrow", "ear", "cheek", "chin", "jaw", "mustache", "beard"]
+    },
+    {
+      "name": "The mouth",
+      "topic": "Inside the mouth. 'gum' here is the pink tissue that holds the teeth (encía), never chewing gum. 'tooth' and 'teeth' are the singular and the irregular plural of the same word, and the unit should make that pairing visible",
+      "words": ["mouth", "lips", "tongue", "tooth", "teeth", "gum", "tonsils"]
+    },
+    {
+      "name": "Skin marks",
+      "topic": "Marks that appear on skin, from birth, from age or from an injury. 'spot' here is a patch of discoloured skin (mancha), not a pimple — 'pimple' is in the same unit and they must not be described the same way",
+      "words": ["marks", "scar", "mole", "freckles", "spot", "pimple", "wrinkle", "dimple", "bump"]
+    },
+    {
+      "name": "The neck and trunk",
+      "topic": "From the neck down to the ribs: the front and the back of the torso and the bones inside it. 'chest' and 'breast' are both pecho in Spanish and the unit should make the difference clear",
+      "words": ["trunk", "neck", "throat", "chest", "breast", "nipple", "back", "spine", "ribs"]
+    },
+    {
+      "name": "The abdomen and reproductive organs",
+      "topic": "The lower body and the reproductive anatomy, described plainly and clinically as a biology class would",
+      "words": ["abdomen", "penis", "testicles", "vagina", "ovary", "fallopian tubes", "uterus", "anus"]
+    }
+  ]
+}
