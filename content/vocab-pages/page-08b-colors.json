@@ -1,0 +1,35 @@
+{
+  "source": "CAMIL GE-V-04 · Page 08 · Health and Colors (colours half)",
+  "notes": [
+    "The second half of page 08, split off: colours and health share a page and nothing else.",
+    "'BLOND(E)' normalised to 'blond'. 'GREY' normalised to 'gray' — the page uses American",
+    "spelling everywhere else, including 'colors' in its own title.",
+    "violet/purple are the violeta/morado pair and stay in one unit.",
+    "'mourning' is not a colour, but the page groups it with black and it is genuinely useful.",
+    "Note for later pages: 'mourning' and 'morning' are homophones. They are in different",
+    "areas so no exercise can mix them, but a time-and-date page should not reuse this word.",
+    "VERY_EASY: an A1/A2 course, still its early pages."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Colors",
+    "nameEs": "Los colores",
+    "description": "Los colores que usas todos los días, los tonos claros y oscuros, y el color del pelo.",
+    "iconKey": "sparkle",
+    "tint": "#FFF4CC",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Basic colors",
+      "topic": "The colours a learner needs first, the ones on a flag or a traffic light",
+      "words": ["white", "black", "red", "yellow", "orange", "blue", "green", "brown"]
+    },
+    {
+      "name": "More colors, light and dark",
+      "topic": "The rest of the colours, the words that make a colour lighter or darker, the word for fair hair, and what wearing black means. 'violet' and 'purple' are both close to morado and the unit should distinguish them",
+      "words": ["pink", "violet", "purple", "gray", "light", "dark", "blond", "mourning"]
+    }
+  ]
+}

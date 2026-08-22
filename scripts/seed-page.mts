@@ -69,6 +69,17 @@ type Page = {
      * ramp: the vocabulary stays as useful, the intro paragraph gets harder.
      */
     difficulty?: Difficulty;
+    /**
+     * Appended verbatim to the unit's intro paragraph, in both languages.
+     *
+     * For anything the learner must be told exactly. Asking the model for it
+     * in the topic does not work: the A1 brief caps the paragraph at 60-90
+     * words and the prompt pushes it to spend them on the unit's own words, so
+     * an instruction competing for that space is quietly dropped. Words a
+     * learner should recognise but never say belong here — never in the word
+     * list, where every exercise would drill them into production.
+     */
+    paragraphNote?: { en: string; es: string };
   }>;
 };
 
@@ -192,6 +203,10 @@ async function seedPage(page: Page) {
         // every unit after the area, so the area screen reads as eight copies
         // of the same heading.
         draft.title = spec.name;
+        if (spec.paragraphNote) {
+          draft.introParagraph = `${draft.introParagraph} ${spec.paragraphNote.en}`;
+          draft.introParagraphEs = `${draft.introParagraphEs} ${spec.paragraphNote.es}`;
+        }
 
         // A large unit tempts the model over the item budget. Trim the surplus
         // instead of throwing away a draft that is otherwise good.

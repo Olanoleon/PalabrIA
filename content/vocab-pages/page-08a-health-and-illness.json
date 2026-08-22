@@ -1,0 +1,114 @@
+{
+  "source": "CAMIL GE-V-04 · Page 08 · Health and Colors (health half)",
+  "notes": [
+    "Page 08 carries two unrelated topics; health and colours are separate areas.",
+    "The page's six example sentences ('Doctor, I need to book an appointment') are excluded.",
+    "Four words dropped as harmful in current English: 'cripple' is a slur, 'handicapped' is",
+    "dated and avoided in favour of 'disabled', 'maimed' describes an injury rather than a",
+    "person, and 'hunchback' is a caricature. A learner who repeats them in an English-speaking",
+    "workplace damages their own standing, which is the opposite of what this course is for.",
+    "They are NOT taught as a unit. Every exercise type here makes the learner produce the",
+    "word — fill-in-the-blank hands them the sentence and waits for it, dictation has them",
+    "them as words to recognise and never use, which is prose and can carry the judgement",
+    "alongside the word.",
+    "Two more dropped on other grounds: 'hunch' glossed as joroba, when the page's own example",
+    "sentence uses the common sense (presentimiento) — the same trap as 'sleep'/lagaña on page",
+    "07; and 'ailment', formal and the fourth word on the page meaning enfermedad.",
+    "'mute', 'cross-eyed' and 'one-eyed' are kept: dated rather than offensive.",
+    "sick/ill (enfermo, US against British) and ache/pain (dolor) are collision pairs and stay",
+    "in one unit each.",
+    "VERY_EASY: an A1/A2 course, still its early pages.",
+    "The warning is appended to the paragraph by the seeder, not written by the model. Asked for it in the topic, the model dropped it silently: the A1 brief caps the paragraph at 60-90 words and spends them on the unit's own words."
+  ],
+  "org": {
+    "name": "Camil",
+    "slug": "camil"
+  },
+  "area": {
+    "name": "Health and Illness",
+    "nameEs": "La salud y la enfermedad",
+    "description": "Hablar de cómo te sientes: estar sano o enfermo, los dolores y los síntomas, y qué encuentras en un hospital.",
+    "iconKey": "sparkle",
+    "tint": "#E3F0E8",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Health and illness",
+      "topic": "Being well and being unwell. 'sick' and 'ill' both translate as enfermo — one is American, one British — and 'sickness', 'illness' and 'disease' are all enfermedad with real differences: a disease is a named medical condition, an illness is the state of being unwell, sickness leans towards nausea. The unit should make those differences clear",
+      "words": [
+        "health",
+        "healthy",
+        "weak",
+        "strong",
+        "sick",
+        "ill",
+        "sickness",
+        "illness",
+        "disease"
+      ]
+    },
+    {
+      "name": "Aches and pains",
+      "topic": "Saying where it hurts. 'ache' and 'pain' are both dolor and the unit should distinguish them: an ache is dull and lasting, a pain is sharper. The compound aches name the body part that hurts",
+      "words": [
+        "ache",
+        "pain",
+        "sore",
+        "headache",
+        "toothache",
+        "backache",
+        "sore throat",
+        "stomach-ache"
+      ]
+    },
+    {
+      "name": "Symptoms and remedies",
+      "topic": "What you tell a doctor you are feeling, and the first thing you reach for",
+      "words": [
+        "symptoms",
+        "fever",
+        "temperature",
+        "cold",
+        "nausea",
+        "dizzy",
+        "vomit",
+        "pills"
+      ]
+    },
+    {
+      "name": "Sight, hearing and mobility",
+      "topic": "The respectful, current English for disability: the words for not seeing, not hearing, not speaking and not being able to move, and the correct general word.",
+      "words": [
+        "blind",
+        "deaf",
+        "mute",
+        "cross-eyed",
+        "one-eyed",
+        "blurred vision",
+        "paralyzed",
+        "disabled"
+      ],
+      "paragraphNote": {
+        "en": "You will sometimes hear the words \"cripple\", \"handicapped\" and \"maimed\". These words hurt people. Do not use them. Say \"disabled\".",
+        "es": "A veces vas a escuchar las palabras «cripple», «handicapped» y «maimed». Estas palabras ofenden. No las uses. Di «disabled»."
+      }
+    },
+    {
+      "name": "At the hospital",
+      "topic": "Where you go when you are ill and who you meet there, from the ambulance to the ward",
+      "words": [
+        "hospital",
+        "ward",
+        "emergency",
+        "ambulance",
+        "doctor",
+        "nurse",
+        "patient",
+        "syringe",
+        "injection"
+      ]
+    }
+  ]
+}

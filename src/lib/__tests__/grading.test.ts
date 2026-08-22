@@ -197,3 +197,31 @@ describe("hyphenated entries", () => {
     expect(sameSpelling("inlaw", "in-laws")).toBe(false);
   });
 });
+
+/**
+ * An apostrophe is not a separator.
+ *
+ * "Valentine's Day" is two words, one of which contains a mark the keypad
+ * cannot produce. Dropping the mark lets the learner type "valentines day" as
+ * two groups; splitting on it would draw "Valentine" and "s" as separate
+ * groups, which is not how the word looks. Word processors emit both the
+ * straight and the curly form, so both have to go.
+ */
+describe("apostrophes", () => {
+  it("drops the apostrophe instead of splitting on it", () => {
+    expect(segmentsOf("Valentine's Day")).toEqual([10, 3]);
+    expect(segmentsOf("Mother's Day")).toEqual([7, 3]);
+    expect(segmentsOf("Valentine’s Day")).toEqual([10, 3]);
+  });
+
+  it("still counts the entry as two parts, so dictation stays allowed", () => {
+    expect(wordCountOf("Valentine's Day")).toBe(2);
+    expect(wordCountOf("Mother’s Day")).toBe(2);
+  });
+
+  it("grades an answer typed without the apostrophe", () => {
+    expect(sameSpelling("valentinesday", "Valentine's Day")).toBe(true);
+    expect(sameSpelling("mothersday", "Mother’s Day")).toBe(true);
+    expect(sameSpelling("mothers day", "Mother's Day")).toBe(true);
+  });
+});
