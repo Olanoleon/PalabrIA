@@ -1,8 +1,9 @@
 /**
  * Builds one area from an institution's vocabulary page.
  *
- *   npm run seed:page -- --page content/vocab-pages/family-and-relationships.json --dry
- *   npm run seed:page -- --page content/vocab-pages/family-and-relationships.json
+ *   npm run seed:page -- --all --dry        # every page, nothing written
+ *   npm run seed:page -- --all               # every page, in curriculum order
+ *   npm run seed:page -- --page content/vocab-pages/page-03-family.json
  *
  * The page file carries the vocabulary a real curriculum already teaches; the
  * model supplies everything around it — IPA, definitions, examples, activities
@@ -14,11 +15,19 @@
  *
  * Creates the organization and the area if they do not exist, and skips any
  * unit already generated, so an interrupted run resumes rather than
- * duplicating. Writes to whatever DATABASE_URL/DIRECT_URL point at — check
- * both before aiming this at anything real.
+ * duplicating — and so `--all` can be re-run after adding a page without
+ * paying for the ones already built.
+ *
+ * Pages are processed in filename order, which is why they are numbered: an
+ * area's position in the learner's path is its creation order.
+ *
+ * Writes to whatever DATABASE_URL/DIRECT_URL point at. Prisma reads
+ * `directUrl`, not `url`, so changing only DATABASE_URL leaves this pointed
+ * somewhere you did not intend — change both.
  */
 import "dotenv/config";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { PrismaClient } from "../src/generated/prisma";
 import { generateUnit, GenerationError } from "../src/lib/openai";
 import { persistGeneratedUnit } from "../src/lib/unit-persist";
@@ -33,8 +42,10 @@ function arg(name: string, fallback?: string) {
 }
 
 const PAGE = arg("page");
+const ALL = process.argv.includes("--all");
 const DRY = process.argv.includes("--dry");
 const MODEL = arg("model");
+const PAGES_DIR = "content/vocab-pages";
 
 type Page = {
   source: string;
@@ -51,14 +62,24 @@ type Page = {
   units: Array<{ name: string; topic: string; words: string[] }>;
 };
 
-if (!PAGE) {
-  console.error("Pass --page <file.json>. See content/vocab-pages/.");
+if (!PAGE && !ALL) {
+  console.error(`Pass --page <file.json>, or --all for everything in ${PAGES_DIR}.`);
   process.exit(1);
 }
 
-const page: Page = JSON.parse(readFileSync(PAGE, "utf8"));
+const files = PAGE
+  ? [PAGE]
+  : readdirSync(PAGES_DIR)
+      .filter((f) => f.endsWith(".json"))
+      .sort()
+      .map((f) => join(PAGES_DIR, f));
 
-async function main() {
+if (!files.length) {
+  console.error(`No page files in ${PAGES_DIR}.`);
+  process.exit(1);
+}
+
+async function seedPage(page: Page) {
   const settings = await prisma.platformSettings.findUnique({ where: { id: 1 } });
   const model = MODEL ?? settings?.openaiModel ?? "gpt-5.6-luna";
   const totalWords = page.units.reduce((n, u) => n + u.words.length, 0);
@@ -201,7 +222,29 @@ async function main() {
   console.log(
     `\n${made} unit(s) generated, ${skipped} skipped, ${failed} failed, in ${((Date.now() - started) / 1000 / 60).toFixed(1)} min.`,
   );
-  if (failed) process.exitCode = 1;
+  return { made, skipped, failed };
+}
+
+async function main() {
+  const totals = { made: 0, skipped: 0, failed: 0 };
+  for (const [i, file] of files.entries()) {
+    if (files.length > 1) {
+      console.log(`\n${"─".repeat(72)}\npage ${i + 1}/${files.length}: ${file}\n`);
+    }
+    const page: Page = JSON.parse(readFileSync(file, "utf8"));
+    const result = await seedPage(page);
+    if (result) {
+      totals.made += result.made;
+      totals.skipped += result.skipped;
+      totals.failed += result.failed;
+    }
+  }
+  if (files.length > 1 && !DRY) {
+    console.log(
+      `\n${"═".repeat(72)}\nall pages: ${totals.made} generated, ${totals.skipped} skipped, ${totals.failed} failed.`,
+    );
+  }
+  if (totals.failed) process.exitCode = 1;
 }
 
 main()
