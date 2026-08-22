@@ -15,7 +15,8 @@
     "Unit 6 holds all twelve subject names on purpose, so the learner sees why they belong",
     "together. At twelve words it is the largest a unit may be, and the eleven-item session",
     "cap means one subject will not get its own question — the match-up and the singles",
-    "between them still practise eleven of the twelve."
+    "between them still practise eleven of the twelve.",
+    "VERY_EASY: this is an A1/A2 course and these are its first pages. Difficulty sets the CEFR level and length of the intro paragraph, not the vocabulary — and it also sets what the unit pays in XP, so a harder unit later is worth more."
   ],
   "org": {
     "name": "Camil",
@@ -27,34 +28,74 @@
     "description": "El colegio por dentro: el salón y sus muebles, lo que llevas en el morral, los exámenes y las materias que estudias.",
     "iconKey": "sparkle",
     "tint": "#E4ECF7",
-    "difficulty": "EASY",
+    "difficulty": "VERY_EASY",
     "visible": true
   },
   "units": [
     {
       "name": "Places and people at school",
       "topic": "Where you study and who is there: the school itself, the places you go on to after it, and the people in a classroom",
-      "words": ["school", "college", "university", "teacher", "student", "classroom", "lockers"]
+      "words": [
+        "school",
+        "college",
+        "university",
+        "teacher",
+        "student",
+        "classroom",
+        "lockers"
+      ]
     },
     {
       "name": "The classroom",
       "topic": "What is on the walls of a classroom and the furniture in it: the different kinds of board, the map, and where you sit",
-      "words": ["board", "blackboard", "bulletin board", "billboard", "map", "desk", "chair", "drawer"]
+      "words": [
+        "board",
+        "blackboard",
+        "bulletin board",
+        "billboard",
+        "map",
+        "desk",
+        "chair",
+        "drawer"
+      ]
     },
     {
       "name": "Things you write with",
       "topic": "What you write with and on: pens, pencils, what corrects a mistake, and the paper it goes on",
-      "words": ["chalk", "pen", "pencil", "eraser", "sharpener", "ink", "paper", "notebook"]
+      "words": [
+        "chalk",
+        "pen",
+        "pencil",
+        "eraser",
+        "sharpener",
+        "ink",
+        "paper",
+        "notebook"
+      ]
     },
     {
       "name": "Books, tools and your backpack",
       "topic": "What a student carries and the tools for measuring and drawing. 'compass' here is the geometry instrument for drawing circles, not the one that points north; 'paper clip' is the small metal clip that holds sheets together",
-      "words": ["book", "paper clip", "thumbtack", "ruler", "compass", "backpack"]
+      "words": [
+        "book",
+        "paper clip",
+        "thumbtack",
+        "ruler",
+        "compass",
+        "backpack"
+      ]
     },
     {
       "name": "The school day, tests and grades",
       "topic": "How the school day is marked and how work is judged: the bell, the words for an assessment, and the words for the result",
-      "words": ["bell", "subjects", "test", "exam", "grades", "marks"]
+      "words": [
+        "bell",
+        "subjects",
+        "test",
+        "exam",
+        "grades",
+        "marks"
+      ]
     },
     {
       "name": "School subjects",

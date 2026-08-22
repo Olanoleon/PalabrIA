@@ -60,7 +60,16 @@ type Page = {
     difficulty: Difficulty;
     visible: boolean;
   };
-  units: Array<{ name: string; topic: string; words: string[] }>;
+  units: Array<{
+    name: string;
+    topic: string;
+    words: string[];
+    /**
+     * Overrides the area's difficulty for this unit alone, so a course can
+     * ramp: the vocabulary stays as useful, the intro paragraph gets harder.
+     */
+    difficulty?: Difficulty;
+  }>;
 };
 
 if (!PAGE && !ALL) {
@@ -91,7 +100,8 @@ async function seedPage(page: Page) {
   console.log(`model:  ${model}`);
   console.log(`plan:   ${page.units.length} units, ${totalWords} words\n`);
   for (const [i, unit] of page.units.entries()) {
-    console.log(`  ${String(i + 1).padStart(2)}. ${unit.name}`);
+    const level = unit.difficulty ?? page.area.difficulty;
+    console.log(`  ${String(i + 1).padStart(2)}. ${unit.name}  [${level}]`);
     console.log(`      ${String(unit.words.length).padStart(2)} words  ${unit.words.join(", ")}`);
   }
 
@@ -162,9 +172,10 @@ async function seedPage(page: Page) {
       continue;
     }
 
+    const difficulty = spec.difficulty ?? page.area.difficulty;
     const input = {
       wordCount: spec.words.length,
-      difficulty: page.area.difficulty,
+      difficulty,
       topic: spec.topic,
       wordList: spec.words,
       areaName: page.area.name,
@@ -195,7 +206,7 @@ async function seedPage(page: Page) {
         });
 
         const written = await persistGeneratedUnit(area.id, fitted, {
-          difficulty: page.area.difficulty,
+          difficulty,
           visible: page.area.visible,
           generationInput: input,
           edited: false,

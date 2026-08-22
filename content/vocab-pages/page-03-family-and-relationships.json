@@ -13,7 +13,8 @@
     "boyfriend/groom and girlfriend/bride are both novio/novia, godfather/best man and",
     "godmother/maid of honor are both padrino/madrina. The learner's difficulty is the",
     "mapping, so the unit is built to be about the distinction rather than to avoid it.",
-    "Unit names come from this file, not the model: left to itself it titles every unit after the area, so a learner scrolling the area sees the same heading eight times."
+    "Unit names come from this file, not the model: left to itself it titles every unit after the area, so a learner scrolling the area sees the same heading eight times.",
+    "VERY_EASY: this is an A1/A2 course and these are its first pages. Difficulty sets the CEFR level and length of the intro paragraph, not the vocabulary — and it also sets what the unit pays in XP, so a harder unit later is worth more."
   ],
   "org": {
     "name": "Camil",
@@ -25,7 +26,7 @@
     "description": "Cómo se llaman las personas de tu familia y de tu vida: de los padres y hermanos a los suegros, los padrinos y la pareja.",
     "iconKey": "sparkle",
     "tint": "#FBE7E3",
-    "difficulty": "EASY",
+    "difficulty": "VERY_EASY",
     "visible": true
   },
   "units": [

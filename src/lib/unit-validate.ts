@@ -175,13 +175,17 @@ export function validateGeneratedUnit(
       // The keypad has no space key, but it does not need one: the slots are
       // drawn as one group per word and the learner types letters only. Two
       // words fit on a phone; three run off the edge.
-      // 14 letters is about four rows of slots plus the keypad on a phone.
-      // Longer is still answerable, just cramped — a warning, not a block,
-      // since a small unit may have nothing shorter to offer.
+      // Past 14 letters the slots wrap to a third row and crowd out the
+      // keypad. This was a warning first, on the theory that a small unit
+      // might have nothing shorter — but the model kept reaching for
+      // "great-grandfather" in a unit where every other word was shorter, and
+      // a preference it ignores is not a rule. Blocking costs a retry; a unit
+      // with genuinely nothing shorter loses its dictation, which is only a
+      // missing-kind warning.
       if (lettersOnly(a.word).length > 14) {
         issues.push({
-          level: "warning",
-          message: `"Type what you hear" for "${a.word}" is ${lettersOnly(a.word).length} letters; the slots will wrap on a phone.`,
+          level: "error",
+          message: `"Type what you hear" cannot use "${a.word}": ${lettersOnly(a.word).length} letters overflows the slots on a phone. Choose a shorter word.`,
         });
       }
       if (wordCountOf(a.word) > 2) {

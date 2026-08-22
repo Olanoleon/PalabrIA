@@ -294,6 +294,22 @@ describe("validateGeneratedUnit", () => {
     );
   });
 
+  it("blocks a dictation whose answer overflows the slots on a phone", () => {
+    const draft = unit([...SIX.slice(0, 5), "great-grandfather"]);
+    draft.activities[2] = activity("great-grandfather", "TYPE_WHAT_YOU_HEAR");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("overflows the slots"))).toBe(true);
+  });
+
+  it("allows a dictation right up to the limit", () => {
+    // 13 letters wraps to two rows, which is fine.
+    const draft = unit([...SIX.slice(0, 5), "granddaughter"]);
+    draft.activities[2] = activity("granddaughter", "TYPE_WHAT_YOU_HEAR");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(false);
+  });
+
   it("blocks a phonetic exercise on a word that sounds like another in the unit", () => {
     // The real case: CAMIL's family page teaches "fiance" and "fiancee", which
     // share /ˌfiːɑːnˈseɪ/. Neither can be heard apart from the other.
