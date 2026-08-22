@@ -30,10 +30,17 @@ export function CardsMode({
   words,
   lang,
   onSeen,
+  hint = false,
 }: {
   words: Word[];
   lang: Lang;
   onSeen: () => void;
+  /**
+   * Whether the flip hint should run at all. Driven by the learner's persisted
+   * onboarding state, so it plays on the first unit they ever open and never
+   * again — it used to be per-mount, and so replayed forever.
+   */
+  hint?: boolean;
 }) {
   const d = t(lang);
   const [index, setIndex] = useState(0);
@@ -210,7 +217,9 @@ export function CardsMode({
         <div
           className={cn(
             "size-full [transform-style:preserve-3d]",
-            !everFlipped && "[animation:flip-hint_4.2s_ease-in-out_infinite]",
+            hint &&
+              !everFlipped &&
+              "[animation:flip-hint_2.4s_ease-in-out_infinite]",
           )}
         >
         <div

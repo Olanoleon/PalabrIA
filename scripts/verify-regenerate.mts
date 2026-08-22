@@ -37,10 +37,29 @@ function draft(words: string[], title: string): GeneratedUnit {
       exampleSentence: `This is a ${text}.`,
       exampleSentenceEs: `Esto es un ${text}.`,
     })),
+    // One activity per word, plus the mandatory match-up over the last three.
+    // Anything thinner is now rejected by the 70% coverage rule before it
+    // reaches the database.
     activities: [
-      { type: "FILL_BLANK", word: words[0], prompt: "p", promptEs: "p", sentence: "A ______ here.", options: [words[0], words[1], words[2], words[3]], answerIndex: 0, note: "n", noteEs: "n" },
-      { type: "IPA_MATCH", word: words[1], prompt: "p", promptEs: "p", sentence: null, options: [`/${words[1]}/`, "/x/", "/y/", "/z/"], answerIndex: 0, note: "n", noteEs: "n" },
-      { type: "TYPE_WHAT_YOU_HEAR", word: words[2], prompt: "p", promptEs: "p", sentence: null, options: [], answerIndex: 0, note: "n", noteEs: "n" },
+      ...words.slice(0, -3).map((text, i) =>
+        i % 3 === 1
+          ? { type: "IPA_MATCH" as const, word: text, prompt: "p", promptEs: "p", sentence: null, options: [`/${text}/`, "/x/", "/y/", "/z/"], answerIndex: 0, note: "n", noteEs: "n", pairs: null }
+          : i % 3 === 2
+            ? { type: "TYPE_WHAT_YOU_HEAR" as const, word: text, prompt: "p", promptEs: "p", sentence: null, options: [], answerIndex: 0, note: "n", noteEs: "n", pairs: null }
+            : { type: "FILL_BLANK" as const, word: text, prompt: "p", promptEs: "p", sentence: "A ______ here.", options: [text, "x", "y", "z"], answerIndex: 0, note: "n", noteEs: "n", pairs: null },
+      ),
+      {
+        type: "MATCH_UP" as const,
+        word: words[words.length - 3],
+        prompt: "p",
+        promptEs: "p",
+        sentence: null,
+        options: [],
+        answerIndex: 0,
+        note: "n",
+        noteEs: "n",
+        pairs: words.slice(-3).map((text) => ({ en: text, es: `la ${text}` })),
+      },
     ],
   };
 }
@@ -124,7 +143,8 @@ const wordsBefore = (
   await prisma.word.findMany({ where: { unitId }, orderBy: { sortOrder: "asc" } })
 ).map((w) => w.text);
 check("starting words", wordsBefore, ["alpha", "bravo", "charlie", "delta"]);
-check("starting attempt history", await prisma.activityAttempt.count({ where: { learnerId } }), 3);
+// Four rows, not three: one single plus the match-up's three pairings.
+check("starting attempt history", await prisma.activityAttempt.count({ where: { learnerId } }), 4);
 check("starting XP ledger rows", await prisma.xpLedger.count({ where: { learnerId } }), 3);
 check("starting badges", await prisma.learnerBadge.count({ where: { learnerId } }), dictationBadge ? 1 : 0);
 
@@ -144,7 +164,8 @@ const after = await prisma.unit.findUniqueOrThrow({
 check("same unit row", after.id, unitId);
 check("content replaced", after.words.map((w) => w.text), ["echo", "foxtrot", "golf", "hotel", "india"]);
 check("no orphan words left behind", after.words.length, 5);
-check("activities replaced, not appended", after.activities.length, 3);
+// Five words: two singles plus the match-up expanded into three rows.
+check("activities replaced, not appended", after.activities.length, 5);
 check("name updated", after.name, "Replaced Content");
 check("wordCount updated", after.wordCount, 5);
 check("difficulty updated", after.difficulty, "EASY");

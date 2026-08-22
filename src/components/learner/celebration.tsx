@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { t, type Lang } from "@/lib/i18n";
 import { TrophyIcon, FlameIcon, BoardIcon } from "@/components/ui/icons";
+import { confettiPieces } from "@/lib/confetti";
 import { levelFromXp } from "@/lib/xp";
 
 export type Celebration =
@@ -11,12 +12,26 @@ export type Celebration =
   | { kind: "level-up"; level: number; totalXp: number };
 
 /**
- * Full-screen moments that explain the gamification.
+ * The moments that explain the gamification, over the result rather than
+ * instead of it.
  *
- * Shown one at a time and dismissed by tapping: a learner who has just earned
- * their first XP and levelled up in the same run sees the explanation first,
- * then the celebration, rather than both competing for the same screen.
+ * These used to sit behind a flat `ink/70` scrim with the card centred, which
+ * hid the score ring completely and read as a different screen. Now the ground
+ * darkens towards the edges and the card arrives as a sheet from the bottom, so
+ * the result the learner just earned stays in view behind the celebration.
+ *
+ * Shown one at a time: a learner who earns their first XP and levels up in the
+ * same run gets the explanation first, then the celebration.
  */
+
+/** Volleys across the upper half, where the scrim is clearest. */
+const ORIGINS = [
+  { x: 26, y: 24 },
+  { x: 52, y: 15 },
+  { x: 76, y: 27 },
+  { x: 40, y: 34 },
+];
+
 export function Celebrations({
   queue,
   lang,
@@ -27,24 +42,68 @@ export function Celebrations({
   onDone?: () => void;
 }) {
   const [shown, setShown] = useState(0);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const current = queue[shown];
-  if (!current) return null;
 
-  const d = t(lang);
-  const next = () => {
+  const next = useCallback(() => {
     if (shown + 1 >= queue.length) onDone?.();
     setShown((n) => n + 1);
-  };
+  }, [shown, queue.length, onDone]);
+
+  useEffect(() => {
+    if (!current) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") next();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [current, next]);
+
+  useEffect(() => {
+    buttonRef.current?.focus();
+  }, [shown]);
+
+  // Keyed to the position in the queue so the second celebration gets its own
+  // volley rather than replaying the first one's.
+  const pieces = useMemo(
+    () =>
+      current
+        ? confettiPieces({
+            seed: `${current.kind}:${shown}`,
+            count: 60,
+            origins: ORIGINS,
+            spread: [90, 210],
+            delay: [0, 620],
+          })
+        : [],
+    [current, shown],
+  );
+
+  if (!current) return null;
+  const d = t(lang);
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       onClick={next}
-      className="fixed inset-0 z-100 flex items-center justify-center bg-ink/70 px-6 [animation:overlay-in_220ms_ease-out]"
+      className="fixed inset-0 z-100 flex items-end justify-center px-6 pb-6 [animation:overlay-in_220ms_ease-out]"
+      style={{
+        // Mid-focus: clear over the score ring, closing to near-opaque at the
+        // bezel so the eye is pulled inward instead of walled off.
+        background:
+          "radial-gradient(ellipse 78% 52% at 50% 36%, rgba(27,22,17,0.08) 0%, rgba(27,22,17,0.34) 58%, rgba(27,22,17,0.74) 100%)",
+        backdropFilter: "blur(2px)",
+      }}
     >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {pieces.map((piece) => (
+          <div key={piece.id} style={piece.style as React.CSSProperties} />
+        ))}
+      </div>
+
       <div
-        className="w-full max-w-[340px] rounded-[26px] border-2 border-ink bg-paper p-6 text-center flat-3 [animation:panel-in_420ms_cubic-bezier(.2,.9,.3,1.2)]"
+        className="relative w-full max-w-[340px] rounded-[26px] border-2 border-ink bg-paper p-6 text-center flat-3 [animation:panel-in_420ms_cubic-bezier(.2,.9,.3,1.2)]"
         onClick={(event) => event.stopPropagation()}
       >
         {current.kind === "first-xp" ? (
@@ -54,6 +113,7 @@ export function Celebrations({
         )}
 
         <button
+          ref={buttonRef}
           type="button"
           onClick={next}
           className="press mt-5 w-full rounded-2xl border-2 border-ink bg-brand py-[13px] font-display text-[16px] font-bold text-brand-ink hard-2"

@@ -11,5 +11,11 @@ export default async function UnitPage({ params }: PageProps<"/unit/[unitId]">) 
   // than shown content the path has not opened yet.
   if (unit.locked) redirect(`/area/${unit.areaId}`);
 
-  return <UnitView unit={unit} lang={lang} />;
+  return (
+    <UnitView
+      unit={unit}
+      lang={lang}
+      onboardingSteps={learner.onboardingSteps}
+    />
+  );
 }

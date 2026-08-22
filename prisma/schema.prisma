@@ -66,6 +66,7 @@ enum ActivityType {
   FILL_BLANK
   IPA_MATCH
   TYPE_WHAT_YOU_HEAR
+  MATCH_UP
 }
 
 enum XpReason {
@@ -163,6 +164,17 @@ model Learner {
   streakCount    Int       @default(0)
   streakLastDay  String?   // YYYY-MM-DD in the learner's own timezone
   lastActiveAt   DateTime?
+
+  /**
+   * First-run coach-marks the learner has already dismissed, by step key.
+   *
+   * On the record rather than in localStorage so the tutorial follows the
+   * learner to a second device and, more importantly, does not carry over
+   * between two learners sharing one phone. Keys are defined in
+   * `src/lib/onboarding.ts`; an unknown key here is ignored, so a retired
+   * step needs no migration.
+   */
+  onboardingSteps String[] @default([])
 
   billingStatus      BillingStatus @default(TRIAL)
   paidThrough        DateTime?
@@ -338,9 +350,21 @@ model Activity {
   mono        Boolean      @default(false)
   sortOrder   Int          @default(0)
 
+  /**
+   * Ties the rows of one match-up together.
+   *
+   * A match-up is three pairings, so it is stored as three ordinary rows —
+   * each with its own real `wordId`, its own options and its own answer. That
+   * keeps grading, coverage counting and partial credit working with no
+   * special cases; the only thing the runtime adds is drawing rows that share
+   * a group on a single screen. Null for every other type.
+   */
+  matchGroup  String?
+
   attempts ActivityAttempt[]
 
   @@index([unitId, sortOrder])
+  @@index([matchGroup])
 }
 
 // ── Progress & gamification ─────────────────────────────────────────────────

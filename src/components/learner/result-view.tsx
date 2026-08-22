@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { t, type Lang } from "@/lib/i18n";
@@ -9,55 +9,9 @@ import {
   Celebrations,
   type Celebration,
 } from "@/components/learner/celebration";
+import { confettiPieces } from "@/lib/confetti";
 import { CONTENT_REFRESH_XP } from "@/lib/xp";
 import type { ResultSummary } from "@/lib/progress";
-
-const CONFETTI_COLORS = ["#EA580C", "#15803D", "#F59E0B", "#FFFFFF", "#C2410C"];
-
-/**
- * 26 pieces bursting outward. Generated once per result so a re-render does not
- * restart the animation mid-flight.
- */
-function useConfetti(enabled: boolean, seed: string) {
-  return useMemo(() => {
-    if (!enabled) return [];
-    // Deterministic from the seed so server and client agree and the burst does
-    // not reshuffle on hydration.
-    let state = 0;
-    for (const ch of seed) state = (state * 31 + ch.charCodeAt(0)) % 100_000;
-    const rand = (min: number, max: number) => {
-      state = (state * 1103515245 + 12345) % 2147483648;
-      return min + (state / 2147483648) * (max - min);
-    };
-    return Array.from({ length: 26 }, (_, i) => {
-      const angle = (i / 26) * Math.PI * 2 + rand(-0.16, 0.16);
-      const distance = rand(70, 145);
-      const round = i % 3 === 0;
-      const width = round ? rand(7, 10) : rand(6, 11);
-      return {
-        id: i,
-        style: {
-          position: "absolute" as const,
-          left: "50%",
-          top: "50%",
-          width: `${width}px`,
-          height: `${round ? width : rand(9, 15)}px`,
-          marginLeft: `${-width / 2}px`,
-          marginTop: "-6px",
-          background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-          border: "1.5px solid #1B1611",
-          borderRadius: round ? "50%" : "2px",
-          pointerEvents: "none" as const,
-          opacity: 0,
-          "--tx": `${Math.cos(angle) * distance * 0.95}px`,
-          "--ty": `${Math.sin(angle) * distance * 0.62 + rand(30, 80)}px`,
-          "--rot": `${rand(-540, 540)}deg`,
-          animation: `burst ${rand(1000, 1650).toFixed(0)}ms cubic-bezier(.15,.75,.35,1) ${rand(0, 220).toFixed(0)}ms forwards`,
-        } as React.CSSProperties,
-      };
-    });
-  }, [enabled, seed]);
-}
 
 export function ResultView({
   result,
@@ -91,7 +45,24 @@ export function ResultView({
       totalXp: result.totalXp,
     });
   }
-  const confetti = useConfetti(pass, `${unitId}:${result.score}:${result.attempt}`);
+  /**
+   * Hold the result's own burst until the celebrations are out of the way.
+   * Otherwise it plays to nobody: the sheet covers the panel, and by the time
+   * the learner dismisses it the animation has already finished.
+   */
+  const [celebrated, setCelebrated] = useState(celebrations.length === 0);
+
+  // Memoized so a re-render does not restart a burst that is mid-flight.
+  const confetti = useMemo(
+    () =>
+      pass && celebrated
+        ? confettiPieces({
+            seed: `${unitId}:${result.score}:${result.attempt}`,
+            count: 26,
+          })
+        : [],
+    [pass, celebrated, unitId, result.score, result.attempt],
+  );
 
   // The last unit of an area has nothing to unlock, so a failing run there
   // reports the area as unfinished rather than naming a nonexistent next unit.
@@ -113,7 +84,11 @@ export function ResultView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-[18px] pb-[14px] pt-5">
-      <Celebrations queue={celebrations} lang={lang} />
+      <Celebrations
+        queue={celebrations}
+        lang={lang}
+        onDone={() => setCelebrated(true)}
+      />
       <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-auto px-[5px] pb-[5px] text-center">
         <ProgressRing
           size={172}
@@ -161,7 +136,7 @@ export function ResultView({
 
         <div className="relative w-full">
           {confetti.map((piece) => (
-            <div key={piece.id} style={piece.style} />
+            <div key={piece.id} style={piece.style as React.CSSProperties} />
           ))}
           <div
             className={cn(

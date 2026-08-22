@@ -62,7 +62,16 @@ try {
 
   console.log(`\nactivities (${unit.activities.length}):`);
   for (const a of unit.activities) {
-    console.log(`  ${a.type.padEnd(20)} ${a.word}`);
+    // A match-up's `word` is only an anchor for the first pair, so printing it
+    // alone hides the entire exercise.
+    const heading =
+      a.type === "MATCH_UP"
+        ? (a.pairs ?? []).map((pair) => pair.en).join(", ")
+        : a.word;
+    console.log(`  ${a.type.padEnd(20)} ${heading}`);
+    for (const pair of a.pairs ?? []) {
+      console.log(`  ${" ".repeat(20)} ${pair.en} → ${pair.es}`);
+    }
     if (a.sentence) console.log(`  ${" ".repeat(20)} ${a.sentence}`);
     if (a.options.length) {
       // Distractor quality is the thing a weaker model degrades first, so show

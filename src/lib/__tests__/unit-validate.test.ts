@@ -32,6 +32,7 @@ function activity(
         answerIndex: 0,
         note: "n",
         noteEs: "n",
+        pairs: null,
       }
     : {
         type,
@@ -43,10 +44,43 @@ function activity(
         answerIndex: 0,
         note: "n",
         noteEs: "n",
+        pairs: null,
       };
 }
 
+/** A match-up over three of the unit's words. Every unit must carry one. */
+function matchUp(words: string[]): GeneratedUnit["activities"][number] {
+  return {
+    type: "MATCH_UP",
+    word: words[0],
+    prompt: "Match each word with its meaning.",
+    promptEs: "Une cada palabra con su significado.",
+    sentence: null,
+    options: [],
+    answerIndex: 0,
+    note: "n",
+    noteEs: "n",
+    pairs: words.map((text) => ({ en: text, es: `la ${text}` })),
+  };
+}
+
+const SINGLE_TYPES = ["FILL_BLANK", "IPA_MATCH", "TYPE_WHAT_YOU_HEAR"] as const;
+
+/**
+ * A unit shaped the way the generator is now asked to produce them: one
+ * activity per word, plus a mandatory match-up over the last three, inside the
+ * 11-item budget.
+ *
+ * The earlier builder emitted three activities regardless of word count, which
+ * is 50% coverage — below the bar these tests now assert, so every case built
+ * on it would have failed for the wrong reason.
+ */
 function unit(words: string[]): GeneratedUnit {
+  const paired = words.slice(-3);
+  const singles = words
+    .filter((w) => !paired.includes(w))
+    // A match-up is 3 items, so 8 singles is the most that fits in 11.
+    .slice(0, 8);
   return {
     title: "Test unit",
     subtitle: `${words.length} palabras`,
@@ -55,9 +89,10 @@ function unit(words: string[]): GeneratedUnit {
     introParagraphEs: "Un párrafo.",
     words: words.map(word),
     activities: [
-      activity(words[0], "FILL_BLANK"),
-      activity(words[1] ?? words[0], "IPA_MATCH"),
-      activity(words[2] ?? words[0], "TYPE_WHAT_YOU_HEAR"),
+      // Cycled so the first three indices stay FILL_BLANK, IPA_MATCH and
+      // TYPE_WHAT_YOU_HEAR, which several cases below address positionally.
+      ...singles.map((text, i) => activity(text, SINGLE_TYPES[i % 3])),
+      matchUp(paired),
     ],
   };
 }
@@ -145,13 +180,21 @@ describe("validateGeneratedUnit", () => {
     expect(hasBlockingIssue(issues)).toBe(true);
   });
 
-  it("blocks a dictation whose answer is more than one word", () => {
-    // The letter keypad has no space key, so "cutting board" is untypeable.
-    const draft = unit([...SIX.slice(0, 5), "cutting board"]);
-    draft.activities[2] = activity("cutting board", "TYPE_WHAT_YOU_HEAR");
+  it("allows a two-word dictation", () => {
+    // The keypad has no space key but does not need one: "dining room" is drawn
+    // as two groups of slots and typed as ten letters.
+    const draft = unit([...SIX.slice(0, 5), "dining room"]);
+    draft.activities[2] = activity("dining room", "TYPE_WHAT_YOU_HEAR");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(false);
+  });
+
+  it("blocks a dictation of three words or more", () => {
+    const draft = unit([...SIX.slice(0, 5), "out of the blue"]);
+    draft.activities[2] = activity("out of the blue", "TYPE_WHAT_YOU_HEAR");
     const issues = validateGeneratedUnit(draft, { wordCount: 6 });
     expect(hasBlockingIssue(issues)).toBe(true);
-    expect(issues.some((i) => i.message.includes("no space key"))).toBe(true);
+    expect(issues.some((i) => i.message.includes("at most two words"))).toBe(true);
   });
 
   it("allows a multi-word entry on the multiple-choice types", () => {
@@ -193,9 +236,74 @@ describe("validateGeneratedUnit", () => {
 
   it("warns when an activity kind is missing", () => {
     const draft = unit(SIX);
-    draft.activities = [activity("alpha", "FILL_BLANK")];
+    // Drop the kind but keep the match-up and enough coverage, so the only
+    // thing this case is testing is the missing kind.
+    draft.activities = draft.activities.filter((a) => a.type !== "IPA_MATCH");
     const issues = validateGeneratedUnit(draft, { wordCount: 6 });
     expect(issues.some((i) => i.message.includes("IPA_MATCH"))).toBe(true);
     expect(hasBlockingIssue(issues)).toBe(false);
+  });
+
+  it("blocks a unit that practises too few of its words", () => {
+    const draft = unit(SIX);
+    // Match-up only: three of six words is 50%, under the 70% bar.
+    draft.activities = draft.activities.filter((a) => a.type === "MATCH_UP");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("words are practised"))).toBe(true);
+  });
+
+  it("counts a match-up's three words toward coverage", () => {
+    const draft = unit(SIX);
+    // Four singles plus the match-up's three would be seven of six words; the
+    // point is that the match-up contributes all three, not just its anchor.
+    const covered = new Set(
+      draft.activities.flatMap((a) =>
+        a.type === "MATCH_UP" ? (a.pairs ?? []).map((p) => p.en) : [a.word],
+      ),
+    );
+    expect(covered.size).toBe(6);
+    expect(hasBlockingIssue(validateGeneratedUnit(draft, { wordCount: 6 }))).toBe(
+      false,
+    );
+  });
+
+  it("blocks a unit with more gradeable items than the budget", () => {
+    const draft = unit(SIX);
+    // Three singles + a match-up is 6 items; six more takes it to 12.
+    for (const text of SIX) {
+      draft.activities.push(activity(text, "FILL_BLANK"));
+    }
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("gradeable items"))).toBe(true);
+  });
+
+  it("blocks a unit with no match-up", () => {
+    const draft = unit(SIX);
+    draft.activities = draft.activities.filter((a) => a.type !== "MATCH_UP");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("exactly one match-up"))).toBe(
+      true,
+    );
+  });
+
+  it("blocks a match-up with the wrong number of pairs", () => {
+    const draft = unit(SIX);
+    const match = draft.activities.find((a) => a.type === "MATCH_UP")!;
+    match.pairs = (match.pairs ?? []).slice(0, 2);
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("exactly 3"))).toBe(true);
+  });
+
+  it("blocks a match-up whose meanings repeat, which makes a pairing ambiguous", () => {
+    const draft = unit(SIX);
+    const match = draft.activities.find((a) => a.type === "MATCH_UP")!;
+    match.pairs = (match.pairs ?? []).map((pair) => ({ ...pair, es: "lo mismo" }));
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("ambiguous"))).toBe(true);
   });
 });

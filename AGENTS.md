@@ -71,6 +71,21 @@ new rules there and call them from the server module — not the other way round
   or four, and a worse retry pays nothing.
 - **`Unit.contentVersion` is bumped only by regeneration**, never by an edit.
   It's what invites a learner back to a unit they passed; a typo fix must not.
+- **A match-up is three rows, not one.** The model emits one `MATCH_UP` object
+  with three `pairs`; `unit-persist.ts` expands it into three ordinary
+  `Activity` rows sharing a `matchGroup`, each with its own `wordId` and its own
+  answer among the same three meanings. That is what keeps grading, partial
+  credit and coverage counting free of special cases — only the practice screen
+  knows rows sharing a group are drawn together. Never store one row for it.
+- **Dictation is compared on letters alone.** Vocabulary may be two words
+  ("dining room") but the keypad has no space key, so both graders call
+  `sameSpelling` in `answer.ts`. Grading is duplicated in `progress.ts` and
+  `actions/practice.ts`; `grading.test.ts` exists to catch them drifting.
+- **Coverage and session length are generation-time rules.** `unit-validate.ts`
+  blocks a unit under 70% distinct-word coverage, over 11 gradeable items, or
+  without exactly one match-up. They cannot move to runtime: the score is
+  `correct / activities` over the whole unit, so trimming a session there would
+  silently mark the trimmed questions wrong.
 
 ## Payments are not settled yet
 

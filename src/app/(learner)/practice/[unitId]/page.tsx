@@ -18,7 +18,7 @@ export default async function PracticePage({
       unitId={unit.id}
       unitName={unit.areaName}
       areaId={unit.areaId}
-      questions={questions}
+      steps={questions}
       lang={lang}
     />
   );

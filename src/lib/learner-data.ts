@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings, viewFor } from "@/lib/billing";
 import { levelFromXp, PASS_THRESHOLD } from "@/lib/xp";
 import { areaComplete, passedCount, unitStates, type UnitState } from "@/lib/unlock";
+import { lettersOnly } from "@/lib/answer";
 import { wordsLearned } from "@/lib/progress";
 import { requireLearner } from "@/lib/rbac";
 import { currentDict } from "@/lib/lang";
@@ -340,7 +341,9 @@ function shuffled<T>(items: T[]): T[] {
  * and because grading compares the chosen *text*, not its position, shuffling
  * here cannot desynchronise from the stored answer.
  */
-export type PracticeQuestion = {
+/** One screen of practice with a single answer. */
+export type PracticeSingle = {
+  kind: "single";
   id: string;
   type: "FILL_BLANK" | "IPA_MATCH" | "TYPE_WHAT_YOU_HEAR";
   prompt: string;
@@ -348,33 +351,94 @@ export type PracticeQuestion = {
   sentence: string | null;
   options: string[];
   mono: boolean;
-  /** Only sent for the dictation type, where the client needs the length. */
+  /**
+   * Letters the learner must type, spaces excluded. Only meaningful for the
+   * dictation type.
+   */
   wordLength: number;
+  /**
+   * Letters per word, so "dining room" is [6, 4].
+   *
+   * The keypad has no space key and should not need one: the slots are drawn
+   * as groups with a gap between them, and the gap is presentational only.
+   */
+  wordShape: number[];
   word: string | null;
 };
 
+/**
+ * One screen pairing several words with their meanings.
+ *
+ * Three stored rows, one screen. Each row is an ordinary
+ * pick-the-right-option activity, which is what lets the existing grader,
+ * partial credit and word-coverage counting work with no special cases.
+ */
+export type PracticeMatch = {
+  kind: "match";
+  /** The shared `matchGroup`. */
+  id: string;
+  prompt: string;
+  promptEs: string;
+  /** The meanings on offer, shuffled once for the whole screen. */
+  meanings: string[];
+  rows: Array<{ id: string; en: string }>;
+};
+
+export type PracticeStep = PracticeSingle | PracticeMatch;
+
 export async function practiceQuestions(
   unitId: string,
-): Promise<PracticeQuestion[]> {
+): Promise<PracticeStep[]> {
   const activities = await prisma.activity.findMany({
     where: { unitId },
     orderBy: { sortOrder: "asc" },
     include: { word: { select: { text: true } } },
   });
 
-  return activities.map((a) => ({
-    id: a.id,
-    type: a.type,
-    prompt: a.prompt,
-    promptEs: a.promptEs,
-    sentence: a.sentence,
-    options: shuffled(Array.isArray(a.options) ? (a.options as string[]) : []),
-    mono: a.mono,
-    wordLength: a.word.text.length,
-    // The dictation type needs the word client-side to speak it and to build
-    // the letter bank; the two multiple-choice types never receive it.
-    word: a.type === "TYPE_WHAT_YOU_HEAR" ? a.word.text : null,
-  }));
+  const steps: PracticeStep[] = [];
+  const consumed = new Set<string>();
+
+  for (const a of activities) {
+    if (consumed.has(a.id)) continue;
+
+    if (a.type === "MATCH_UP" && a.matchGroup) {
+      const group = activities.filter((x) => x.matchGroup === a.matchGroup);
+      for (const row of group) consumed.add(row.id);
+      steps.push({
+        kind: "match",
+        id: a.matchGroup,
+        prompt: a.prompt,
+        promptEs: a.promptEs,
+        // Every row carries the same three meanings; shuffle once so the
+        // screen shows one consistent column.
+        meanings: shuffled(
+          Array.isArray(a.options) ? (a.options as string[]) : [],
+        ),
+        rows: group.map((row) => ({ id: row.id, en: row.word.text })),
+      });
+      continue;
+    }
+
+    steps.push({
+      kind: "single",
+      id: a.id,
+      // A MATCH_UP row with no group would be unrenderable as a pair screen;
+      // treating it as multiple choice still grades correctly.
+      type: a.type === "MATCH_UP" ? "IPA_MATCH" : a.type,
+      prompt: a.prompt,
+      promptEs: a.promptEs,
+      sentence: a.sentence,
+      options: shuffled(Array.isArray(a.options) ? (a.options as string[]) : []),
+      mono: a.mono,
+      wordLength: lettersOnly(a.word.text).length,
+      wordShape: a.word.text.trim().split(/\s+/).map((part) => part.length),
+      // The dictation type needs the word client-side to speak it and to build
+      // the letter bank; the two multiple-choice types never receive it.
+      word: a.type === "TYPE_WHAT_YOU_HEAR" ? a.word.text : null,
+    });
+  }
+
+  return steps;
 }
 
 export type BoardRow = {

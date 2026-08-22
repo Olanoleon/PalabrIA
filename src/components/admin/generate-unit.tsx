@@ -438,13 +438,36 @@ export function GenerateUnit({
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Tag tone="brand">{activity.type}</Tag>
-                    <strong>{activity.word}</strong>
+                    <strong>
+                      {activity.type === "MATCH_UP"
+                        ? (activity.pairs ?? []).map((pair) => pair.en).join(" · ")
+                        : activity.word}
+                    </strong>
                     <span className="text-muted-2">{activity.promptEs}</span>
                   </div>
                   {activity.sentence ? (
                     <p className="mt-1 italic text-body">{activity.sentence}</p>
                   ) : null}
-                  {activity.options.length ? (
+                  {/*
+                    Match-ups get their own row: rendering them through the
+                    options list below would show three English words with the
+                    first arbitrarily marked correct, and no meanings at all.
+                  */}
+                  {activity.type === "MATCH_UP" ? (
+                    <ul className="mt-1 flex flex-col gap-1">
+                      {(activity.pairs ?? []).map((pair, pairIndex) => (
+                        <li
+                          key={pairIndex}
+                          className="flex flex-wrap items-baseline gap-2"
+                        >
+                          <span className="font-bold">{pair.en}</span>
+                          <span className="text-muted-2">→</span>
+                          <span>{pair.es}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {activity.type !== "MATCH_UP" && activity.options.length ? (
                     <ul className="mt-1 flex flex-wrap gap-2">
                       {activity.options.map((option, optionIndex) => (
                         <li

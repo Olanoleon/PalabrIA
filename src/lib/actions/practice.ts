@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { sameSpelling } from "@/lib/answer";
 import { requireLearner } from "@/lib/rbac";
 import { getSettings, viewFor } from "@/lib/billing";
 import { recordPractice, type ResultSummary, type SubmittedAnswer } from "@/lib/progress";
@@ -41,8 +42,7 @@ export async function checkAnswer(
   // of "option 2" is not the stored one.
   const correct =
     activity.type === "TYPE_WHAT_YOU_HEAR"
-      ? (answer.typed ?? "").trim().toLowerCase() ===
-        activity.word.text.trim().toLowerCase()
+      ? sameSpelling(answer.typed ?? "", activity.word.text)
       : (answer.optionText ?? "").trim() ===
         (options[activity.answerIndex] ?? "").trim();
 

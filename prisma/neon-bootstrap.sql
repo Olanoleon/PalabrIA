@@ -1,24 +1,3 @@
--- PalabrIA — full schema bootstrap for an EMPTY database.
---
--- Generated with:
---   npm run db:sql
--- (prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script)
---
--- This is the ALTERNATIVE path, for pasting into the Neon SQL Editor when you
--- cannot run the CLI. The normal path is `npm run db:deploy`.
---
--- IMPORTANT: applying this file does NOT populate Prisma's _prisma_migrations
--- table, so the next `prisma migrate deploy` would try to re-create everything
--- and fail. After running this once, mark the existing migrations as applied:
---
---   npx prisma migrate resolve --applied 20260821075046_init
---   npx prisma migrate resolve --applied 20260821084311_payment_previous_period
---
--- Verify with `npm run db:status` — it should report "Database schema is up to date!".
---
--- Creates 17 tables, 9 enum types, 23 indexes and 20 foreign keys.
--- Safe on an empty database only; it does not use IF NOT EXISTS on tables.
-
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
@@ -41,10 +20,10 @@ CREATE TYPE "AreaScope" AS ENUM ('GLOBAL', 'ORG');
 CREATE TYPE "Difficulty" AS ENUM ('VERY_EASY', 'EASY', 'MEDIUM', 'HARD');
 
 -- CreateEnum
-CREATE TYPE "ActivityType" AS ENUM ('FILL_BLANK', 'IPA_MATCH', 'TYPE_WHAT_YOU_HEAR');
+CREATE TYPE "ActivityType" AS ENUM ('FILL_BLANK', 'IPA_MATCH', 'TYPE_WHAT_YOU_HEAR', 'MATCH_UP');
 
 -- CreateEnum
-CREATE TYPE "XpReason" AS ENUM ('UNIT_PASS', 'UNIT_IMPROVE', 'ATTEMPT_EFFORT', 'FLAWLESS', 'AREA_COMPLETE', 'STREAK_DAY', 'STREAK_MILESTONE');
+CREATE TYPE "XpReason" AS ENUM ('UNIT_PASS', 'UNIT_IMPROVE', 'CONTENT_REFRESH', 'ATTEMPT_EFFORT', 'FLAWLESS', 'AREA_COMPLETE', 'STREAK_DAY', 'STREAK_MILESTONE');
 
 -- CreateEnum
 CREATE TYPE "TokenPurpose" AS ENUM ('TWO_FACTOR', 'PASSWORD_RESET');
@@ -56,7 +35,7 @@ CREATE TABLE "PlatformSettings" (
     "monthlyAmount" INTEGER NOT NULL DEFAULT 25000,
     "currency" TEXT NOT NULL DEFAULT 'COP',
     "graceDays" INTEGER NOT NULL DEFAULT 5,
-    "openaiModel" TEXT NOT NULL DEFAULT 'gpt-5',
+    "openaiModel" TEXT NOT NULL DEFAULT 'gpt-5.6-luna',
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "PlatformSettings_pkey" PRIMARY KEY ("id")
@@ -117,6 +96,7 @@ CREATE TABLE "Learner" (
     "streakCount" INTEGER NOT NULL DEFAULT 0,
     "streakLastDay" TEXT,
     "lastActiveAt" TIMESTAMP(3),
+    "onboardingSteps" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "billingStatus" "BillingStatus" NOT NULL DEFAULT 'TRIAL',
     "paidThrough" TIMESTAMP(3),
     "statusOverrideBy" TEXT,
@@ -202,6 +182,7 @@ CREATE TABLE "Unit" (
     "wordCount" INTEGER NOT NULL DEFAULT 6,
     "introParagraph" TEXT NOT NULL DEFAULT '',
     "introParagraphEs" TEXT NOT NULL DEFAULT '',
+    "contentVersion" INTEGER NOT NULL DEFAULT 1,
     "sourceUnitId" TEXT,
     "generationInput" JSONB,
     "generatedAt" TIMESTAMP(3),
@@ -246,6 +227,7 @@ CREATE TABLE "Activity" (
     "noteEs" TEXT NOT NULL DEFAULT '',
     "mono" BOOLEAN NOT NULL DEFAULT false,
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
+    "matchGroup" TEXT,
 
     CONSTRAINT "Activity_pkey" PRIMARY KEY ("id")
 );
@@ -257,6 +239,7 @@ CREATE TABLE "UnitProgress" (
     "unitId" TEXT NOT NULL,
     "bestScore" INTEGER NOT NULL DEFAULT 0,
     "attempts" INTEGER NOT NULL DEFAULT 0,
+    "seenContentVersion" INTEGER NOT NULL DEFAULT 1,
     "xpAwarded" INTEGER NOT NULL DEFAULT 0,
     "flawless" BOOLEAN NOT NULL DEFAULT false,
     "passedAt" TIMESTAMP(3),
@@ -355,6 +338,9 @@ CREATE INDEX "Word_unitId_sortOrder_idx" ON "Word"("unitId", "sortOrder");
 
 -- CreateIndex
 CREATE INDEX "Activity_unitId_sortOrder_idx" ON "Activity"("unitId", "sortOrder");
+
+-- CreateIndex
+CREATE INDEX "Activity_matchGroup_idx" ON "Activity"("matchGroup");
 
 -- CreateIndex
 CREATE INDEX "UnitProgress_unitId_idx" ON "UnitProgress"("unitId");

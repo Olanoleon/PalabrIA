@@ -19,6 +19,7 @@ import {
   localDay,
   unitAward,
 } from "@/lib/xp";
+import { sameSpelling } from "@/lib/answer";
 import { areaComplete, isPassed } from "@/lib/unlock";
 import type { XpReason } from "@/generated/prisma";
 
@@ -81,11 +82,12 @@ function gradeOne(
   if (!answer) return { activityId: activity.id, word, correct: false };
 
   if (activity.type === "TYPE_WHAT_YOU_HEAR") {
-    const typed = (answer.typed ?? "").trim().toLowerCase();
+    // Spacing is ignored: a two-word entry is typed on a keypad with no space
+    // key, so "dining room" arrives as "diningroom".
     return {
       activityId: activity.id,
       word,
-      correct: typed.length > 0 && typed === word.trim().toLowerCase(),
+      correct: sameSpelling(answer.typed ?? "", word),
     };
   }
   const options = Array.isArray(activity.options)

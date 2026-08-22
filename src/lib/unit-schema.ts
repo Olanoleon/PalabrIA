@@ -11,7 +11,25 @@ export const ACTIVITY_TYPES = [
   "FILL_BLANK",
   "IPA_MATCH",
   "TYPE_WHAT_YOU_HEAR",
+  "MATCH_UP",
 ] as const;
+
+/** Pairings in one match-up. Three is small enough to read on a phone. */
+export const MATCH_PAIRS = 3;
+
+/**
+ * The largest number of gradeable items a unit may hold.
+ *
+ * A match-up counts as three, so the intended shape is eight single questions
+ * plus one match-up: nine screens, eleven items, up to eleven distinct words
+ * practised. The cap is enforced at generation because the score is
+ * `correct / activities` over the whole unit — there is no runtime sampling to
+ * trim a session that came out too long.
+ */
+export const MAX_ITEMS = 11;
+
+/** Share of a unit's words that must actually be practised. */
+export const MIN_COVERAGE = 0.7;
 
 export const WordSchema = z.object({
   text: z.string().min(1),
@@ -26,6 +44,12 @@ export const WordSchema = z.object({
   exampleSentenceEs: z.string().min(1),
 });
 
+/** One pairing of a match-up: the English word and its Spanish meaning. */
+export const PairSchema = z.object({
+  en: z.string().min(1),
+  es: z.string().min(1),
+});
+
 export const ActivitySchema = z.object({
   type: z.enum(ACTIVITY_TYPES),
   word: z.string().min(1),
@@ -36,6 +60,14 @@ export const ActivitySchema = z.object({
   answerIndex: z.number().int().min(0),
   note: z.string().min(1),
   noteEs: z.string().min(1),
+  /**
+   * Only MATCH_UP fills this; every other type sends null.
+   *
+   * Required-and-nullable rather than optional because OpenAI structured
+   * outputs run in strict mode, where every property must appear in
+   * `required` — the same treatment `sentence` already gets.
+   */
+  pairs: z.array(PairSchema).nullable(),
 });
 
 export const UnitSchema = z.object({
@@ -122,6 +154,7 @@ export const UNIT_JSON_SCHEMA = {
           "answerIndex",
           "note",
           "noteEs",
+          "pairs",
         ],
         properties: {
           type: { type: "string", enum: ACTIVITY_TYPES },
@@ -133,6 +166,18 @@ export const UNIT_JSON_SCHEMA = {
           answerIndex: { type: "integer" },
           note: { type: "string" },
           noteEs: { type: "string" },
+          pairs: {
+            type: ["array", "null"],
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["en", "es"],
+              properties: {
+                en: { type: "string" },
+                es: { type: "string" },
+              },
+            },
+          },
         },
       },
     },

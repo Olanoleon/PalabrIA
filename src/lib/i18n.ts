@@ -148,7 +148,13 @@ export const ES = {
   kickerBlank: "Completa la frase",
   kickerIpa: "Palabra ↔ IPA",
   kickerAudio: "Escribe lo que oyes",
+  kickerMatch: "Une palabra y significado",
+  matchPick: "Elige un significado",
+  matchTally: (n: number, total: number) => n + " de " + total + " bien",
   practiceEmpty: "Esta unidad todavía no tiene práctica.",
+  reviewBack: "Pregunta anterior",
+  reviewBadge: "Ya respondida",
+  reviewResume: "Continuar",
 
   // ── Result ────────────────────────────────────────────────────────────────
   passTitle: "¡Unidad aprobada!",
@@ -190,6 +196,17 @@ export const ES = {
     "Te faltan " + xp + " XP para el nivel " + n + ".",
   levelUpCta: "Seguir",
   tapHint: "Toca un área para empezar",
+
+  // ── First-run coach-marks ─────────────────────────────────────────────────
+  coachCta: "Entendido",
+  coachPathTitle: "Empieza aquí",
+  coachCardsTitle: "Toca para voltear",
+  coachCardsBody:
+    "Cada tarjeta trae la palabra, cómo se dice y un ejemplo. Deslízalas para verlas todas.",
+  coachPracticeTitle: "Primero mira las tarjetas",
+  coachPracticeBody:
+    "Repasa las palabras y después practica. Solo te lo pedimos esta vez.",
+
   newBadge: (n: number) =>
     n === 1 ? "Ganaste una insignia nueva" : "Ganaste " + n + " insignias nuevas",
 
@@ -383,6 +400,12 @@ export const EN: Translated = {
   kickerIpa: "Match word to IPA",
   kickerAudio: "Type what you hear",
   practiceEmpty: "This unit has no practice yet.",
+  kickerMatch: "Match word to meaning",
+  matchPick: "Pick a meaning",
+  matchTally: (n, total) => n + " of " + total + " right",
+  reviewBack: "Previous question",
+  reviewBadge: "Already answered",
+  reviewResume: "Continue",
 
   passTitle: "Unit passed!",
   failTitle: "So close",
@@ -420,6 +443,16 @@ export const EN: Translated = {
   levelUpNext: (xp, n) => xp + " XP to level " + n + ".",
   levelUpCta: "Continue",
   tapHint: "Tap an area to start",
+
+  coachCta: "Got it",
+  coachPathTitle: "Start here",
+  coachCardsTitle: "Tap to flip",
+  coachCardsBody:
+    "Each card has the word, how it sounds and an example. Swipe to see them all.",
+  coachPracticeTitle: "Look at the cards first",
+  coachPracticeBody:
+    "Review the words, then practise. We'll only ask this once.",
+
   newBadge: (n) => (n === 1 ? "You earned a new badge" : "You earned " + n + " new badges"),
 
   introTabs: ["Cards", "Reading", "Avatar"],

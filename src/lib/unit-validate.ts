@@ -5,9 +5,15 @@
  * them, since "the model found only 7 good words for this topic" is a judgement
  * call, not a bug.
  */
+import { wordCountOf } from "@/lib/answer";
 import {
+  ACTIVITY_TYPES,
+  MATCH_PAIRS,
+  MAX_ITEMS,
   MAX_WORDS,
+  MIN_COVERAGE,
   MIN_WORDS,
+  type GeneratedActivity,
   type GeneratedUnit,
 } from "@/lib/unit-schema";
 
@@ -19,6 +25,17 @@ export type ValidateInput = {
 };
 
 const normalize = (s: string) => s.trim().toLowerCase();
+
+/**
+ * Every word an activity actually practises.
+ *
+ * One for the single-answer types; all three for a match-up, whose `word` field
+ * is only an anchor for the first pair.
+ */
+function practisedWords(a: GeneratedActivity): string[] {
+  if (a.type === "MATCH_UP") return (a.pairs ?? []).map((p) => normalize(p.en));
+  return [normalize(a.word)];
+}
 
 export function validateGeneratedUnit(
   unit: GeneratedUnit,
@@ -91,7 +108,7 @@ export function validateGeneratedUnit(
   }
 
   const orphans = unit.activities
-    .map((a) => normalize(a.word))
+    .flatMap(practisedWords)
     .filter((w) => !seen.has(w));
   if (orphans.length) {
     issues.push({
@@ -103,6 +120,30 @@ export function validateGeneratedUnit(
   }
 
   for (const a of unit.activities) {
+    if (a.type === "MATCH_UP") {
+      const pairs = a.pairs ?? [];
+      if (pairs.length !== MATCH_PAIRS) {
+        issues.push({
+          level: "error",
+          message: `Match-up has ${pairs.length} pairs; it needs exactly ${MATCH_PAIRS}.`,
+        });
+      }
+      if (new Set(pairs.map((pair) => normalize(pair.en))).size !== pairs.length) {
+        issues.push({
+          level: "error",
+          message: "Match-up repeats an English word.",
+        });
+      }
+      // Two identical meanings make one of the pairings unanswerable rather
+      // than merely hard.
+      if (new Set(pairs.map((pair) => normalize(pair.es))).size !== pairs.length) {
+        issues.push({
+          level: "error",
+          message: "Match-up repeats a Spanish meaning, so a pairing is ambiguous.",
+        });
+      }
+      continue;
+    }
     if (a.type === "TYPE_WHAT_YOU_HEAR") {
       if (a.options.length) {
         issues.push({
@@ -110,12 +151,13 @@ export function validateGeneratedUnit(
           message: `"Type what you hear" for "${a.word}" came back with options; they will be dropped.`,
         });
       }
-      // The learner spells these on a letter keypad that has no space key, so a
-      // multi-word answer is impossible to enter.
-      if (/\s/.test(a.word.trim())) {
+      // The keypad has no space key, but it does not need one: the slots are
+      // drawn as one group per word and the learner types letters only. Two
+      // words fit on a phone; three run off the edge.
+      if (wordCountOf(a.word) > 2) {
         issues.push({
           level: "error",
-          message: `"Type what you hear" cannot use "${a.word}": the letter keypad has no space key, so a multi-word answer cannot be typed.`,
+          message: `"Type what you hear" cannot use "${a.word}": the letter keypad handles at most two words.`,
         });
       }
       continue;
@@ -148,13 +190,48 @@ export function validateGeneratedUnit(
   }
 
   const kinds = new Set(unit.activities.map((a) => a.type));
-  for (const kind of ["FILL_BLANK", "IPA_MATCH", "TYPE_WHAT_YOU_HEAR"] as const) {
+  // Iterating the enum rather than a hand-kept list, so a future type cannot be
+  // silently forgotten here.
+  for (const kind of ACTIVITY_TYPES) {
+    if (kind === "MATCH_UP") continue;
     if (!kinds.has(kind)) {
       issues.push({
         level: "warning",
         message: `No ${kind} activity was generated.`,
       });
     }
+  }
+
+  // ── Match-up, item budget and word coverage ───────────────────────────────
+  const matchUps = unit.activities.filter((a) => a.type === "MATCH_UP");
+  if (matchUps.length !== 1) {
+    issues.push({
+      level: "error",
+      message: `A unit needs exactly one match-up activity; this one has ${matchUps.length}.`,
+    });
+  }
+
+  const items = unit.activities.reduce(
+    (total, a) => total + (a.type === "MATCH_UP" ? (a.pairs?.length ?? 0) : 1),
+    0,
+  );
+  if (items > MAX_ITEMS) {
+    issues.push({
+      level: "error",
+      message: `The unit has ${items} gradeable items; the maximum is ${MAX_ITEMS} (a match-up counts as its ${MATCH_PAIRS} pairs).`,
+    });
+  }
+
+  // Distinct words, not activity rows: ten activities on two words is not
+  // coverage. A match-up contributes all three of its words.
+  const practised = new Set(unit.activities.flatMap(practisedWords));
+  const covered = words.filter((w) => practised.has(w)).length;
+  const required = Math.ceil(words.length * MIN_COVERAGE);
+  if (words.length > 0 && covered < required) {
+    issues.push({
+      level: "error",
+      message: `Only ${covered} of ${words.length} words are practised; at least ${required} must be.`,
+    });
   }
 
   // ── Paragraph coverage ────────────────────────────────────────────────────

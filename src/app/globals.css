@@ -53,7 +53,12 @@
   --animate-wave: wave 0.6s ease-in-out infinite;
   --animate-pop: pop 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
   --animate-rise: rise 260ms ease-out;
-  --animate-nudge: nudge 3.4s ease-in-out infinite;
+  /*
+   * 1.6s, not 3.4s. At the slower rate a 3px rise read as the page settling
+   * rather than as an invitation to tap — the motion has to be quick enough to
+   * register as deliberate.
+   */
+  --animate-nudge: nudge 1.6s ease-in-out infinite;
 }
 
 @keyframes wave {
@@ -98,20 +103,25 @@
  * A periodic hint that the card turns over. Mostly at rest — it tilts briefly
  * once per cycle rather than wobbling continuously, which would be noise. Shown
  * only until the learner flips a card for the first time.
+ *
+ * The tilt is front-loaded on purpose. The first version put it at 78-94% of a
+ * 4.2s cycle, so a learner arriving on the unit screen watched a motionless
+ * card for nearly three seconds and concluded there was nothing to do. Now the
+ * card tilts almost immediately and rests afterwards.
  */
 @keyframes flip-hint {
   0%,
-  70%,
+  40%,
   100% {
     transform: rotateY(0deg);
   }
-  78% {
+  12% {
     transform: rotateY(-14deg);
   }
-  86% {
+  22% {
     transform: rotateY(-4deg);
   }
-  94% {
+  32% {
     transform: rotateY(-8deg);
   }
 }
