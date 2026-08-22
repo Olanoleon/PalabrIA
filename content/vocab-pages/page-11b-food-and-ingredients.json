@@ -1,0 +1,54 @@
+{
+  "source": "CAMIL GE-V-06 · Page 11 · Meals and Food (ingredients half)",
+  "notes": [
+    "The ingredient half of page 11: the categories food is bought and cooked in, as against",
+    "the Meals and Drinks area, which is what ends up on a plate at a given hour.",
+    "'salt' and 'sugar' are placed where they are used rather than in a bucket unit of their",
+    "own — salt with the salad, sugar with the dessert.",
+    "'watermelon' and 'grapes' moved out of the page's dessert row into the fruit unit, which",
+    "is what they are.",
+    "Two normalisations: MEAT BALLS -> meatballs, one word in standard English, and SHRIMPS ->",
+    "shrimp, which is how Americans use it.",
+    "'chop' is pinned to the cut of meat, not the verb.",
+    "'orange' is here as the fruit and also appears inside 'orange juice' in Meals and Drinks,",
+    "and as a colour in Colors. Three different areas, so no exercise can put them together.",
+    "VERY_EASY: an A1/A2 course, still its early pages."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Food and Ingredients",
+    "nameEs": "Los alimentos",
+    "description": "Los alimentos por familias: las verduras y la ensalada, las carnes, el pescado y los mariscos, la fruta y los postres.",
+    "iconKey": "food",
+    "tint": "#E6F2DC",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Salad and vegetables",
+      "topic": "What goes into a salad and the vegetables you buy at a market, and the one thing you season them with",
+      "words": ["salad", "vegetables", "lettuce", "onion", "tomato", "cucumber", "cabbage", "salt"]
+    },
+    {
+      "name": "Meat",
+      "topic": "The meats and the ways they are served. 'chop' here is a cut of meat with the bone in, never the verb for cutting",
+      "words": ["meat", "beef", "pork", "chicken", "turkey", "chop", "roast beef", "meatballs"]
+    },
+    {
+      "name": "Fish and seafood",
+      "topic": "What comes out of the sea. 'fish' is the animal you eat, 'seafood' is everything edible from the sea, and 'shellfish' is the part of it that has a shell — the unit should keep those apart",
+      "words": ["seafood", "fish", "shrimp", "oysters", "lobster", "shellfish"]
+    },
+    {
+      "name": "Fruit",
+      "topic": "The fruits a learner meets first, from the everyday ones to the large sweet ones",
+      "words": ["fruits", "apple", "pear", "orange", "tangerine", "banana", "strawberry", "plum", "watermelon", "grapes"]
+    },
+    {
+      "name": "Dessert",
+      "topic": "What is served at the end of a meal, and what makes it sweet",
+      "words": ["dessert", "cake", "apple pie", "ice cream", "pudding", "sugar"]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "source": "CAMIL GE-V-06 · Page 11 · Meals and Food (meals half)",
+  "notes": [
+    "Page 11 is 65 terms, the largest so far, so it becomes two areas: what you eat at a given",
+    "moment, and the ingredients and food categories themselves.",
+    "Grouped by what kind of thing a word is, not by the row it sits on. The page's rows mix",
+    "ingredients into meal lists — cheese sat among the fast food, butter and salt under a",
+    "heading that was not a real category.",
+    "Drinks get their own unit; 'tea' was only in the dessert row because the page ran out of",
+    "space there.",
+    "'ketchup' stays with fast food rather than moving to ingredients: unlike butter or salt it",
+    "is a finished condiment handed to you with the fries, not something you cook with.",
+    "dinner/supper are both cena and stay in one unit.",
+    "'toast' is pinned to the bread. The page's own bottom sentence uses the other sense",
+    "(brindis), which is exactly the trap to avoid.",
+    "VERY_EASY: an A1/A2 course, still its early pages."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Meals and Drinks",
+    "nameEs": "Las comidas y las bebidas",
+    "description": "Qué se come a cada hora del día: el desayuno, el almuerzo, la comida rápida y todo lo que se bebe.",
+    "iconKey": "food",
+    "tint": "#FFEAD6",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Meals of the day",
+      "topic": "The names of the meals and the words for a whole plate of food. 'dinner' and 'supper' are both cena — supper is the older and more regional of the two — and the unit should say so",
+      "words": ["breakfast", "lunch", "dinner", "supper", "main dish", "fast food"]
+    },
+    {
+      "name": "Breakfast & lunch",
+      "topic": "What is actually on the plate at the first two meals of the day, from eggs and bread in the morning to soup and rice at midday. 'toast' here is the grilled bread, never a drink raised to someone",
+      "words": ["eggs", "bread", "toast", "cereal", "bacon", "butter", "cheese", "soup", "rice", "beans", "avocado"]
+    },
+    {
+      "name": "Drinks",
+      "topic": "What you drink with a meal, hot and cold",
+      "words": ["orange juice", "milkshake", "soda", "coke", "tea"]
+    },
+    {
+      "name": "Fast food",
+      "topic": "What you order at a counter and eat with your hands, and the sauce that comes with it",
+      "words": ["hamburger", "sandwich", "potato chips", "french fries", "ketchup"]
+    }
+  ]
+}

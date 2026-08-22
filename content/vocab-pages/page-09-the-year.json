@@ -1,0 +1,65 @@
+{
+  "source": "CAMIL GE-V-05 · Page 09 · The Year and Its Parts",
+  "notes": [
+    "The page's four question sentences ('How many days are there in a leap year?') are",
+    "excluded: they are phrases, not lexical items.",
+    "The two section headers, 'THE DAYS OF THE WEEK' and 'THE MONTHS OF THE YEAR', are full",
+    "noun phrases rather than lexical items, so they are reduced to their head nouns 'week'",
+    "and 'month' — both essential A1 words that appear nowhere else on the page. 'year' is",
+    "still not taught anywhere and is worth adding if a later page does not cover it.",
+    "The long time expressions are kept deliberately. 'the day before yesterday' and 'the",
+    "night before last' look like phrases, but Spanish has single words for them (antier,",
+    "anteanoche, pasado mañana), which is exactly what makes them worth teaching as units of",
+    "meaning. At four or five parts they are skipped by dictation automatically.",
+    "'fortnight' is chiefly British and a loose fit for quincena, which in Colombia usually",
+    "means a pay period. Kept for now; the same profile as 'greenboard' if it should go.",
+    "Unit 2 is all twelve months at the twelve-word ceiling, so one month will not get its own",
+    "question — the same trade as 'physics' in School subjects. One clean unit reads better",
+    "than a January-June / July-December split.",
+    "Independence Day and Valentine's Day get generic definitions: Colombia's dates are not",
+    "the American ones, so pinning them to July 4th or February 14th would teach a wrong fact.",
+    "VERY_EASY: an A1/A2 course, still its early pages."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "The Year and Its Parts",
+    "nameEs": "El año y sus partes",
+    "description": "El calendario completo: los días de la semana, los meses, cómo decir ayer y mañana, y las fiestas del año.",
+    "iconKey": "sparkle",
+    "tint": "#FDE8D7",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "The days of the week",
+      "topic": "The seven days and the word for the set of them. Note that English writes the days with a capital letter",
+      "words": ["week", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    },
+    {
+      "name": "The months of the year",
+      "topic": "The twelve months in order, from the start of the year to the end of it",
+      "words": ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+    },
+    {
+      "name": "Weeks, months and years",
+      "topic": "Stretches of time longer than a day: the two days off at the end of a week, the extra day off beside them, and the longer spans. 'fortnight' means two weeks and is mainly British",
+      "words": ["month", "weekend", "long weekend", "fortnight", "century", "leap year"]
+    },
+    {
+      "name": "Today, yesterday and tomorrow",
+      "topic": "Naming a day by how far it is from today, in both directions. English needs several words where Spanish has one — 'the day before yesterday' is antier and 'the day after tomorrow' is pasado mañana",
+      "words": ["today", "yesterday", "the day before yesterday", "tomorrow", "the day after tomorrow"]
+    },
+    {
+      "name": "Nights, afternoons and the light",
+      "topic": "Naming a part of a day rather than the whole day, and the two moments when the light changes. 'the night before last' is anteanoche",
+      "words": ["tonight", "last night", "the night before last", "yesterday afternoon", "tomorrow morning", "sunset", "dawn"]
+    },
+    {
+      "name": "Holidays and celebrations",
+      "topic": "The days a year is marked by. Describe each one generally, by what it celebrates — never by its date, because Colombia does not keep Independence Day or Valentine's Day on the American dates",
+      "words": ["holiday", "christmas", "christmas eve", "new year", "holy week", "easter", "lent", "independence day", "valentine's day", "mother's day"]
+    }
+  ]
+}

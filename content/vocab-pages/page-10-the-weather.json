@@ -1,0 +1,63 @@
+{
+  "source": "CAMIL GE-V-05 · Page 10 · The Weather",
+  "notes": [
+    "The page's six example sentences ('What is the weather like in your city?') are excluded.",
+    "'clime' dropped and 'climate' added in its place at Leon's call. 'Clime' is archaic and",
+    "poetic; a learner taught it would say 'the clime in Medellin', which sounds bizarre rather",
+    "than merely wrong. It sits beside 'weather' so the unit can teach the difference — Spanish",
+    "uses tiempo and clima the same way English uses weather and climate.",
+    "'rays' is pinned to sunlight. The page glosses it as rayos straight after 'lightning', but",
+    "in English 'rays' means beams of sun almost exclusively — rayo as a lightning bolt is",
+    "'bolt'. Left alone this is the same trap as 'sleep'/lagaña on page 07.",
+    "Three section headers reduced to their head nouns: THE FOUR SEASONS -> seasons, THE",
+    "WEATHER -> weather, THE WEATHER FORECAST -> forecast.",
+    "autumn/fall (otoño, British against American) and snow/flurries (nieve) are collision",
+    "pairs. Unit 6 is almost entirely collisions — cold/cool/chill are all frío and",
+    "warmth/heat are both calor — which is exactly what makes it the most useful unit here.",
+    "'temperature' also appears in Health and Illness as body temperature. Different areas, and",
+    "no exercise spans two areas.",
+    "VERY_EASY: an A1/A2 course, still its early pages."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "The Weather",
+    "nameEs": "El tiempo",
+    "description": "Hablar del tiempo: las estaciones, la lluvia y la nieve, el pronóstico, y todas las formas de decir que hace frío o calor.",
+    "iconKey": "sparkle",
+    "tint": "#DCEEF7",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "The four seasons",
+      "topic": "The four parts of the year and the word for the set of them. 'autumn' and 'fall' are the same season — one British, one American — and the unit should say so plainly",
+      "words": ["seasons", "winter", "spring", "summer", "autumn", "fall"]
+    },
+    {
+      "name": "Weather, climate and degrees",
+      "topic": "Talking about how hot or cold it is and how it is measured. 'weather' is what it is like today and 'climate' is what it is like all year — the same difference Spanish makes between tiempo and clima, and the unit should make it clear",
+      "words": ["weather", "climate", "temperature", "degrees", "celsius", "fahrenheit"]
+    },
+    {
+      "name": "Rain, snow and storms",
+      "topic": "What falls from the sky and what a storm sounds and looks like. 'rays' here means the lines of light that come from the sun, NOT a lightning bolt — describe it that way. 'flurries' is light snow that does not settle",
+      "words": ["snow", "flurries", "rain", "sleet", "thunder", "lightning", "rays"]
+    },
+    {
+      "name": "Sky, sun and wind",
+      "topic": "What you see and feel outside on an ordinary day, and the things a warm day brings with it",
+      "words": ["sky", "clouds", "fog", "sun", "wind", "flowers", "sweat", "beach"]
+    },
+    {
+      "name": "The weather forecast",
+      "topic": "The adjectives a forecast uses, each one built from the name of the thing itself by adding -y",
+      "words": ["forecast", "rainy", "cloudy", "sunny", "windy", "foggy"]
+    },
+    {
+      "name": "Hot and cold",
+      "topic": "Every way to say hot or cold. Spanish uses one word where English uses several: cold, cool and chill are all frío, and warmth and heat are both calor. The unit exists to separate them — cool is pleasantly cold, chill is a sudden cold you feel, chilly describes a person or a day that feels cold",
+      "words": ["warm", "warmth", "heat", "hot", "cold", "cool", "chill", "chilly"]
+    }
+  ]
+}
