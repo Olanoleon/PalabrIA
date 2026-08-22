@@ -44,3 +44,12 @@ next-env.d.ts
 
 /src/generated/prisma
 .postgres/
+
+# Third-party agent skills (Prisma/Neon). Installed for Claude's reference only —
+# the app does not need them to build or run, so they live at the user level
+# (~/.claude/skills) instead of in the repository. Ignored here so the skill
+# installers can re-create them locally without them coming back into git.
+/.agents/
+/.windsurf/
+/.claude/skills/
+/skills-lock.json
