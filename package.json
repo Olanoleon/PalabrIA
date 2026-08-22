@@ -29,7 +29,8 @@
     "seed:owner": "tsx scripts/seed-owner.mts",
     "try:generate": "tsx --conditions=react-server scripts/try-generate.mts",
     "seed:areas": "tsx --conditions=react-server scripts/seed-areas.mts",
-    "verify:regenerate": "tsx --conditions=react-server scripts/verify-regenerate.mts"
+    "verify:regenerate": "tsx --conditions=react-server scripts/verify-regenerate.mts",
+    "seed:page": "tsx --conditions=react-server scripts/seed-page.mts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

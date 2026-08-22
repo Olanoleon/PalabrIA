@@ -5,7 +5,7 @@
  * them, since "the model found only 7 good words for this topic" is a judgement
  * call, not a bug.
  */
-import { wordCountOf } from "@/lib/answer";
+import { lettersOnly, wordCountOf } from "@/lib/answer";
 import {
   ACTIVITY_TYPES,
   MATCH_PAIRS,
@@ -32,6 +32,9 @@ const normalize = (s: string) => s.trim().toLowerCase();
  * One for the single-answer types; all three for a match-up, whose `word` field
  * is only an anchor for the first pair.
  */
+/** IPA stripped of slashes and spacing, for comparing two transcriptions. */
+const ipaKey = (ipa: string) => ipa.replace(/[\s/]+/g, "").toLowerCase();
+
 function practisedWords(a: GeneratedActivity): string[] {
   if (a.type === "MATCH_UP") return (a.pairs ?? []).map((p) => normalize(p.en));
   return [normalize(a.word)];
@@ -172,6 +175,15 @@ export function validateGeneratedUnit(
       // The keypad has no space key, but it does not need one: the slots are
       // drawn as one group per word and the learner types letters only. Two
       // words fit on a phone; three run off the edge.
+      // 14 letters is about four rows of slots plus the keypad on a phone.
+      // Longer is still answerable, just cramped — a warning, not a block,
+      // since a small unit may have nothing shorter to offer.
+      if (lettersOnly(a.word).length > 14) {
+        issues.push({
+          level: "warning",
+          message: `"Type what you hear" for "${a.word}" is ${lettersOnly(a.word).length} letters; the slots will wrap on a phone.`,
+        });
+      }
       if (wordCountOf(a.word) > 2) {
         issues.push({
           level: "error",
@@ -205,6 +217,38 @@ export function validateGeneratedUnit(
         message: `Fill-in-the-blank for "${a.word}" has no blank in its sentence.`,
       });
     }
+  }
+
+  // ── Homophones ────────────────────────────────────────────────────────────
+  // Two words that sound identical ("fiance" and "fiancee", /ˌfiːɑːnˈseɪ/)
+  // cannot be told apart by ear, so the two phonetic exercise types become
+  // unanswerable — the learner is guessing, not demonstrating anything. Both
+  // words are still perfectly good in a sentence or against a definition,
+  // which is where the distinction actually lives.
+  const byIpa = new Map<string, string[]>();
+  for (const w of unit.words) {
+    const key = ipaKey(w.ipa);
+    byIpa.set(key, [...(byIpa.get(key) ?? []), w.text]);
+  }
+  const homophones = new Set(
+    [...byIpa.values()]
+      .filter((group) => group.length > 1)
+      .flatMap((group) => group.map(normalize)),
+  );
+  for (const a of unit.activities) {
+    if (a.type !== "IPA_MATCH" && a.type !== "TYPE_WHAT_YOU_HEAR") continue;
+    if (!homophones.has(normalize(a.word))) continue;
+    const twins = unit.words
+      .filter((w) => ipaKey(w.ipa) === ipaKey(
+        unit.words.find((x) => normalize(x.text) === normalize(a.word))?.ipa ?? "",
+      ))
+      .map((w) => w.text);
+    issues.push({
+      level: "error",
+      message: `${a.type} cannot use "${a.word}": it sounds identical to ${twins
+        .filter((t) => normalize(t) !== normalize(a.word))
+        .join(", ")} in this unit, so the answer cannot be heard.`,
+    });
   }
 
   const kinds = new Set(unit.activities.map((a) => a.type));

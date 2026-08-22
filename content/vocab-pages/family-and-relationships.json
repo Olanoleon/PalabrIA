@@ -1,0 +1,139 @@
+{
+  "source": "CAMIL GE-V-02 · Page 03 · Family and Introductions (03-Enero-2019)",
+  "notes": [
+    "The page's seven question sentences ('How many people are there in your family?') are",
+    "excluded: they are phrases, not lexical items, and the app teaches single entries.",
+    "The area is named for what it contains — the 'introductions' half of the page title is",
+    "entirely those questions.",
+    "Spelling normalised to standard English where the page hyphenates a closed compound:",
+    "GRAND-FATHER -> grandfather, STEP-MOTHER -> stepmother, GOD-FATHER -> godfather. The",
+    "page's own IPA confirms these are single words (/ˈɡrænfɑːðər/). Hyphens are kept only",
+    "where they are correct: great-grandfather, the in-laws, in-laws.",
+    "Units 7 and 8 deliberately hold the pairs that collapse to one Spanish word —",
+    "boyfriend/groom and girlfriend/bride are both novio/novia, godfather/best man and",
+    "godmother/maid of honor are both padrino/madrina. The learner's difficulty is the",
+    "mapping, so the unit is built to be about the distinction rather than to avoid it.",
+    "Unit names come from this file, not the model: left to itself it titles every unit after the area, so a learner scrolling the area sees the same heading eight times."
+  ],
+  "org": {
+    "name": "Camil",
+    "slug": "camil"
+  },
+  "area": {
+    "name": "Family and Relationships",
+    "nameEs": "Familia y relaciones",
+    "description": "Cómo se llaman las personas de tu familia y de tu vida: de los padres y hermanos a los suegros, los padrinos y la pareja.",
+    "iconKey": "sparkle",
+    "tint": "#FBE7E3",
+    "difficulty": "EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Parents and children",
+      "topic": "The closest family: parents and their children",
+      "words": [
+        "father",
+        "mother",
+        "parents",
+        "son",
+        "daughter",
+        "child",
+        "children",
+        "family"
+      ]
+    },
+    {
+      "name": "Names we use at home",
+      "topic": "The informal names people use for their parents and small children at home",
+      "words": [
+        "dad",
+        "daddy",
+        "mom",
+        "mommy",
+        "kids",
+        "baby"
+      ]
+    },
+    {
+      "name": "Brothers and sisters",
+      "topic": "Brothers, sisters and the children of a family",
+      "words": [
+        "brother",
+        "sister",
+        "sibling",
+        "twins",
+        "boy",
+        "girl"
+      ]
+    },
+    {
+      "name": "Grandparents and grandchildren",
+      "topic": "Grandparents and grandchildren, and the generation before them",
+      "words": [
+        "grandfather",
+        "grandmother",
+        "grandparents",
+        "grandson",
+        "granddaughter",
+        "great-grandfather"
+      ]
+    },
+    {
+      "name": "The extended family",
+      "topic": "The extended family: aunts, uncles, cousins and the words for relatives as a whole",
+      "words": [
+        "uncle",
+        "aunt",
+        "cousin",
+        "nephew",
+        "niece",
+        "relatives",
+        "kin",
+        "next of kin"
+      ]
+    },
+    {
+      "name": "Family by marriage",
+      "topic": "The family you gain by marriage: in-laws and step-parents",
+      "words": [
+        "father-in-law",
+        "mother-in-law",
+        "brother-in-law",
+        "sister-in-law",
+        "son-in-law",
+        "daughter-in-law",
+        "in-laws",
+        "stepfather",
+        "stepmother"
+      ]
+    },
+    {
+      "name": "Godparents and the wedding party",
+      "topic": "A wedding and the people in it: godparents, the attendants who stand beside the couple, the engaged couple and the married couple",
+      "words": [
+        "godfather",
+        "godmother",
+        "best man",
+        "maid of honor",
+        "husband",
+        "wife",
+        "fiance",
+        "fiancee"
+      ]
+    },
+    {
+      "name": "Dating and getting married",
+      "topic": "Two kinds of novio and novia: a partner you are dating and a person getting married today, plus the words for relationship status",
+      "words": [
+        "boyfriend",
+        "girlfriend",
+        "groom",
+        "bride",
+        "friend",
+        "single",
+        "married"
+      ]
+    }
+  ]
+}

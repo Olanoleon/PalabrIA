@@ -7,20 +7,38 @@
  * They drifting apart is exactly the bug `grading.test.ts` was written to
  * catch.
  *
- * Whitespace is dropped on both sides. Vocabulary entries may be two words
- * ("dining room"), but the letter keypad has no space key: the learner types
- * letters only and the gap between slot groups is drawn for them.
+ * Whitespace and hyphens are dropped on both sides. Vocabulary entries may be
+ * two parts ("dining room", "in-laws"), but the letter keypad has only letters:
+ * the learner types letters alone and the gap between slot groups is drawn for
+ * them. A hyphen is a separator the learner cannot tap, so it is treated
+ * exactly like a space rather than becoming an untypeable tile.
  */
 
-/** The word with every space removed, lower-cased. */
+/** Splits an entry into its typeable parts: "father-in-law" -> 3 parts. */
+const SEPARATOR = /[\s\u2010-\u2015-]+/;
+
+/** The word with every separator removed, lower-cased. */
 export function lettersOnly(text: string): string {
-  return text.replace(/\s+/g, "").toLowerCase();
+  return text.replace(new RegExp(SEPARATOR, "g"), "").toLowerCase();
 }
 
-/** How many words the entry has. Two is the most the dictation UI supports. */
+/**
+ * Letters per part, so "dining room" is [6, 4] and "in-laws" is [2, 4].
+ *
+ * Drives the slot groups on the dictation screen; the gap between groups
+ * stands in for the space or hyphen.
+ */
+export function segmentsOf(text: string): number[] {
+  return text
+    .trim()
+    .split(SEPARATOR)
+    .filter(Boolean)
+    .map((part) => part.length);
+}
+
+/** How many parts the entry has. Two is the most the dictation UI supports. */
 export function wordCountOf(text: string): number {
-  const trimmed = text.trim();
-  return trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length;
+  return segmentsOf(text).length;
 }
 
 /** Whether a typed answer spells the target, ignoring spacing and case. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sameSpelling } from "@/lib/answer";
+import { sameSpelling, segmentsOf, wordCountOf } from "@/lib/answer";
 
 /**
  * Multiple-choice answers are graded by the chosen option's TEXT, never its
@@ -167,5 +167,33 @@ describe("match-up grading", () => {
         expect(gradeChoice(MEANINGS, row.answerIndex, tapped)).toBe(true);
       }
     }
+  });
+});
+
+/**
+ * A hyphen is a separator the learner cannot tap — the keypad has letters and
+ * nothing else. It is treated exactly like a space: "in-laws" is two groups of
+ * slots and seven letters, never a hyphen tile.
+ */
+describe("hyphenated entries", () => {
+  it("splits on hyphens as well as spaces", () => {
+    expect(segmentsOf("in-laws")).toEqual([2, 4]);
+    expect(segmentsOf("dining room")).toEqual([6, 4]);
+    expect(segmentsOf("father-in-law")).toEqual([6, 2, 3]);
+    expect(segmentsOf("brother")).toEqual([7]);
+  });
+
+  it("counts hyphenated parts, so three-part entries stay out of dictation", () => {
+    expect(wordCountOf("in-laws")).toBe(2);
+    expect(wordCountOf("father-in-law")).toBe(3);
+    expect(wordCountOf("great-grandfather")).toBe(2);
+    expect(wordCountOf("maid of honor")).toBe(3);
+  });
+
+  it("grades a hyphenated entry typed as bare letters", () => {
+    expect(sameSpelling("inlaws", "in-laws")).toBe(true);
+    expect(sameSpelling("greatgrandfather", "great-grandfather")).toBe(true);
+    expect(sameSpelling("in-laws", "in-laws")).toBe(true);
+    expect(sameSpelling("inlaw", "in-laws")).toBe(false);
   });
 });

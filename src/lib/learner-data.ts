@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings, viewFor } from "@/lib/billing";
 import { levelFromXp, PASS_THRESHOLD } from "@/lib/xp";
 import { areaComplete, passedCount, unitStates, type UnitState } from "@/lib/unlock";
-import { lettersOnly } from "@/lib/answer";
+import { lettersOnly, segmentsOf } from "@/lib/answer";
 import { wordsLearned } from "@/lib/progress";
 import { requireLearner } from "@/lib/rbac";
 import { currentDict } from "@/lib/lang";
@@ -431,7 +431,7 @@ export async function practiceQuestions(
       options: shuffled(Array.isArray(a.options) ? (a.options as string[]) : []),
       mono: a.mono,
       wordLength: lettersOnly(a.word.text).length,
-      wordShape: a.word.text.trim().split(/\s+/).map((part) => part.length),
+      wordShape: segmentsOf(a.word.text),
       // The dictation type needs the word client-side to speak it and to build
       // the letter bank; the two multiple-choice types never receive it.
       word: a.type === "TYPE_WHAT_YOU_HEAR" ? a.word.text : null,

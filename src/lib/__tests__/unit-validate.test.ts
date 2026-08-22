@@ -294,6 +294,29 @@ describe("validateGeneratedUnit", () => {
     );
   });
 
+  it("blocks a phonetic exercise on a word that sounds like another in the unit", () => {
+    // The real case: CAMIL's family page teaches "fiance" and "fiancee", which
+    // share /ˌfiːɑːnˈseɪ/. Neither can be heard apart from the other.
+    const draft = unit(SIX);
+    draft.words[0] = { ...word("fiance"), ipa: "/ˌfiːɑːnˈseɪ/" };
+    draft.words[1] = { ...word("fiancee"), ipa: "/ˌfiːɑːnˈseɪ/" };
+    draft.activities[1] = activity("fiancee", "IPA_MATCH");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("sounds identical"))).toBe(true);
+  });
+
+  it("still allows those words in a sentence or a match-up", () => {
+    const draft = unit(SIX);
+    draft.words[0] = { ...word("fiance"), ipa: "/ˌfiːɑːnˈseɪ/" };
+    draft.words[1] = { ...word("fiancee"), ipa: "/ˌfiːɑːnˈseɪ/" };
+    // Both homophones taught through context instead of sound.
+    draft.activities[0] = activity("fiance", "FILL_BLANK");
+    draft.activities[1] = activity("fiancee", "FILL_BLANK");
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(false);
+  });
+
   it("blocks a match-up with the wrong number of pairs", () => {
     const draft = unit(SIX);
     const match = draft.activities.find((a) => a.type === "MATCH_UP")!;
