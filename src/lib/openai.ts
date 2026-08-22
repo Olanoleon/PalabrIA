@@ -112,7 +112,8 @@ function prompt(input: GenerationInput): string {
     // match-up. Coverage is what the unit is graded on, and the cap cannot be
     // trimmed later: the score is correct/activities over the whole unit.
     `Produce exactly one MATCH_UP activity, plus at most ${MAX_ITEMS - MATCH_PAIRS} single-word activities (FILL_BLANK, IPA_MATCH or TYPE_WHAT_YOU_HEAR), with at least one of each of those three kinds.`,
-    `Coverage is the priority: at least 70% of the unit's words must be practised by some activity. Give the MATCH_UP three words that NO other activity uses, so it adds three words to the coverage rather than repeating them. Do not practise the same word twice until every word has been practised once.`,
+    `Practise EVERY word in the unit. 70% is the floor below which the unit is rejected, not the target — use the whole budget above. Only leave a word unpractised when the item limit makes it impossible, which happens solely when the unit has more words than the limit allows.`,
+    `Give the MATCH_UP three words that NO other activity uses, so it adds three words to the coverage rather than repeating them. Never practise the same word twice while another word has no activity at all.`,
     `- "prompt" is English instruction text, "promptEs" its Spanish twin. "note"/"noteEs" explain the answer in one sentence after the learner answers.`,
     `- Vary which position holds the correct answer across activities; do not always put it first. (The app shuffles options anyway, but the stored data should not be lopsided.)`,
   );

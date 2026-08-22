@@ -1,0 +1,78 @@
+{
+  "source": "CAMIL GE-V-02 · Page 04 · The School",
+  "notes": [
+    "The page's six question and example sentences ('When do you go to school?', 'I need to",
+    "sharpen this pencil') are excluded: they are phrases, not lexical items.",
+    "Dropped from the page at Leon's call: 'greenboard' (real but rare — a learner will meet",
+    "whiteboard or chalkboard instead) and 'examination' (the formal long form of exam, which",
+    "made a three-way near-synonym that fill-in-the-blank cannot grade unambiguously).",
+    "'clip' became 'paper clip': the page's Spanish is 'sujetador', and bare 'clip' is vague.",
+    "Two definitions are pinned because the English is ambiguous where the Spanish is not —",
+    "'compass' is the geometry instrument (compás), not the navigation one (brújula).",
+    "college/university (universidad) and grades/marks (notas) stay in one unit each: the",
+    "learner's difficulty is one Spanish word splitting into two English ones, so the unit is",
+    "built to be about the distinction.",
+    "Unit 6 holds all twelve subject names on purpose, so the learner sees why they belong",
+    "together. At twelve words it is the largest a unit may be, and the eleven-item session",
+    "cap means one subject will not get its own question — the match-up and the singles",
+    "between them still practise eleven of the twelve."
+  ],
+  "org": {
+    "name": "Camil",
+    "slug": "camil"
+  },
+  "area": {
+    "name": "The School",
+    "nameEs": "El colegio",
+    "description": "El colegio por dentro: el salón y sus muebles, lo que llevas en el morral, los exámenes y las materias que estudias.",
+    "iconKey": "sparkle",
+    "tint": "#E4ECF7",
+    "difficulty": "EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Places and people at school",
+      "topic": "Where you study and who is there: the school itself, the places you go on to after it, and the people in a classroom",
+      "words": ["school", "college", "university", "teacher", "student", "classroom", "lockers"]
+    },
+    {
+      "name": "The classroom",
+      "topic": "What is on the walls of a classroom and the furniture in it: the different kinds of board, the map, and where you sit",
+      "words": ["board", "blackboard", "bulletin board", "billboard", "map", "desk", "chair", "drawer"]
+    },
+    {
+      "name": "Things you write with",
+      "topic": "What you write with and on: pens, pencils, what corrects a mistake, and the paper it goes on",
+      "words": ["chalk", "pen", "pencil", "eraser", "sharpener", "ink", "paper", "notebook"]
+    },
+    {
+      "name": "Books, tools and your backpack",
+      "topic": "What a student carries and the tools for measuring and drawing. 'compass' here is the geometry instrument for drawing circles, not the one that points north; 'paper clip' is the small metal clip that holds sheets together",
+      "words": ["book", "paper clip", "thumbtack", "ruler", "compass", "backpack"]
+    },
+    {
+      "name": "The school day, tests and grades",
+      "topic": "How the school day is marked and how work is judged: the bell, the words for an assessment, and the words for the result",
+      "words": ["bell", "subjects", "test", "exam", "grades", "marks"]
+    },
+    {
+      "name": "School subjects",
+      "topic": "The subjects on a school timetable, from the sciences and mathematics to the humanities, languages and beliefs",
+      "words": [
+        "math",
+        "geometry",
+        "science",
+        "biology",
+        "chemistry",
+        "physics",
+        "geography",
+        "history",
+        "languages",
+        "philosophy",
+        "psychology",
+        "religion"
+      ]
+    }
+  ]
+}

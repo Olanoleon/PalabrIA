@@ -32,6 +32,7 @@ import { PrismaClient } from "../src/generated/prisma";
 import { generateUnit, GenerationError } from "../src/lib/openai";
 import { persistGeneratedUnit } from "../src/lib/unit-persist";
 import { validateGeneratedUnit } from "../src/lib/unit-validate";
+import { trimToBudget } from "../src/lib/unit-trim";
 import type { Difficulty } from "../src/generated/prisma";
 
 const prisma = new PrismaClient();
@@ -180,12 +181,20 @@ async function seedPage(page: Page) {
         // every unit after the area, so the area screen reads as eight copies
         // of the same heading.
         draft.title = spec.name;
-        const issues = validateGeneratedUnit(draft, {
+
+        // A large unit tempts the model over the item budget. Trim the surplus
+        // instead of throwing away a draft that is otherwise good.
+        const { unit: fitted, dropped } = trimToBudget(draft);
+        for (const word of dropped) {
+          console.log(`      trim   dropped a spare activity for "${word}" to fit the session`);
+        }
+
+        const issues = validateGeneratedUnit(fitted, {
           wordCount: input.wordCount,
           wordList: input.wordList,
         });
 
-        const written = await persistGeneratedUnit(area.id, draft, {
+        const written = await persistGeneratedUnit(area.id, fitted, {
           difficulty: page.area.difficulty,
           visible: page.area.visible,
           generationInput: input,
@@ -198,9 +207,9 @@ async function seedPage(page: Page) {
 
         saved = true;
         made++;
-        const match = draft.activities.find((a) => a.type === "MATCH_UP");
+        const match = fitted.activities.find((a) => a.type === "MATCH_UP");
         console.log(
-          `✔ ${label} ${draft.title} — ${draft.words.length} words, ${draft.activities.length} activities, ${((Date.now() - at) / 1000).toFixed(0)}s`,
+          `✔ ${label} ${fitted.title} — ${fitted.words.length} words, ${fitted.activities.length} activities, ${((Date.now() - at) / 1000).toFixed(0)}s`,
         );
         for (const pair of match?.pairs ?? []) {
           console.log(`      match  ${pair.en} → ${pair.es}`);
@@ -218,6 +227,32 @@ async function seedPage(page: Page) {
     }
     if (!saved) failed++;
   }
+
+  // Renumber to the plan's order.
+  //
+  // `persistGeneratedUnit` appends — it takes sortOrder from the current unit
+  // count — so a unit regenerated after being deleted from the middle lands at
+  // the end and collides with whatever already holds that number. Unit order
+  // is the unlock chain, so a tie there is a learner stuck behind the wrong
+  // unit. Rewriting the whole area from the plan is cheap and self-healing.
+  const rows = await prisma.unit.findMany({
+    where: { areaId: area.id },
+    select: { id: true, name: true, sortOrder: true },
+  });
+  const planOrder = new Map(page.units.map((u, i) => [u.name, i]));
+  const ordered = [...rows].sort(
+    (a, b) =>
+      (planOrder.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
+        (planOrder.get(b.name) ?? Number.MAX_SAFE_INTEGER) ||
+      a.sortOrder - b.sortOrder,
+  );
+  let moved = 0;
+  for (const [index, row] of ordered.entries()) {
+    if (row.sortOrder === index) continue;
+    await prisma.unit.update({ where: { id: row.id }, data: { sortOrder: index } });
+    moved++;
+  }
+  if (moved) console.log(`↻ renumbered ${moved} unit(s) into the plan's order`);
 
   console.log(
     `\n${made} unit(s) generated, ${skipped} skipped, ${failed} failed, in ${((Date.now() - started) / 1000 / 60).toFixed(1)} min.`,
