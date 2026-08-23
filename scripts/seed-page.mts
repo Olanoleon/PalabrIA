@@ -3,6 +3,7 @@
  *
  *   npm run seed:page -- --all --dry        # every page, nothing written
  *   npm run seed:page -- --all               # every page, in curriculum order
+ *   npm run seed:page -- --all --update      # also rebuild units whose plan changed
  *   npm run seed:page -- --page content/vocab-pages/page-03-family.json
  *
  * The page file carries the vocabulary a real curriculum already teaches; the
@@ -30,7 +31,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PrismaClient } from "../src/generated/prisma";
 import { generateUnit, GenerationError } from "../src/lib/openai";
-import { persistGeneratedUnit } from "../src/lib/unit-persist";
+import { persistGeneratedUnit, replaceGeneratedUnit } from "../src/lib/unit-persist";
 import { validateGeneratedUnit } from "../src/lib/unit-validate";
 import { trimToBudget } from "../src/lib/unit-trim";
 import type { Difficulty } from "../src/generated/prisma";
@@ -46,6 +47,7 @@ const PAGE = arg("page");
 const ALL = process.argv.includes("--all");
 const DRY = process.argv.includes("--dry");
 const MODEL = arg("model");
+const UPDATE = process.argv.includes("--update");
 const PAGES_DIR = "content/vocab-pages";
 
 type Page = {
@@ -98,6 +100,23 @@ const files = PAGE
 if (!files.length) {
   console.error(`No page files in ${PAGES_DIR}.`);
   process.exit(1);
+}
+
+/**
+ * JSON with object keys in a fixed order.
+ *
+ * Postgres jsonb does not preserve the order keys were written in, so the
+ * generation input read back from a row never matches the literal it was
+ * built from under a plain JSON.stringify — which made every unit look
+ * changed. Sorting both sides compares the values rather than the layout.
+ */
+function canonical(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`).join(",")}}`;
 }
 
 async function seedPage(page: Page) {
@@ -168,21 +187,6 @@ async function seedPage(page: Page) {
   for (const [index, spec] of page.units.entries()) {
     const label = `${String(index + 1).padStart(2)}/${page.units.length}`;
 
-    // Resume rather than duplicate: a unit is identified by the topic it was
-    // generated from, which is recorded on the row.
-    const existing = await prisma.unit.findFirst({
-      where: {
-        areaId: area.id,
-        generationInput: { path: ["topic"], equals: spec.topic },
-      },
-      select: { id: true, name: true },
-    });
-    if (existing) {
-      console.log(`• ${label} already there: ${existing.name}`);
-      skipped++;
-      continue;
-    }
-
     const difficulty = spec.difficulty ?? page.area.difficulty;
     const input = {
       wordCount: spec.words.length,
@@ -191,6 +195,75 @@ async function seedPage(page: Page) {
       wordList: spec.words,
       areaName: page.area.name,
     };
+
+    /*
+     * Resume rather than duplicate, keyed on the unit's NAME.
+     *
+     * This used to key on the topic recorded in generationInput, which had two
+     * ways to go wrong when a page file was edited later. Changing a unit's
+     * word list without touching its topic looked identical to an untouched
+     * unit, so the edit was silently ignored. Changing the topic looked like a
+     * brand new unit, so a second copy appeared beside the first under the
+     * same name. Both failures are quiet, and both surface weeks later.
+     *
+     * The name is stable and unique within an area — the page file sets it —
+     * so it identifies the unit, and the recorded input tells us whether the
+     * plan has moved since it was built.
+     */
+    const existing = await prisma.unit.findFirst({
+      where: { areaId: area.id, name: spec.name },
+      select: { id: true, name: true, generationInput: true },
+    });
+
+    if (existing) {
+      const before = canonical(existing.generationInput ?? {});
+      const after = canonical(input);
+      if (before === after) {
+        console.log(`• ${label} already there: ${existing.name}`);
+        skipped++;
+        continue;
+      }
+      if (!UPDATE) {
+        console.log(
+          `• ${label} ${existing.name}: the page file has changed since this was built — pass --update to rebuild it`,
+        );
+        skipped++;
+        continue;
+      }
+      // Rebuild in place. The Unit row survives, so a learner's best score and
+      // attempts survive with it, and contentVersion is bumped so anyone who
+      // already passed it is invited back.
+      try {
+        const draft = await generateUnit(input, model);
+        draft.title = spec.name;
+        if (spec.paragraphNote) {
+          draft.introParagraph = `${draft.introParagraph} ${spec.paragraphNote.en}`;
+          draft.introParagraphEs = `${draft.introParagraphEs} ${spec.paragraphNote.es}`;
+        }
+        const { unit: fitted } = trimToBudget(draft);
+        const written = await replaceGeneratedUnit(existing.id, fitted, {
+          difficulty,
+          visible: page.area.visible,
+          generationInput: input,
+          edited: false,
+        });
+        if ("error" in written) {
+          console.log(`  ✘ ${label} rebuild rejected: ${written.error}`);
+          failed++;
+          continue;
+        }
+        console.log(`↻ ${label} ${spec.name} rebuilt from the updated page file`);
+        made++;
+      } catch (error) {
+        if (error instanceof GenerationError) {
+          console.log(`  ✘ ${label} rebuild ${error.code}: ${error.message}`);
+          failed++;
+          continue;
+        }
+        throw error;
+      }
+      continue;
+    }
 
     // One retry: a generation can miss the coverage or item rules by chance,
     // and a second attempt is far cheaper than a failed run.
