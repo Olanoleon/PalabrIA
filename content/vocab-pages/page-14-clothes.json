@@ -1,0 +1,130 @@
+{
+  "source": "CAMIL GE-V-07 · Page 14 · Clothing - Clothes",
+  "notes": [
+    "The page's four example sentences ('How often do you wear a tuxedo?') are excluded.",
+    "The page's own Spanish never reaches the generator — it is only read to catch mismatches.",
+    "Three of its glosses are wrong and the correct English sense is asserted in the topic:",
+    "'slippers' are soft indoor shoes (pantuflas), not chanclas, which are flip-flops;",
+    "'waistband' is the band at the top of a pair of trousers, not a belt, and 'belt' sits in",
+    "the same unit so describing both as a belt would make them unanswerable against each",
+    "other; 'gown' is a long formal dress, not a bata. Each word was already in the unit its",
+    "real meaning belongs to, so only the definitions change.",
+    "Two words dropped. 'slacks' is a third word for pantalones and genuinely dated in American",
+    "English — trousers/pants is the pair that matters. 'undershorts' is a dated duplicate of",
+    "'underpants' with the same gloss.",
+    "This page is denser with collisions than any before it, and every pair sits in one unit:",
+    "clothing/clothes (ropa), dress/gown (vestido), trousers/pants (pantalones, British against",
+    "American), socks/stockings (medias), gloves/mittens (guantes), underpants/panties.",
+    "PANTY-HOSE, SWEAT-SUIT and SWIM-SUIT normalised to their closed forms.",
+    "Mixed difficulty at Leon's request. EASY goes to the three units whose paragraphs have a",
+    "real distinction to explain — formal occasions, the underwear near-synonyms, and the mixed",
+    "last unit. The concrete everyday ones stay VERY_EASY.",
+    "The Spanish for 'gown' and 'wardrobe' is asserted in the topic. Left to itself the model returned 'bata elegante' for gown, reaching for the same wrong word the page used, and hedged wardrobe between the furniture and a person's collection."
+  ],
+  "org": {
+    "name": "Camil",
+    "slug": "camil"
+  },
+  "area": {
+    "name": "Clothes",
+    "nameEs": "La ropa",
+    "description": "Cómo se llama lo que te pones: camisas y pantalones, ropa formal, ropa interior, zapatos y todo lo que abriga.",
+    "iconKey": "sparkle",
+    "tint": "#F2E6F7",
+    "difficulty": "VERY_EASY",
+    "visible": true
+  },
+  "units": [
+    {
+      "name": "Shirts and tops",
+      "topic": "What you wear on the upper body every day, and the two general words for it. 'clothing' and 'clothes' are both ropa — clothing is the collective, slightly more formal word, clothes is what people actually say — and the unit should make that difference clear",
+      "words": [
+        "clothing",
+        "clothes",
+        "shirt",
+        "t-shirt",
+        "undershirt",
+        "blouse",
+        "sweater"
+      ]
+    },
+    {
+      "name": "Formal clothes",
+      "topic": "What is worn to a wedding, an office or a formal evening. 'gown' here is a long formal dress worn to an important occasion. Its Spanish is 'vestido de gala' or 'vestido largo' — NEVER 'bata', which is a housecoat and a different garment entirely. 'dress' and 'gown' are both vestido and the unit should separate them: a dress is everyday, a gown is long and formal.",
+      "words": [
+        "suit",
+        "tuxedo",
+        "dress",
+        "gown",
+        "necktie"
+      ],
+      "difficulty": "EASY"
+    },
+    {
+      "name": "Trousers and skirts",
+      "topic": "What you wear on the lower body and what holds it up. 'trousers' and 'pants' are the same garment — trousers is British, pants is American — and the unit should say so. 'waistband' is the band of cloth at the top of a pair of trousers or a skirt, NOT a belt: 'belt' is the separate strap you buy on its own, and the two are in this unit together so they must be described so they cannot be confused",
+      "words": [
+        "trousers",
+        "pants",
+        "jeans",
+        "shorts",
+        "skirt",
+        "belt",
+        "waistband"
+      ]
+    },
+    {
+      "name": "Underwear",
+      "topic": "What is worn under everything else. Several of these are close in meaning and the unit exists to separate them: 'underwear' is the general word, 'underpants' and 'panties' are specific garments, 'pantyhose' covers the legs and waist in one piece",
+      "words": [
+        "underpants",
+        "underwear",
+        "panties",
+        "pantyhose",
+        "bra",
+        "diaper",
+        "underskirt"
+      ],
+      "difficulty": "EASY"
+    },
+    {
+      "name": "Shoes and socks",
+      "topic": "What goes on the feet, indoors and out. 'slippers' are the soft shoes worn inside the house — pantuflas — never open flip-flops. 'socks' and 'stockings' are both medias and the unit should separate them: socks reach the ankle or calf, stockings are thin and reach the thigh",
+      "words": [
+        "boots",
+        "shoes",
+        "sneakers",
+        "slippers",
+        "laces",
+        "socks",
+        "stockings"
+      ]
+    },
+    {
+      "name": "Coats, hats and gloves",
+      "topic": "What you put on when it is cold or when you go outside. 'gloves' and 'mittens' are both guantes and the difference is the point: gloves have a place for each finger, mittens keep the fingers together",
+      "words": [
+        "shawl",
+        "coat",
+        "jacket",
+        "scarf",
+        "hat",
+        "cap",
+        "gloves",
+        "mittens"
+      ]
+    },
+    {
+      "name": "Sport, swimming and storing clothes",
+      "topic": "Clothes for exercise and the water, the cloth you carry in a pocket, and the piece of furniture clothes are kept in. 'trunks' are the shorts a man swims in. 'wardrobe' is ONLY the tall cupboard that clothes hang in — an armario or ropero. Do not define it as a person's collection of clothes; that sense is not taught here.",
+      "words": [
+        "trunks",
+        "swimsuit",
+        "sweatsuit",
+        "handkerchief",
+        "wardrobe"
+      ],
+      "difficulty": "EASY"
+    }
+  ]
+}
