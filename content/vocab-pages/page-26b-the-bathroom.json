@@ -1,0 +1,34 @@
+{
+  "source": "CAMIL GE-V-13 · Page 26 · Bedroom and Bathroom (bathroom half)",
+  "notes": [
+    "'washbowl' dropped: archaic. TO FLUSH normalised to 'flush' — the page lists it with the",
+    "infinitive marker attached, which is not how a word is taught. WASTE BASKET to",
+    "'wastebasket'.",
+    "faucet/tap (grifo) and perfume/cologne (perfume) are collision pairs and stay together.",
+    "Cleaning things are here rather than in a house area because they live in this room."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "The Bathroom",
+    "nameEs": "El baño",
+    "description": "El baño: la ducha y el sanitario, lo que usas para lavarte y arreglarte, y lo que sirve para limpiar.",
+    "iconKey": "sparkle", "tint": "#DDEEF2", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "The bathroom",
+      "topic": "The fixed things in a bathroom and what you do with them. 'faucet' and 'tap' are the same thing — faucet is American, tap is British",
+      "words": ["toilet", "toilet paper", "flush", "faucet", "tap", "shower", "bathtub"] },
+    { "name": "Washing and hair",
+      "topic": "What you wash with and what you do to your hair afterwards. Toiletries is the general word for all of it",
+      "words": ["soap", "soap dish", "shampoo", "conditioner", "comb", "brush", "hair dryer", "toiletries"] },
+    { "name": "Teeth and shaving",
+      "topic": "Looking after teeth, and shaving. A blade is the sharp part a razor holds",
+      "words": ["toothbrush", "toothpaste", "dental floss", "razor", "blade"] },
+    { "name": "Makeup and perfume",
+      "topic": "What goes on the face and skin. 'perfume' and 'cologne' are both perfume — cologne is lighter and traditionally worn by men",
+      "words": ["lipstick", "makeup", "powder", "lotion", "creams", "perfume", "cologne"] },
+    { "name": "Cleaning",
+      "topic": "What a house is cleaned with, and where the rubbish goes",
+      "words": ["broom", "dustpan", "mop", "detergent", "wastebasket"] }
+  ]
+}

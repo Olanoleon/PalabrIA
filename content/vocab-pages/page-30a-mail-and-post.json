@@ -1,0 +1,24 @@
+{
+  "source": "CAMIL GE-V-15 · Page 30 · Communications (post half)",
+  "notes": [
+    "The Communications page was rewritten at Leon's request: much of it describes technology",
+    "that no longer exists. Post and internet are also different topics, so they split.",
+    "Dropped from this half: 'postman' (a duplicate of mailman), 'mailbag', 'parcel post',",
+    "'special delivery' and 'regular mail' — service names a learner will not meet."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Mail and the Post Office",
+    "nameEs": "El correo",
+    "description": "Enviar y recibir correo: la oficina de correos, el sobre y la estampilla, y los paquetes.",
+    "iconKey": "sparkle", "tint": "#F2E9DC", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "At the post office",
+      "topic": "Where mail is handled and who brings it. A P.O. box is a private box at the post office rather than at your home",
+      "words": ["post office", "mail", "mailman", "mail truck", "mailbox", "P.O. box", "package", "money order"] },
+    { "name": "Sending a letter",
+      "topic": "What a letter is made of and what has to go on it before it travels",
+      "words": ["letter", "envelope", "stamp", "postage", "zip code", "post card", "receipt"] }
+  ]
+}

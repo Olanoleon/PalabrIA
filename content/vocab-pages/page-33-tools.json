@@ -1,0 +1,45 @@
+{
+  "source": "CAMIL GE-V-17 · Page 33 · Tools",
+  "notes": [
+    "BALANCE replaced with 'scale'. The page glosses it balanza, but 'balance' does not mean a",
+    "weighing instrument in current English — the same class of error as 'clime' on page 10.",
+    "'pipe' dropped: on a tools page it reads as plumbing, but the gloss is pipa, the smoking",
+    "kind. Ambiguous either way and not really a tool.",
+    "Collisions kept together: wrench/spanner (spanner is British), lantern/flashlight",
+    "(linterna), tape/ribbon (cinta), hook/hanger (gancho), cane/stick (bastón).",
+    "'seal' here is the stamp; the animal is in another area. 'clip' also appears as paper clip",
+    "in Food and Ingredients, and 'washer' is the metal ring, unrelated to the machine in The",
+    "Kitchen.",
+    "EASY: workshop vocabulary asks more of a learner than naming what is in a room."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Tools",
+    "nameEs": "Las herramientas",
+    "description": "Las herramientas de una caja y de un taller: para atornillar, cortar, medir, alumbrar y sujetar.",
+    "iconKey": "sparkle", "tint": "#EDE4D4", "difficulty": "EASY", "visible": true
+  },
+  "units": [
+    { "name": "Hand tools",
+      "topic": "The tools that turn and grip. 'wrench' and 'spanner' are the same tool — wrench is American, spanner British — and a monkey wrench adjusts to fit",
+      "words": ["screwdriver", "hammer", "pliers", "wrench", "spanner", "monkey wrench", "vise"] },
+    { "name": "Cutting and drilling",
+      "topic": "The tools that make a hole or take material away. A bit is the part of a drill that turns, a handsaw is a saw used by hand",
+      "words": ["drill", "bit", "file", "saw", "handsaw", "axe", "scissors"] },
+    { "name": "Screws and nails",
+      "topic": "The small metal pieces that hold things together. A washer is the flat ring that sits under a nut",
+      "words": ["screw", "bolt", "nut", "washer", "nail", "wire", "pin", "stapler"] },
+    { "name": "Keys, locks and switches",
+      "topic": "What opens, closes and hangs. 'hook' and 'hanger' are both gancho — a hanger holds clothes, a hook holds anything",
+      "words": ["key", "key ring", "lock", "switch", "plug", "hook", "hanger"] },
+    { "name": "Garden and building",
+      "topic": "The larger tools used outdoors and on a building site",
+      "words": ["rake", "shovel", "pick", "trowel", "ladder", "level", "wagon"] },
+    { "name": "Sticking and measuring",
+      "topic": "What joins things and what measures them. 'tape' and 'ribbon' are both cinta — tape sticks, ribbon decorates. 'seal' here is the stamp pressed into a document",
+      "words": ["tape", "ribbon", "clip", "seal", "glue", "scale", "thermometer"] },
+    { "name": "Light and fire",
+      "topic": "What gives light when there is none, and what you lean on. 'lantern' and 'flashlight' are both linterna — a flashlight is the handheld electric one. 'cane' and 'stick' are both bastón",
+      "words": ["lantern", "flashlight", "candle", "match", "magnifying glass", "cane", "stick"] }
+  ]
+}

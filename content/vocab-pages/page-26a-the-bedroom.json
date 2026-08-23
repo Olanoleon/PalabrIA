@@ -1,0 +1,26 @@
+{
+  "source": "CAMIL GE-V-13 · Page 26 · Bedroom and Bathroom (bedroom half)",
+  "notes": [
+    "BOARD normalised to 'headboard' and FRAME to 'bed frame'. Bare 'board' and 'frame' say",
+    "nothing in a bedroom, and 'frame' would collide with the picture frame in The Living Room.",
+    "PILLOW CASE normalised to 'pillowcase'.",
+    "'spring' kept at Leon's call: resorte is still what it means.",
+    "'wardrobe' also appears in Clothes. Different areas, and the sense is the same piece of",
+    "furniture, so the repetition reinforces rather than confuses."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "The Bedroom",
+    "nameEs": "La alcoba",
+    "description": "La alcoba: la cama y todo lo que lleva encima, y los muebles donde se guarda la ropa.",
+    "iconKey": "sparkle", "tint": "#E4E9F2", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "The bed",
+      "topic": "The bed and everything on it. The headboard is the panel at the head of the bed, the bed frame is the structure holding the mattress, and a spring is one of the metal coils inside a mattress",
+      "words": ["bed", "mattress", "spring", "headboard", "bed frame", "sheets", "blanket", "cover", "pillow", "pillowcase"] },
+    { "name": "Bedroom furniture",
+      "topic": "What stands around a bed: where clothes are kept and where things are put down",
+      "words": ["night table", "closet", "wardrobe", "shelf", "mirror", "dresser", "drawer"] }
+  ]
+}

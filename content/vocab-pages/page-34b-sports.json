@@ -1,0 +1,24 @@
+{
+  "source": "CAMIL GE-V-17 · Page 34 · Miscellaneous (sports)",
+  "notes": [
+    "football/soccer is the most useful pair on the page: in American English football is a",
+    "different game entirely, and a Colombian learner saying 'football' to an American will be",
+    "misunderstood. They stay in one unit.",
+    "'swimming' also appears as 'swimming pool' in House and Home. Different areas."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Sports",
+    "nameEs": "Los deportes",
+    "description": "Los deportes de pelota y los demás, y por qué football no quiere decir fútbol.",
+    "iconKey": "sparkle", "tint": "#DFEAF5", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Ball sports",
+      "topic": "The sports played with a ball. This is the important one: in American English 'soccer' is the game played with the feet and 'football' is a different sport played with the hands and a pointed ball. A learner who says football to an American means the wrong game",
+      "words": ["sports", "football", "soccer", "basketball", "volleyball", "hockey", "tennis"] },
+    { "name": "Other sports",
+      "topic": "The sports played without a ball, in a pool, a ring or on a track",
+      "words": ["golf", "swimming", "boxing", "cycling", "gymnastics", "athletics"] }
+  ]
+}

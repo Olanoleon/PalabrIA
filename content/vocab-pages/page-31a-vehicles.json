@@ -1,0 +1,26 @@
+{
+  "source": "CAMIL GE-V-16 · Page 31 · Transportation (vehicles half)",
+  "notes": [
+    "Vehicles and car parts split: one is what you travel in, the other is what a car is made of.",
+    "'tools' dropped here — page 33 is fifty words of them.",
+    "Collisions kept together: bike/bicycle, taxi/cab, helicopter/chopper."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Vehicles",
+    "nameEs": "Los vehículos",
+    "description": "Cómo se mueve la gente: bicicletas y motos, carros y taxis, y los vehículos grandes que van por tierra o por aire.",
+    "iconKey": "sparkle", "tint": "#E7EFE0", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Bikes and motorbikes",
+      "topic": "Two-wheeled vehicles and the person who rides one. 'bike' and 'bicycle' are the same thing — bike is the everyday word",
+      "words": ["vehicles", "bike", "bicycle", "cyclist", "motorcycle", "scooter"] },
+    { "name": "Cars and taxis",
+      "topic": "Cars of different kinds and what you hire to be driven in. 'taxi' and 'cab' are the same thing",
+      "words": ["automobile", "car", "sports car", "taxi", "cab", "jeep", "van", "four wheel drive"] },
+    { "name": "Big and flying",
+      "topic": "Vehicles too large to park at a house, and the ones that leave the ground. 'chopper' is an informal word for a helicopter, and an 18-wheeler is the largest kind of truck",
+      "words": ["bus", "truck", "18-wheeler", "train", "plane", "helicopter", "chopper"] }
+  ]
+}

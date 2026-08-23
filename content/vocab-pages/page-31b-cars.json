@@ -1,0 +1,35 @@
+{
+  "source": "CAMIL GE-V-16 · Page 31 · Transportation (car parts half)",
+  "notes": [
+    "HEAD-LIGHT and TAIL-LIGHT normalised to 'headlight' and 'taillight'.",
+    "engine/motor (motor) is a collision pair and stays together.",
+    "'trunk' now appears in three areas — the body, swim trunks and a car boot. Different",
+    "areas, so no exercise can put them together, but it is the same word taught three ways.",
+    "'mirror' also appears in The Bedroom.",
+    "EASY: mechanical vocabulary is a step up from naming objects around a house."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Cars: Parts and Driving",
+    "nameEs": "El carro y la conducción",
+    "description": "De qué está hecho un carro y qué necesitas para conducirlo: la carrocería, el motor, los pedales y los papeles.",
+    "iconKey": "sparkle", "tint": "#E9E3DC", "difficulty": "EASY", "visible": true
+  },
+  "units": [
+    { "name": "Outside the car",
+      "topic": "The body of a car: what opens, what you see through and what protects it",
+      "words": ["front door", "rear door", "hood", "trunk", "bumper", "mirror", "windshield", "wipers"] },
+    { "name": "Lights and wheels",
+      "topic": "What a car runs on and how it is seen at night, plus what you need for a flat tire",
+      "words": ["headlight", "taillight", "wheel", "tire", "rim", "spare tire", "jack", "license plate"] },
+    { "name": "At the wheel",
+      "topic": "What the driver holds and presses. The gas pedal makes the car go, the brake pedal stops it, and honking sounds the horn",
+      "words": ["steering wheel", "horn", "honk", "clutch", "accelerator", "brake", "gas pedal", "brake pedal"] },
+    { "name": "Under the hood",
+      "topic": "The machinery that makes a car move. 'engine' and 'motor' are both motor and are used almost interchangeably in English",
+      "words": ["engine", "motor", "battery", "radiator", "spark plug", "transmission", "gear"] },
+    { "name": "Driving and paperwork",
+      "topic": "What a car consumes and what the driver must carry",
+      "words": ["stick shift", "fuel", "oil", "driver's license", "insurance"] }
+  ]
+}

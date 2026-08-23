@@ -1,0 +1,36 @@
+{
+  "source": "CAMIL GE-V-12 · Page 24 · House and Home",
+  "notes": [
+    "The page's four example sentences are excluded.",
+    "Collisions kept together: ceiling/roof (techo), fireplace/chimney (chimenea),",
+    "steps/stairs (escalas), paint/painting (pintura).",
+    "'library' here is the room in a house, not a public one."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "House and Home",
+    "nameEs": "Casa y hogar",
+    "description": "Dónde vive la gente: tipos de vivienda, las habitaciones, el jardín y todo lo que forma una casa.",
+    "iconKey": "sparkle", "tint": "#EFE8DD", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Kinds of home",
+      "topic": "The different places people live in a city and how you get into them",
+      "words": ["building", "condominium", "apartment", "studio", "floor plan", "elevator", "lobby"] },
+    { "name": "The rooms",
+      "topic": "The rooms of a house and what each is used for. 'library' here is a room in a house lined with books",
+      "words": ["room", "living room", "dining room", "bedroom", "bathroom", "kitchen", "library", "garage"] },
+    { "name": "Outside the house",
+      "topic": "The parts of a home that are outdoors. 'garden' is where things are planted, 'lawn' is the grass, 'yard' is the whole open space",
+      "words": ["balcony", "porch", "yard", "garden", "lawn", "fence", "swimming pool"] },
+    { "name": "Doors, windows and walls",
+      "topic": "The openings of a house and what announces a visitor",
+      "words": ["door", "door plate", "doorbell", "alarm", "window", "wall", "floor"] },
+    { "name": "Up and down",
+      "topic": "Above and below the rooms, and how you move between them. 'ceiling' and 'roof' are both techo — the ceiling is above you inside, the roof covers the building outside. 'fireplace' and 'chimney' are both chimenea — the fireplace is where the fire is, the chimney is the pipe the smoke leaves by. 'steps' and 'stairs' are both escalas",
+      "words": ["ceiling", "roof", "chimney", "fireplace", "basement", "steps", "stairs", "upstairs", "downstairs"] },
+    { "name": "Finishes and addresses",
+      "topic": "What covers a wall or a floor, and how a home is found. 'paint' is the liquid, 'painting' is the picture on the wall — both are pintura",
+      "words": ["tile", "paint", "painting", "address", "home address", "business address", "homeless"] }
+  ]
+}

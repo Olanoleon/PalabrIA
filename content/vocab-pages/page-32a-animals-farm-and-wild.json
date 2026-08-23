@@ -1,0 +1,34 @@
+{
+  "source": "CAMIL GE-V-16 · Page 32 · Animals (mammals half)",
+  "notes": [
+    "Eighty terms, the largest page in the course, so it becomes two areas: mammals, and then",
+    "birds, sea animals and insects.",
+    "'calf' also appears in Arms, Legs and Inside the Body as the muscle. Different areas.",
+    "crocodile/alligator (cocodrilo/caimán) is a real pair but they sit in different areas here:",
+    "the crocodile with the wild mammals as the page has it, the alligator with the sea animals."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Animals: Farm and Wild",
+    "nameEs": "Animales: la granja y la selva",
+    "description": "Los animales de casa y de finca, y los grandes animales salvajes de la selva y la sabana.",
+    "iconKey": "sparkle", "tint": "#E6EFD9", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Pets and farm animals",
+      "topic": "The animals people keep. A mare is a female horse, a bull is a male cow",
+      "words": ["domestic animals", "dog", "cat", "horse", "donkey", "mare", "cow", "bull"] },
+    { "name": "Young animals and livestock",
+      "topic": "The young of farm animals and the larger animals kept or hunted elsewhere. A calf is a young cow, a lamb a young sheep",
+      "words": ["calf", "lamb", "pig", "goat", "sheep", "camel", "buffalo", "moose"] },
+    { "name": "Big cats and bears",
+      "topic": "The large predators and the primates beside them",
+      "words": ["wild animals", "lion", "tiger", "panther", "leopard", "bear", "monkey"] },
+    { "name": "African animals",
+      "topic": "The very large animals of the savannah and the forest",
+      "words": ["gorilla", "elephant", "hippopotamus", "rhinoceros", "zebra", "giraffe", "deer"] },
+    { "name": "Forest animals",
+      "topic": "Smaller wild animals, the ones you might see near a town or in a river",
+      "words": ["fox", "wolf", "kangaroo", "rabbit", "beaver", "crocodile", "snake", "skunk"] }
+  ]
+}

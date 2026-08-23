@@ -1,0 +1,34 @@
+{
+  "source": "CAMIL GE-V-16 · Page 32 · Animals (birds, sea and insects half)",
+  "notes": [
+    "dove/pigeon (paloma) and frog/toad (rana/sapo) are collision pairs and stay together.",
+    "'chicken', 'turkey' and 'fish' also appear in Food and Ingredients as meat. Different",
+    "areas, and the double life of those words is worth a learner meeting twice.",
+    "'seal' also appears in Tools as the stamp. Same spelling, unrelated meanings, different",
+    "areas."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Birds, Sea Animals and Insects",
+    "nameEs": "Aves, animales de mar e insectos",
+    "description": "Las aves de corral y las salvajes, los animales del mar y del río, y los insectos que se meten en la casa.",
+    "iconKey": "sparkle", "tint": "#DCEDF0", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Farm birds",
+      "topic": "The birds kept for eggs and meat. A hen is female, a rooster male, a chicken either",
+      "words": ["birds", "hen", "rooster", "chicken", "duck", "goose", "swan", "turkey", "ostrich"] },
+    { "name": "Wild birds",
+      "topic": "The birds you see in a city or in the sky. 'dove' and 'pigeon' are both paloma — a dove is smaller and paler, and stands for peace",
+      "words": ["eagle", "parrot", "dove", "pigeon", "owl", "sea gull", "swallow", "vulture"] },
+    { "name": "In the water",
+      "topic": "What lives in the sea, in rivers and at their edges. 'frog' and 'toad' are close — a toad has drier, rougher skin and stays further from water",
+      "words": ["sea animals", "fish", "whale", "shark", "dolphin", "seal", "octopus", "alligator", "snail", "frog", "toad", "turtle"] },
+    { "name": "Insects",
+      "topic": "The insects you meet outdoors, and the one everybody likes",
+      "words": ["insects", "fly", "bee", "ant", "wasp", "cricket", "butterfly"] },
+    { "name": "Pests",
+      "topic": "The small creatures that get into a house or onto a body, and are not wanted there",
+      "words": ["cockroach", "worm", "flea", "bedbug", "louse", "beetle"] }
+  ]
+}

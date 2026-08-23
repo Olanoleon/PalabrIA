@@ -1,0 +1,39 @@
+{
+  "source": "CAMIL GE-V-15 · Page 30 · Communications (rewritten for modern use)",
+  "notes": [
+    "Rewritten at Leon's request. Nine words dropped as obsolete: 'pay phone', 'public phone',",
+    "'phone booth', 'phone book', 'receiver', 'cradle' and 'slot' are the anatomy of a payphone,",
+    "a machine a learner will never touch; 'cordless phone' names a distinction that stopped",
+    "mattering; 'fax' survives only in a few legal offices.",
+    "Twenty-one words added that the page predates: smartphone, tablet, charger, headphones,",
+    "wifi, website, browser, online, app, download, upload, password, username, text message,",
+    "chat, video call, social media, notification, screenshot, streaming, podcast.",
+    "E-MAIL normalised to 'email', which is how it is written now.",
+    "'screen' and 'television' also appear in The Living Room. Different areas.",
+    "EASY: this unit's vocabulary is abstract in a way the household pages are not."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Phones, Internet and Media",
+    "nameEs": "Teléfonos, internet y medios",
+    "description": "La comunicación de hoy: los aparatos, conectarse, los mensajes y las aplicaciones, y dónde se leen las noticias.",
+    "iconKey": "sparkle", "tint": "#DCE7F7", "difficulty": "EASY", "visible": true
+  },
+  "units": [
+    { "name": "Devices",
+      "topic": "The machines people use to work and communicate, and the two things you plug into them",
+      "words": ["computer", "laptop", "tablet", "smartphone", "keyboard", "printer", "screen", "charger"] },
+    { "name": "Getting online",
+      "topic": "How a device reaches the internet and how you identify yourself to a service. A username says who you are and a password proves it",
+      "words": ["internet", "wifi", "website", "browser", "online", "password", "username"] },
+    { "name": "Apps and messages",
+      "topic": "The ways people write to each other now, and what a phone shows you when someone does",
+      "words": ["app", "email", "text message", "chat", "video call", "social media", "notification", "screenshot"] },
+    { "name": "Files and streaming",
+      "topic": "Moving a file to or from a device, and listening or watching without keeping a copy. Downloading brings a file to you, uploading sends one away",
+      "words": ["download", "upload", "streaming", "podcast", "headphones"] },
+    { "name": "News and broadcast",
+      "topic": "Where news comes from and how a newspaper is laid out. The headlines are the large titles, the front page is the first one",
+      "words": ["television", "radio", "radio station", "newspaper", "front page", "headlines", "magazine"] }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "source": "CAMIL GE-V-17 · Page 34 · Miscellaneous (professions)",
+  "notes": [
+    "Two gendered titles modernised: POLICEMAN to 'police officer' and SPORTSMAN to 'athlete',",
+    "which is what is said now and does not exclude half the people doing the job.",
+    "'actor' and 'actress' are kept as a pair: that one is still live in English.",
+    "'doctor' and 'nurse' also appear in Health and Illness. Different areas.",
+    "EASY: talking about work is more abstract than naming objects."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Professions",
+    "nameEs": "Las profesiones",
+    "description": "A qué se dedica la gente: las profesiones que se estudian, los oficios y los trabajos del arte y la vida pública.",
+    "iconKey": "sparkle", "tint": "#E8E1EE", "difficulty": "EASY", "visible": true
+  },
+  "units": [
+    { "name": "Professions you study for",
+      "topic": "The professions that need a university degree and a licence",
+      "words": ["professions", "engineer", "architect", "lawyer", "doctor", "dentist", "judge"] },
+    { "name": "Working with people",
+      "topic": "Jobs done in a hospital, an office, a building site or on the street",
+      "words": ["nurse", "journalist", "mechanic", "mason", "secretary", "manager", "police officer", "athlete"] },
+    { "name": "Arts and public life",
+      "topic": "The people who write, perform and govern. 'actor' and 'actress' are the male and female forms, and both are still used",
+      "words": ["writer", "musician", "singer", "artist", "actor", "actress", "politician"] }
+  ]
+}

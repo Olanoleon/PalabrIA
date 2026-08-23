@@ -1,0 +1,34 @@
+{
+  "source": "CAMIL GE-V-09 · Page 17 · Ingredients & Utensils for Eating",
+  "notes": [
+    "The page's six example sentences are excluded.",
+    "PLATE MAT normalised to 'placemat'.",
+    "Two three-way collisions carry the page: plate/dish/course are all plato, and",
+    "sauce/dressing/gravy are all salsa. Each stays in one unit.",
+    "cup/mug are both taza and sit together; glass is beside them for contrast."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "The Table and Tableware",
+    "nameEs": "La mesa y los utensilios",
+    "description": "Poner la mesa y comer: los platos y los vasos, los cubiertos, el mantel y las salsas.",
+    "iconKey": "food", "tint": "#F7EEDC", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Plates, cups and glasses",
+      "topic": "What food and drink are served in. 'plate', 'dish' and 'course' are all plato and the unit exists to separate them: a plate is the flat object, a dish is either the deeper object or the food prepared in it, a course is one part of a meal served at a time. 'cup' and 'mug' are both taza — a mug is bigger and has a handle for hot drinks",
+      "words": ["chinaware", "plate", "dish", "course", "cup", "mug", "bowl", "glass"] },
+    { "name": "Knives, forks and spoons",
+      "topic": "The cutlery and the measures taken with it. A spoonful is the amount a spoon holds",
+      "words": ["silverware", "knife", "fork", "spoon", "teaspoon", "spoonful", "teaspoonful"] },
+    { "name": "Setting the table",
+      "topic": "What is laid on a table before anyone sits down, and what a restaurant brings",
+      "words": ["table", "tablecloth", "placemat", "napkin", "tray", "saucer", "pitcher", "menu"] },
+    { "name": "Small things on the table",
+      "topic": "The small objects that end up on a table during a meal",
+      "words": ["toothpick", "corkscrew", "chopsticks", "straw", "ashtray"] },
+    { "name": "Spices and sauces",
+      "topic": "What food is seasoned with. 'sauce', 'dressing' and 'gravy' are all salsa and the unit should separate them: dressing goes on a salad, gravy is made from meat juices, sauce is the general word",
+      "words": ["spices", "spicy", "sauce", "dressing", "gravy", "chili", "pepper", "salt shaker"] }
+  ]
+}

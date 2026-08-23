@@ -1,0 +1,29 @@
+{
+  "source": "CAMIL GE-V-17 · Page 34 · Miscellaneous (fruit)",
+  "notes": [
+    "Page 34 is three unrelated topics and becomes three areas.",
+    "Nine of its fruits are already taught in Food and Ingredients — apple, pear, orange,",
+    "tangerine, banana, strawberry, plum, watermelon, grapes — and are not repeated here. The",
+    "twenty-one genuinely new ones get their own area rather than being added to the existing",
+    "Fruit unit, which is left untouched.",
+    "This area is where the tropical fruit a Colombian learner actually eats finally appears."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "Sour and Tropical Fruit",
+    "nameEs": "Frutas ácidas y tropicales",
+    "description": "Más frutas: las ácidas y cítricas, las del árbol, y las tropicales que se dan en Colombia.",
+    "iconKey": "food", "tint": "#FBF0D5", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Sour and citrus fruit",
+      "topic": "The sharp-tasting fruit. 'lemon' is yellow and 'lime' is green, and Spanish uses limón and lima the other way round in parts of Colombia, so the unit should be clear about the colour",
+      "words": ["sour fruits", "lemon", "lime", "grapefruit", "pineapple", "kiwi", "fig"] },
+    { "name": "Fruit from a tree",
+      "topic": "Fruit with a stone or a hard shell, and what a grape becomes when it dries",
+      "words": ["raisin", "peach", "berry", "cherry", "date", "pomegranate", "coconut"] },
+    { "name": "Tropical fruit",
+      "topic": "The sweet fruit that grows in a hot country, several of which are everyday in Colombia",
+      "words": ["sweet fruits", "papaya", "guava", "mango", "melon", "soursop", "tamarind"] }
+  ]
+}

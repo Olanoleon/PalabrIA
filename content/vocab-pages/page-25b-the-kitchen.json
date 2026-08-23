@@ -1,0 +1,25 @@
+{
+  "source": "CAMIL GE-V-13 · Page 25 · Living Room and Kitchen (kitchen half)",
+  "notes": [
+    "DISH WASHER normalised to 'dishwasher', DRYING MACHINE to 'dryer', JUICE MAKER to",
+    "'juicer' — the forms Americans actually use."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "The Kitchen",
+    "nameEs": "La cocina",
+    "description": "La cocina y sus aparatos: la estufa y el horno, la nevera, y todo lo que ayuda a preparar la comida.",
+    "iconKey": "food", "tint": "#DFF0EA", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Cooking",
+      "topic": "What food is cooked on and in, and what it is cooked in. A pot is deep, a pan is shallow",
+      "words": ["stove", "oven", "grill", "pot", "pan", "microwave oven", "sink"] },
+    { "name": "Cold and clean",
+      "topic": "The large machines that keep food cold and get things clean",
+      "words": ["refrigerator", "freezer", "dishwasher", "washing machine", "dryer"] },
+    { "name": "Small appliances",
+      "topic": "The small machines that sit on a kitchen counter, each named for what it makes",
+      "words": ["toaster", "blender", "coffee maker", "can opener", "juicer", "sandwich maker"] }
+  ]
+}

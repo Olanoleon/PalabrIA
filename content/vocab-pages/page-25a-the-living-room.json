@@ -1,0 +1,30 @@
+{
+  "source": "CAMIL GE-V-13 · Page 25 · Living Room and Kitchen (living room half)",
+  "notes": [
+    "Two rooms, two areas.",
+    "Five words dropped as dead technology, the same problem as the Communications page:",
+    "'record player', 'tape deck', 'tape recorder', 'short wave band' and 'T.V. set', which is",
+    "only a dated way of saying television.",
+    "CENTER TABLE replaced with 'coffee table'. The page's term is a literal rendering of mesa",
+    "de centro; no American says it.",
+    "LOVE SEAT normalised to 'loveseat'."
+  ],
+  "org": { "name": "Camil", "slug": "camil" },
+  "area": {
+    "name": "The Living Room",
+    "nameEs": "La sala",
+    "description": "La sala: los muebles donde te sientas, el televisor y el equipo de sonido, las lámparas y los cuadros.",
+    "iconKey": "sparkle", "tint": "#E8E4F2", "difficulty": "VERY_EASY", "visible": true
+  },
+  "units": [
+    { "name": "Furniture",
+      "topic": "What you sit on and put things on in a living room. A loveseat is a small sofa for two",
+      "words": ["furniture", "sofa", "loveseat", "chair", "coffee table", "side table"] },
+    { "name": "Television and radio",
+      "topic": "The television and the sound system, and the words for what comes out of them",
+      "words": ["television", "screen", "antenna", "channel", "shows", "remote control", "stereo", "radio", "stations", "speakers"] },
+    { "name": "Lamps and decoration",
+      "topic": "Light and what hangs on the wall. A bulb is the glass part that gives the light",
+      "words": ["lamp", "bulb", "wall unit", "picture", "frame", "telephone"] }
+  ]
+}
