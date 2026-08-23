@@ -42,6 +42,21 @@ async function main() {
   let words = 0;
   const problems: string[] = [];
 
+  // Area order is the order the learner meets the areas in, and `promote`
+  // carries sortOrder across from another database, so a tie is possible.
+  const areaPositions = new Map<number, string[]>();
+  for (const area of areas) {
+    areaPositions.set(area.sortOrder, [
+      ...(areaPositions.get(area.sortOrder) ?? []),
+      area.name,
+    ]);
+  }
+  for (const [position, names] of areaPositions) {
+    if (names.length > 1) {
+      problems.push(`areas share position ${position}: ${names.join(", ")}`);
+    }
+  }
+
   for (const area of areas) {
     const areaWords = area.units.reduce((n, u) => n + u.words.length, 0);
     console.log(
