@@ -30,7 +30,8 @@
     "try:generate": "tsx --conditions=react-server scripts/try-generate.mts",
     "seed:areas": "tsx --conditions=react-server scripts/seed-areas.mts",
     "verify:regenerate": "tsx --conditions=react-server scripts/verify-regenerate.mts",
-    "seed:page": "tsx --conditions=react-server scripts/seed-page.mts"
+    "seed:page": "tsx --conditions=react-server scripts/seed-page.mts",
+    "audit": "tsx --conditions=react-server scripts/audit-content.mts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
