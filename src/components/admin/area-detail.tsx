@@ -5,7 +5,7 @@ import { useState } from "react";
 import {
   renameArea,
   reorderUnit,
-  setAreaGroup,
+  setAreaTag,
   setAreaVisible,
   setUnitVisible,
 } from "@/lib/actions/admin";
@@ -17,7 +17,7 @@ import {
   TextArea,
 } from "@/components/admin/form-bits";
 import { GenerateUnitLink } from "@/components/admin/generate-unit-link";
-import { GroupPicker } from "@/components/admin/group-picker";
+import { TagPicker } from "@/components/admin/tag-picker";
 import { cn } from "@/lib/cn";
 import type { ContentArea } from "@/lib/admin-data";
 import { adminT } from "@/lib/i18n-admin";
@@ -33,12 +33,12 @@ import type { Lang } from "@/lib/i18n";
  */
 export function AreaDetail({
   area,
-  groups,
+  tags,
   base,
   lang,
 }: {
   area: ContentArea;
-  groups: Array<{ id: string; name: string }>;
+  tags: Array<{ id: string; name: string }>;
   base: "/admin" | "/super";
   lang: Lang;
 }) {
@@ -122,20 +122,16 @@ export function AreaDetail({
             </ActionForm>
 
             {/*
-              A separate form from the rename: regrouping a curriculum should
+              A separate form from the rename: retagging a curriculum should
               not make an administrator resubmit its description to do it.
             */}
             <div className="mt-4 border-t border-dashed border-rule pt-4">
               <ActionForm
-                action={setAreaGroup}
-                submitLabel={d.areaGroupSave}
+                action={setAreaTag}
+                submitLabel={d.areaTagSave}
                 hidden={{ areaId: area.id }}
               >
-                <GroupPicker
-                  groups={groups}
-                  current={area.group?.id ?? null}
-                  lang={lang}
-                />
+                <TagPicker tags={tags} current={area.tag} lang={lang} />
               </ActionForm>
             </div>
           </div>

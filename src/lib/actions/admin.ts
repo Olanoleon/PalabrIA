@@ -194,15 +194,15 @@ const AreaSchema = z.object({
 });
 
 /**
- * Turns what the group picker submitted into a group id.
+ * Turns what the tag picker submitted into a tag id.
  *
- * The picker offers the existing headings plus "new", so a form sends either an
- * id, a name to create, or nothing at all. Returning null for nothing is the
- * ungrouped case, which is what every area created before groups existed is.
+ * The picker sends either an existing id, a name to create, or nothing at all.
+ * Nothing means untagged, which is what every area created before tags existed
+ * is.
  */
-async function resolveGroupId(
+async function resolveTagId(
   user: CurrentUser,
-  groupId: string,
+  tagId: string,
   newName: string,
 ): Promise<string | null> {
   const scope = await areaScopeFilter(user);
@@ -215,21 +215,21 @@ async function resolveGroupId(
   if (name) {
     // Same name twice is the administrator meaning the same heading, not a
     // second one that happens to read alike.
-    const existing = await prisma.areaGroup.findFirst({
+    const existing = await prisma.areaTag.findFirst({
       where: { ...owner, name },
     });
     if (existing) return existing.id;
-    const count = await prisma.areaGroup.count({ where: owner });
-    const made = await prisma.areaGroup.create({
+    const count = await prisma.areaTag.count({ where: owner });
+    const made = await prisma.areaTag.create({
       data: { ...owner, name, sortOrder: count },
     });
     return made.id;
   }
 
-  if (!groupId) return null;
+  if (!tagId) return null;
   // Never trust an id from a form: it must belong to this actor's curriculum.
-  const found = await prisma.areaGroup.findFirst({
-    where: { ...owner, id: groupId },
+  const found = await prisma.areaTag.findFirst({
+    where: { ...owner, id: tagId },
     select: { id: true },
   });
   return found?.id ?? null;
@@ -258,15 +258,15 @@ export async function createArea(
   const count = await prisma.area.count({ where: { ...scope, isVisible: undefined } });
 
   const { description, iconKey } = await describeArea(parsed.data.name);
-  const groupId = await resolveGroupId(
+  const tagId = await resolveTagId(
     user,
-    String(formData.get("groupId") ?? ""),
-    String(formData.get("newGroup") ?? ""),
+    String(formData.get("tagId") ?? ""),
+    String(formData.get("newTag") ?? ""),
   );
 
   const area = await prisma.area.create({
     data: {
-      groupId,
+      tagId,
       scope: scope.scope,
       orgId: "orgId" in scope ? scope.orgId : null,
       templateId:
@@ -366,13 +366,13 @@ export async function renameArea(
 }
 
 /**
- * Moves an area under a heading, or out from under one.
+ * Tags an area, or clears its tag.
  *
  * Separate from renameArea so the picker on the area screen can stand alone:
- * an administrator regrouping a curriculum should not have to retype its
+ * an administrator retagging a curriculum should not have to retype its
  * description to do it.
  */
-export async function setAreaGroup(
+export async function setAreaTag(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -380,16 +380,16 @@ export async function setAreaGroup(
   const areaId = String(formData.get("areaId") ?? "");
   await assertAreaInScope(user, areaId);
 
-  const groupId = await resolveGroupId(
+  const tagId = await resolveTagId(
     user,
-    String(formData.get("groupId") ?? ""),
-    String(formData.get("newGroup") ?? ""),
+    String(formData.get("tagId") ?? ""),
+    String(formData.get("newTag") ?? ""),
   );
-  await prisma.area.update({ where: { id: areaId }, data: { groupId } });
+  await prisma.area.update({ where: { id: areaId }, data: { tagId } });
 
   revalidateAdmin();
   revalidatePath("/path");
-  return { notice: groupId ? "Área agrupada." : "Área sin grupo." };
+  return { notice: tagId ? "Etiqueta guardada." : "Área sin etiqueta." };
 }
 
 async function assertAreaInScope(user: CurrentUser, areaId: string) {

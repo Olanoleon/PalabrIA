@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { adminContext, areaGroupsFor, contentTree } from "@/lib/admin-data";
+import { adminContext, areaTagsFor, contentTree } from "@/lib/admin-data";
 import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
 import { superNav } from "@/components/admin/admin-nav";
@@ -15,9 +15,9 @@ export default async function SuperAreaPage({
   const { areaId } = await params;
   const user = await requireRole("SUPER_ADMIN");
   const { lang, org } = await adminContext(user);
-  const [tree, groups] = await Promise.all([
+  const [tree, tags] = await Promise.all([
     contentTree(user),
-    areaGroupsFor(user),
+    areaTagsFor(user),
   ]);
   const area = tree.find((a) => a.id === areaId);
   if (!area) notFound();
@@ -42,7 +42,7 @@ export default async function SuperAreaPage({
           { label: area.name },
         ]}
       />
-      <AreaDetail area={area} groups={groups} base="/super" lang={lang} />
+      <AreaDetail area={area} tags={tags} base="/super" lang={lang} />
     </AdminShell>
   );
 }

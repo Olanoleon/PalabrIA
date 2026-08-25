@@ -51,10 +51,10 @@ export type AreaCardData = {
   /** Passed units whose content has been regenerated since. */
   updatedUnits: number;
   /**
-   * The heading this area is listed under, or null when it is ungrouped.
-   * Presentational only — grouping gates nothing.
+   * The tag this area is listed under, or null when it is untagged.
+   * Presentational only — tagging gates nothing.
    */
-  group: { id: string; name: string; sortOrder: number } | null;
+  tag: { id: string; name: string; sortOrder: number } | null;
 };
 
 type ProgressRow = {
@@ -111,7 +111,7 @@ export async function visibleAreas(
       where: { scope: "ORG", orgId, isVisible: true },
       orderBy: { sortOrder: "asc" },
       include: {
-        group: { select: { id: true, name: true, sortOrder: true } },
+        tag: { select: { id: true, name: true, sortOrder: true } },
         units: {
           where: { isVisible: true },
           orderBy: { sortOrder: "asc" },
@@ -148,7 +148,7 @@ export async function visibleAreas(
       updatedUnits: area.units.filter((u) =>
         isBehind(progress, u.id, u.contentVersion),
       ).length,
-      group: area.group,
+      tag: area.tag,
     };
   });
 }
@@ -156,32 +156,32 @@ export async function visibleAreas(
 /**
  * The areas split into the sections the path screen draws.
  *
- * Ungrouped areas come first and carry no heading, which is what every area
- * created before groups existed does — a school that has grouped only its
- * newest term should not have the older ones filed under an invented label.
- * Sections then follow in the order the administrator arranged them.
+ * Untagged areas come first and carry no heading, which is what every area
+ * created before tags existed does — a school that has tagged only its newest
+ * term should not have the older ones filed under an invented label. Tagged
+ * sections then follow in the order the administrator arranged them.
  */
-export function groupAreas(areas: AreaCardData[]): Array<{
+export function areaSections(areas: AreaCardData[]): Array<{
   heading: string | null;
   areas: AreaCardData[];
 }> {
-  const ungrouped = areas.filter((a) => !a.group);
-  const grouped = new Map<string, { name: string; sortOrder: number; areas: AreaCardData[] }>();
+  const untagged = areas.filter((a) => !a.tag);
+  const tagged = new Map<string, { name: string; sortOrder: number; areas: AreaCardData[] }>();
   for (const area of areas) {
-    if (!area.group) continue;
-    const found = grouped.get(area.group.id);
+    if (!area.tag) continue;
+    const found = tagged.get(area.tag.id);
     if (found) found.areas.push(area);
     else
-      grouped.set(area.group.id, {
-        name: area.group.name,
-        sortOrder: area.group.sortOrder,
+      tagged.set(area.tag.id, {
+        name: area.tag.name,
+        sortOrder: area.tag.sortOrder,
         areas: [area],
       });
   }
 
   return [
-    ...(ungrouped.length ? [{ heading: null, areas: ungrouped }] : []),
-    ...[...grouped.values()]
+    ...(untagged.length ? [{ heading: null, areas: untagged }] : []),
+    ...[...tagged.values()]
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((g) => ({ heading: g.name, areas: g.areas })),
   ];

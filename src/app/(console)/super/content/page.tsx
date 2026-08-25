@@ -1,5 +1,5 @@
 import { requireRole } from "@/lib/rbac";
-import { adminContext, areaGroupsFor, contentTree } from "@/lib/admin-data";
+import { adminContext, areaTagsFor, contentTree } from "@/lib/admin-data";
 import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
 import { superNav } from "@/components/admin/admin-nav";
@@ -11,9 +11,9 @@ import { Breadcrumb } from "@/components/admin/breadcrumb";
 export default async function SuperContentPage() {
   const user = await requireRole("SUPER_ADMIN");
   const { lang, org } = await adminContext(user);
-  const [areas, groups] = await Promise.all([
+  const [areas, tags] = await Promise.all([
     contentTree(user),
-    areaGroupsFor(user),
+    areaTagsFor(user),
   ]);
 
   return (
@@ -31,7 +31,7 @@ export default async function SuperContentPage() {
       }
     >
       <Breadcrumb trail={[{ label: adminT(lang).navContent }]} />
-      <AreasList areas={areas} groups={groups} base="/super" lang={lang} />
+      <AreasList areas={areas} tags={tags} base="/super" lang={lang} />
     </AdminShell>
   );
 }

@@ -1,6 +1,6 @@
 import {
   badgeState,
-  groupAreas,
+  areaSections,
   learnerContext,
   monthlyBoard,
   visibleAreas,
@@ -76,11 +76,11 @@ export default async function PathPage() {
         {areas.length === 0 ? (
           <NoteCard>{d.areasEmpty}</NoteCard>
         ) : (
-          groupAreas(areas).map((section) => (
-            <div key={section.heading ?? "ungrouped"} className="flex flex-col gap-3">
+          areaSections(areas).map((section) => (
+            <div key={section.heading ?? "untagged"} className="flex flex-col gap-3">
               {/*
-                A section with no heading is the ungrouped one, which every
-                area created before groups existed belongs to. It leads, and
+                A section with no heading is the untagged one, which every
+                area created before tags existed belongs to. It leads, and
                 looks exactly as the list always did.
               */}
               {section.heading ? (

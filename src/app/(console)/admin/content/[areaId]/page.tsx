@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/rbac";
-import { adminContext, areaGroupsFor, contentTree } from "@/lib/admin-data";
+import { adminContext, areaTagsFor, contentTree } from "@/lib/admin-data";
 import { adminT } from "@/lib/i18n-admin";
 import { AdminShell } from "@/components/admin/shell";
 import { adminNav } from "@/components/admin/admin-nav";
@@ -13,9 +13,9 @@ export default async function AdminAreaPage({
   const { areaId } = await params;
   const user = await requireRole("ORG_ADMIN");
   const { lang, org } = await adminContext(user);
-  const [tree, groups] = await Promise.all([
+  const [tree, tags] = await Promise.all([
     contentTree(user),
-    areaGroupsFor(user),
+    areaTagsFor(user),
   ]);
   const area = tree.find((a) => a.id === areaId);
   if (!area) notFound();
@@ -33,7 +33,7 @@ export default async function AdminAreaPage({
           { label: area.name },
         ]}
       />
-      <AreaDetail area={area} groups={groups} base="/admin" lang={lang} />
+      <AreaDetail area={area} tags={tags} base="/admin" lang={lang} />
     </AdminShell>
   );
 }

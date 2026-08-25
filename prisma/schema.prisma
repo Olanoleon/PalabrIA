@@ -108,7 +108,7 @@ model Organization {
   users    User[]
   learners Learner[]
   areas    Area[]
-  areaGroups AreaGroup[]
+  areaTags  AreaTag[]
 }
 
 // ── Identity ────────────────────────────────────────────────────────────────
@@ -244,11 +244,11 @@ model GlobalTemplate {
   createdAt DateTime @default(now())
 
   areas  Area[]
-  groups AreaGroup[]
+  tags   AreaTag[]
 }
 
 /**
- * A heading the areas of a curriculum are shown under.
+ * A label the areas of a curriculum are grouped under.
  *
  * Purely presentational: it groups the learner's path into sections and gates
  * nothing. Administrators name their own — a school may use CEFR levels, or its
@@ -261,7 +261,7 @@ model GlobalTemplate {
  *
  * Scoped like an area: an organization's own, or the global template's.
  */
-model AreaGroup {
+model AreaTag {
   id         String          @id @default(cuid())
   name       String
   orgId      String?
@@ -294,13 +294,12 @@ model Area {
   isVisible   Boolean  @default(false)
 
   /**
-   * Optional heading this area is listed under. Null means the area is shown
-   * ungrouped, which is what every area created before groups existed does.
-   * SetNull rather than Cascade: deleting a heading must not delete a
-   * curriculum.
+   * Optional tag this area is listed under. Null means the area shows
+   * untagged, which is what every area created before tags existed does.
+   * SetNull rather than Cascade: deleting a tag must not delete a curriculum.
    */
-  groupId String?
-  group   AreaGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  tagId String?
+  tag   AreaTag? @relation(fields: [tagId], references: [id], onDelete: SetNull)
 
   sourceAreaId String?
 
@@ -311,7 +310,7 @@ model Area {
 
   @@index([orgId, sortOrder])
   @@index([templateId, sortOrder])
-  @@index([groupId])
+  @@index([tagId])
 }
 
 model Unit {
