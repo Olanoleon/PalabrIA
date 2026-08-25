@@ -5,6 +5,7 @@ import { useState } from "react";
 import { createArea, reorderArea, setAreaVisible } from "@/lib/actions/admin";
 import { Panel, Tag, Empty } from "@/components/admin/pieces";
 import { ActionForm, Field, SmallButton } from "@/components/admin/form-bits";
+import { GroupPicker } from "@/components/admin/group-picker";
 import { ChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import type { ContentArea } from "@/lib/admin-data";
@@ -20,10 +21,12 @@ import type { Lang } from "@/lib/i18n";
  */
 export function AreasList({
   areas,
+  groups,
   base,
   lang,
 }: {
   areas: ContentArea[];
+  groups: Array<{ id: string; name: string }>;
   base: "/admin" | "/super";
   lang: Lang;
 }) {
@@ -54,6 +57,7 @@ export function AreasList({
               placeholder="Work & Business"
               hint={d.areaNameHint}
             />
+            <GroupPicker groups={groups} lang={lang} />
             <label className="flex items-center gap-2 text-[12.5px] font-semibold">
               <input type="checkbox" name="visible" className="size-4 accent-[#EA580C]" />
               {d.areaVisibleFromStart}

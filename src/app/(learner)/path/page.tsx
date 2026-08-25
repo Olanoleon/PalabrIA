@@ -1,4 +1,10 @@
-import { learnerContext, monthlyBoard, visibleAreas, badgeState } from "@/lib/learner-data";
+import {
+  badgeState,
+  groupAreas,
+  learnerContext,
+  monthlyBoard,
+  visibleAreas,
+} from "@/lib/learner-data";
 import { LearnerHeader, LevelBar } from "@/components/learner/header-chips";
 import { AreaCard } from "@/components/learner/area-card";
 import { Coachmark } from "@/components/learner/coachmark";
@@ -70,24 +76,43 @@ export default async function PathPage() {
         {areas.length === 0 ? (
           <NoteCard>{d.areasEmpty}</NoteCard>
         ) : (
-          areas.map((area, index) =>
-            // Only the first card is spotlit: dimming the page around every
-            // card would say nothing about where to begin.
-            index === 0 ? (
-              <Coachmark
-                key={area.id}
-                step="path-tap"
-                active={needsStep(learner.onboardingSteps, "path-tap")}
-                title={d.coachPathTitle}
-                body={d.tapHint}
-                cta={d.coachCta}
-              >
-                <AreaCard area={area} lang={lang} index={index} />
-              </Coachmark>
-            ) : (
-              <AreaCard key={area.id} area={area} lang={lang} index={index} />
-            ),
-          )
+          groupAreas(areas).map((section) => (
+            <div key={section.heading ?? "ungrouped"} className="flex flex-col gap-3">
+              {/*
+                A section with no heading is the ungrouped one, which every
+                area created before groups existed belongs to. It leads, and
+                looks exactly as the list always did.
+              */}
+              {section.heading ? (
+                <div className="mt-1 flex items-center gap-[10px]">
+                  <span className="text-[11.5px] font-bold uppercase tracking-[0.08em] text-brand-deep">
+                    {section.heading}
+                  </span>
+                  <span className="h-[2px] flex-1 rounded-full bg-rule" />
+                </div>
+              ) : null}
+
+              {section.areas.map((area) => {
+                const index = areas.indexOf(area);
+                // Only the first card on the screen is spotlit: dimming the
+                // page around every card would say nothing about where to begin.
+                return index === 0 ? (
+                  <Coachmark
+                    key={area.id}
+                    step="path-tap"
+                    active={needsStep(learner.onboardingSteps, "path-tap")}
+                    title={d.coachPathTitle}
+                    body={d.tapHint}
+                    cta={d.coachCta}
+                  >
+                    <AreaCard area={area} lang={lang} index={index} />
+                  </Coachmark>
+                ) : (
+                  <AreaCard key={area.id} area={area} lang={lang} index={index} />
+                );
+              })}
+            </div>
+          ))
         )}
       </div>
 

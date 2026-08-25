@@ -55,6 +55,7 @@ async function main() {
     where: { orgId: org.id },
     orderBy: { sortOrder: "asc" },
     include: {
+      group: { select: { name: true, sortOrder: true } },
       units: {
         orderBy: { sortOrder: "asc" },
         include: {
@@ -80,6 +81,32 @@ async function main() {
   if (!targetOrg && !DRY) throw new Error("could not resolve the target organization");
   if (!targetOrg) console.log(`+ would create organization ${org.name}`);
 
+  /**
+   * Headings are matched by name rather than id, since the two databases
+   * generate their own. Created on demand, so a curriculum tagged during
+   * review arrives tagged rather than losing its sections in the copy.
+   */
+  const groupIds = new Map<string, string>();
+  async function groupIdFor(
+    group: { name: string; sortOrder: number } | null,
+  ): Promise<string | null> {
+    if (!group || !targetOrg) return null;
+    const cached = groupIds.get(group.name);
+    if (cached) return cached;
+    const existing = await target.areaGroup.findFirst({
+      where: { orgId: targetOrg.id, name: group.name },
+      select: { id: true },
+    });
+    const row =
+      existing ??
+      (await target.areaGroup.create({
+        data: { orgId: targetOrg.id, name: group.name, sortOrder: group.sortOrder },
+      }));
+    if (!existing) console.log(`✔ group ${group.name}`);
+    groupIds.set(group.name, row.id);
+    return row.id;
+  }
+
   for (const area of areas) {
     let targetArea = targetOrg
       ? await target.area.findFirst({
@@ -95,6 +122,7 @@ async function main() {
           data: {
             scope: "ORG",
             orgId: targetOrg.id,
+            groupId: await groupIdFor(area.group),
             name: area.name,
             nameEs: area.nameEs,
             description: area.description,
@@ -108,7 +136,19 @@ async function main() {
         console.log(`✔ area ${area.name}`);
       }
     } else {
-      console.log(`• area ${area.name} already there`);
+      // The area is already there, but it may have been tagged in the source
+      // since. Filing it is additive; clearing a tag it has in the target is
+      // not this script's business.
+      const wanted = await groupIdFor(area.group);
+      if (wanted && targetArea.groupId !== wanted && !DRY) {
+        await target.area.update({
+          where: { id: targetArea.id },
+          data: { groupId: wanted },
+        });
+        console.log(`• area ${area.name} already there — filed under ${area.group?.name}`);
+      } else {
+        console.log(`• area ${area.name} already there`);
+      }
     }
 
     for (const unit of area.units) {

@@ -169,6 +169,8 @@ export type ContentArea = {
   sortOrder: number;
   isVisible: boolean;
   fromTemplate: boolean;
+  /** The heading this area is listed under, or null when it is ungrouped. */
+  group: { id: string; name: string } | null;
   units: Array<{
     id: string;
     name: string;
@@ -193,6 +195,7 @@ export async function contentTree(user: CurrentUser): Promise<ContentArea[]> {
     where: { ...filter, isVisible: undefined },
     orderBy: { sortOrder: "asc" },
     include: {
+      group: { select: { id: true, name: true } },
       units: {
         orderBy: { sortOrder: "asc" },
         include: { _count: { select: { words: true, activities: true } } },
@@ -210,6 +213,7 @@ export async function contentTree(user: CurrentUser): Promise<ContentArea[]> {
     sortOrder: area.sortOrder,
     isVisible: area.isVisible,
     fromTemplate: area.sourceAreaId !== null,
+    group: area.group,
     units: area.units.map((unit) => ({
       id: unit.id,
       name: unit.name,
@@ -222,6 +226,27 @@ export async function contentTree(user: CurrentUser): Promise<ContentArea[]> {
       fromTemplate: unit.sourceUnitId !== null,
     })),
   }));
+}
+
+/**
+ * The headings available to this actor, for the group picker.
+ *
+ * In creation order rather than alphabetical: an administrator numbering
+ * workshops wants 2 before 10.
+ */
+export async function areaGroupsFor(
+  user: CurrentUser,
+): Promise<Array<{ id: string; name: string }>> {
+  const scope = await areaScopeFilter(user);
+  const owner =
+    "orgId" in scope
+      ? { orgId: scope.orgId }
+      : { templateId: { not: null } };
+  return prisma.areaGroup.findMany({
+    where: owner,
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true },
+  });
 }
 
 /** One area with its units, for the unit-list page. Null when out of scope. */

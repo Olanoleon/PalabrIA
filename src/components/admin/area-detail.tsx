@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   renameArea,
   reorderUnit,
+  setAreaGroup,
   setAreaVisible,
   setUnitVisible,
 } from "@/lib/actions/admin";
@@ -16,6 +17,7 @@ import {
   TextArea,
 } from "@/components/admin/form-bits";
 import { GenerateUnitLink } from "@/components/admin/generate-unit-link";
+import { GroupPicker } from "@/components/admin/group-picker";
 import { cn } from "@/lib/cn";
 import type { ContentArea } from "@/lib/admin-data";
 import { adminT } from "@/lib/i18n-admin";
@@ -31,10 +33,12 @@ import type { Lang } from "@/lib/i18n";
  */
 export function AreaDetail({
   area,
+  groups,
   base,
   lang,
 }: {
   area: ContentArea;
+  groups: Array<{ id: string; name: string }>;
   base: "/admin" | "/super";
   lang: Lang;
 }) {
@@ -116,6 +120,24 @@ export function AreaDetail({
                 hint={d.areaDescHint}
               />
             </ActionForm>
+
+            {/*
+              A separate form from the rename: regrouping a curriculum should
+              not make an administrator resubmit its description to do it.
+            */}
+            <div className="mt-4 border-t border-dashed border-rule pt-4">
+              <ActionForm
+                action={setAreaGroup}
+                submitLabel={d.areaGroupSave}
+                hidden={{ areaId: area.id }}
+              >
+                <GroupPicker
+                  groups={groups}
+                  current={area.group?.id ?? null}
+                  lang={lang}
+                />
+              </ActionForm>
+            </div>
           </div>
         ) : null}
       </Panel>

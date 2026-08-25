@@ -108,6 +108,7 @@ model Organization {
   users    User[]
   learners Learner[]
   areas    Area[]
+  areaGroups AreaGroup[]
 }
 
 // ── Identity ────────────────────────────────────────────────────────────────
@@ -242,7 +243,38 @@ model GlobalTemplate {
   name      String
   createdAt DateTime @default(now())
 
+  areas  Area[]
+  groups AreaGroup[]
+}
+
+/**
+ * A heading the areas of a curriculum are shown under.
+ *
+ * Purely presentational: it groups the learner's path into sections and gates
+ * nothing. Administrators name their own — a school may use CEFR levels, or its
+ * own "Workshop 1" to mark what a term will examine — so the names are data
+ * rather than an enum.
+ *
+ * A table rather than a label on the area, for two reasons: renaming happens in
+ * one place, and the order sections appear in is chosen rather than alphabetical
+ * (which would put "Workshop 10" before "Workshop 2").
+ *
+ * Scoped like an area: an organization's own, or the global template's.
+ */
+model AreaGroup {
+  id         String          @id @default(cuid())
+  name       String
+  orgId      String?
+  org        Organization?   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  templateId String?
+  template   GlobalTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  sortOrder  Int             @default(0)
+  createdAt  DateTime        @default(now())
+
   areas Area[]
+
+  @@index([orgId, sortOrder])
+  @@index([templateId, sortOrder])
 }
 
 model Area {
@@ -261,6 +293,15 @@ model Area {
   sortOrder   Int      @default(0)
   isVisible   Boolean  @default(false)
 
+  /**
+   * Optional heading this area is listed under. Null means the area is shown
+   * ungrouped, which is what every area created before groups existed does.
+   * SetNull rather than Cascade: deleting a heading must not delete a
+   * curriculum.
+   */
+  groupId String?
+  group   AreaGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
   sourceAreaId String?
 
   createdAt DateTime @default(now())
@@ -270,6 +311,7 @@ model Area {
 
   @@index([orgId, sortOrder])
   @@index([templateId, sortOrder])
+  @@index([groupId])
 }
 
 model Unit {
