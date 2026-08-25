@@ -37,6 +37,28 @@
   --color-pass: #15803d;
   --color-pass-soft: #d8ebdf;
   --color-pass-deep: #14532d;
+
+  /*
+   * A wrong answer used to be painted in the same grey as a locked unit, which
+   * reads as "inert" rather than "you chose this and it was wrong". Warm reds,
+   * so they sit on the cream ground rather than fighting it.
+   */
+  --color-fail: #b91c1c;
+  --color-fail-soft: #f6dedb;
+  --color-fail-deep: #7f1d1d;
+
+  /*
+   * Three pairs on one match-up screen. A matched word and its meaning take
+   * the same colour so the couple is visible at a glance; the three are far
+   * enough apart in hue to tell apart, and all are distinct from the pass
+   * green and the fail red that replace them once the screen is graded.
+   */
+  --color-pair-1: #dbe6f7;
+  --color-pair-1-line: #6382b8;
+  --color-pair-2: #e9e1f4;
+  --color-pair-2-line: #8674ac;
+  --color-pair-3: #d9eee6;
+  --color-pair-3-line: #4f9c81;
   --color-mint: #e3f0e8;
 
   --color-muted: #8c8177;

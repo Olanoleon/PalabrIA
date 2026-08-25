@@ -25,6 +25,13 @@ function shuffle<T>(items: T[], seed: number): T[] {
 
 const FILLER_LETTERS = ["e", "r", "s", "t", "h", "a", "n", "o"];
 
+/** One per pairing on a match-up screen, so a couple shares a colour. */
+const PAIR_COLORS = [
+  { fill: "var(--color-pair-1)", line: "var(--color-pair-1-line)" },
+  { fill: "var(--color-pair-2)", line: "var(--color-pair-2-line)" },
+  { fill: "var(--color-pair-3)", line: "var(--color-pair-3-line)" },
+];
+
 type Answer = { optionText?: string; typed?: string };
 
 export function PracticeView({
@@ -231,6 +238,20 @@ export function PracticeView({
   };
 
   /**
+   * Release a pairing. Tapping a word that already has a meaning, or a meaning
+   * already spoken for, puts both back in play — otherwise a learner who pairs
+   * two words the wrong way round has no way to undo it.
+   */
+  const releaseRow = (rowId: string) => {
+    setPairing((prev) => {
+      const next = { ...prev };
+      delete next[rowId];
+      return next;
+    });
+    setActiveRow(null);
+  };
+
+  /**
    * Drop a meaning on the selected word. A meaning belongs to one word at a
    * time, so assigning it anywhere clears it everywhere else — otherwise the
    * learner can leave two words claiming the same meaning and the board stops
@@ -346,39 +367,64 @@ export function PracticeView({
         {match ? (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-[9px]">
-              {match.rows.map((row) => {
+              {match.rows.map((row, rowIndex) => {
                 const chosen = shownPairing[row.id];
                 const rowVerdict = verdicts[row.id];
                 const isActive = activeRow === row.id;
+                const pair = chosen ? PAIR_COLORS[rowIndex % PAIR_COLORS.length] : null;
                 return (
                   <button
                     key={row.id}
                     type="button"
                     disabled={matchGraded || reviewing}
-                    onClick={() => setActiveRow(isActive ? null : row.id)}
+                    onClick={() =>
+                      chosen ? releaseRow(row.id) : setActiveRow(isActive ? null : row.id)
+                    }
+                    style={
+                      // Once graded, right-or-wrong is the only thing that
+                      // matters, so the pair colours give way to it rather
+                      // than putting five colours on one screen.
+                      pair && !rowVerdict
+                        ? { background: pair.fill, borderColor: pair.line, boxShadow: `3px 3px 0 ${pair.line}` }
+                        : undefined
+                    }
                     className={cn(
                       "flex items-center gap-[11px] rounded-2xl border-2 p-[13px] text-left",
                       rowVerdict
                         ? rowVerdict.correct
                           ? "border-pass bg-pass-soft shadow-[3px_3px_0_var(--color-pass)]"
-                          : "border-muted-3 bg-locked shadow-none"
-                        : isActive
-                          ? "border-ink bg-brand-soft shadow-[3px_3px_0_var(--color-brand)]"
-                          : "press border-ink bg-surface hard-1",
+                          : "border-fail bg-fail-soft shadow-[3px_3px_0_var(--color-fail)]"
+                        : pair
+                          ? "press"
+                          : isActive
+                            ? "border-ink bg-brand-soft shadow-[3px_3px_0_var(--color-brand)]"
+                            : "press border-ink bg-surface hard-1",
                     )}
                   >
                     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       <span className="text-[15.5px] font-bold">{row.en}</span>
-                      <span
-                        className={cn(
-                          "text-[12.5px] leading-[1.4]",
-                          chosen ? "font-semibold text-body" : "text-muted-3",
-                        )}
-                      >
-                        {rowVerdict && !rowVerdict.correct
-                          ? rowVerdict.answer
-                          : chosen || d.matchPick}
-                      </span>
+                      {rowVerdict && !rowVerdict.correct ? (
+                        // Both lines, because showing only the right answer on
+                        // a row marked wrong reads as "you got this right and
+                        // it says ×". The struck line is what they chose.
+                        <>
+                          <span className="text-[12.5px] leading-[1.4] text-muted line-through">
+                            {chosen}
+                          </span>
+                          <span className="text-[12.5px] font-semibold leading-[1.4] text-fail-deep">
+                            {rowVerdict.answer}
+                          </span>
+                        </>
+                      ) : (
+                        <span
+                          className={cn(
+                            "text-[12.5px] leading-[1.4]",
+                            chosen ? "font-semibold text-body" : "text-muted-3",
+                          )}
+                        >
+                          {chosen || d.matchPick}
+                        </span>
+                      )}
                     </span>
                     {rowVerdict ? (
                       <span
@@ -386,7 +432,7 @@ export function PracticeView({
                           "grid size-6 flex-none place-items-center rounded-lg border-2 text-[12px] font-bold",
                           rowVerdict.correct
                             ? "border-pass bg-pass text-white"
-                            : "border-muted-3 bg-canvas",
+                            : "border-fail bg-fail text-white",
                         )}
                       >
                         {rowVerdict.correct ? "✓" : "×"}
@@ -404,20 +450,35 @@ export function PracticeView({
             */}
             <div className="flex flex-col gap-2">
               {match.meanings.map((meaning) => {
-                const taken = Object.values(shownPairing).includes(meaning);
+                const ownerIndex = match.rows.findIndex(
+                  (r) => shownPairing[r.id] === meaning,
+                );
+                const owner = ownerIndex >= 0 ? match.rows[ownerIndex] : null;
+                const pair = owner
+                  ? PAIR_COLORS[ownerIndex % PAIR_COLORS.length]
+                  : null;
                 return (
                   <button
                     key={meaning}
                     type="button"
-                    disabled={matchGraded || reviewing || !activeRow}
-                    onClick={() => assignMeaning(meaning)}
+                    disabled={matchGraded || reviewing || (!activeRow && !owner)}
+                    onClick={() =>
+                      owner ? releaseRow(owner.id) : assignMeaning(meaning)
+                    }
+                    style={
+                      pair && !matchGraded
+                        ? { background: pair.fill, borderColor: pair.line, boxShadow: `3px 3px 0 ${pair.line}` }
+                        : undefined
+                    }
                     className={cn(
-                      "rounded-xl border-2 border-ink px-[13px] py-[10px] text-left text-[13px] font-semibold leading-[1.4]",
-                      taken
-                        ? "bg-canvas text-muted-3 opacity-60 shadow-none"
-                        : activeRow
-                          ? "press bg-surface hard-1"
-                          : "bg-surface opacity-80 shadow-none",
+                      "rounded-xl border-2 px-[13px] py-[10px] text-left text-[13px] font-semibold leading-[1.4]",
+                      pair
+                        ? "press"
+                        : matchGraded
+                          ? "border-muted-line bg-canvas text-muted-3 shadow-none"
+                          : activeRow
+                            ? "press border-ink bg-surface hard-1"
+                            : "border-ink bg-surface opacity-80 shadow-none",
                     )}
                   >
                     {meaning}
@@ -523,7 +584,10 @@ export function PracticeView({
                     isAnswer
                       ? "border-pass bg-pass-soft text-pass-deep shadow-[3px_3px_0_var(--color-pass)]"
                       : wrongPick
-                        ? "border-muted-3 bg-locked text-muted shadow-none"
+                        // The option they actually chose, painted as wrong.
+                        // Grey said "not the answer"; red says "you picked
+                        // this", which is the thing worth remembering.
+                        ? "border-fail bg-fail-soft text-fail-deep shadow-[3px_3px_0_var(--color-fail)]"
                         : isPicked
                           ? "border-ink bg-brand-soft shadow-[3px_3px_0_var(--color-brand)]"
                           : "press border-ink bg-surface hard-1",
@@ -535,7 +599,7 @@ export function PracticeView({
                       isAnswer
                         ? "border-pass bg-pass text-white"
                         : wrongPick
-                          ? "border-muted-3 bg-canvas"
+                          ? "border-fail bg-fail text-white"
                           : isPicked
                             ? "border-ink bg-brand text-white"
                             : "border-ink bg-surface",
