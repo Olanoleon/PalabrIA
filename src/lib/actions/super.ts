@@ -9,6 +9,7 @@ import { ORG_MODE_COOKIE, requireRole } from "@/lib/rbac";
 import { hashPassword, normalizeEmail } from "@/lib/auth";
 import { reviewPayment, updateSettings } from "@/lib/billing";
 import { defaultTemplateId, replicateTemplateToOrg } from "@/lib/replicate";
+import { freeJoinCode } from "@/lib/join-code";
 import type { ActionState } from "@/lib/actions/admin";
 
 async function superAdmin() {
@@ -56,7 +57,7 @@ export async function createOrganization(
   }
 
   const org = await prisma.organization.create({
-    data: { name: parsed.data.name, slug },
+    data: { name: parsed.data.name, slug, joinCode: await freeJoinCode(prisma) },
   });
 
   const templateId = await defaultTemplateId();
@@ -72,6 +73,19 @@ export async function createOrganization(
   return {
     notice: `Organización creada. Se replicaron ${counts.areas} áreas y ${counts.units} unidades (ocultas).`,
   };
+}
+
+/**
+ * Issues a new join code, which invalidates every link and every set of four
+ * digits already handed out for this organisation.
+ */
+export async function regenerateJoinCode(orgId: string) {
+  await superAdmin();
+  await prisma.organization.update({
+    where: { id: orgId },
+    data: { joinCode: await freeJoinCode(prisma) },
+  });
+  revalidateSuper();
 }
 
 export async function renameOrganization(

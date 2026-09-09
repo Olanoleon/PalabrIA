@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/super";
 import { Panel, Tag, Empty } from "@/components/admin/pieces";
 import { ActionForm, Field, SmallButton } from "@/components/admin/form-bits";
+import { JoinLink } from "@/components/admin/join-link";
 import { cn } from "@/lib/cn";
 import { adminT } from "@/lib/i18n-admin";
 import type { Lang } from "@/lib/i18n";
@@ -21,6 +22,7 @@ type OrgRow = {
   id: string;
   name: string;
   slug: string;
+  joinCode: string | null;
   isActive: boolean;
   _count: { learners: number; areas: number };
   users: Array<{ id: string; name: string; email: string; isActive: boolean }>;
@@ -29,10 +31,13 @@ type OrgRow = {
 export function OrganizationsPanel({
   organizations,
   activeOrgId,
+  appUrl,
   lang,
 }: {
   organizations: OrgRow[];
   activeOrgId: string | null;
+  /** Base for the invite links; resolved server-side from APP_URL. */
+  appUrl: string;
   lang: Lang;
 }) {
   const d = adminT(lang);
@@ -93,6 +98,11 @@ export function OrganizationsPanel({
                     {activeOrgId === org.id ? (
                       <Tag tone="brand">{d.orgInMode}</Tag>
                     ) : null}
+                    {org.joinCode ? (
+                      <span className="rounded-lg border-[1.5px] border-muted-line bg-cream px-[7px] py-[1px] font-mono text-[12px] font-bold tracking-[0.12em]">
+                        {org.joinCode}
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-[12.5px] text-muted-2">
                     {d.orgStats(org._count.learners, org._count.areas, org.users.length)}
@@ -120,6 +130,13 @@ export function OrganizationsPanel({
 
               {open === org.id ? (
                 <div className="mt-4 flex flex-col gap-4 border-t border-rule pt-4">
+                  <JoinLink
+                    orgId={org.id}
+                    code={org.joinCode}
+                    appUrl={appUrl}
+                    lang={lang}
+                  />
+
                   <ActionForm
                     action={renameOrganization}
                     submitLabel={d.orgRename}

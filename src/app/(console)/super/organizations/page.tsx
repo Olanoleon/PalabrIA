@@ -9,6 +9,9 @@ export default async function SuperOrganizationsPage() {
   const user = await requireRole("SUPER_ADMIN");
   const { lang, org, orgId } = await adminContext(user);
   const organizations = await organizationRows();
+  // Invite links have to be absolute: they are pasted into WhatsApp and
+  // email, not clicked inside the console.
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
 
   return (
     <AdminShell
@@ -20,6 +23,7 @@ export default async function SuperOrganizationsPage() {
       <OrganizationsPanel
         organizations={organizations}
         activeOrgId={orgId}
+        appUrl={appUrl}
         lang={lang}
       />
     </AdminShell>

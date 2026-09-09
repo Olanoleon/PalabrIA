@@ -14,11 +14,16 @@ export function ResetPasswordForm({ lang, token }: { lang: Lang; token: string }
       submitLabel={d.newPwCta}
       hidden={{ token }}
     >
+      {/*
+        No minLength: a learner's key is a 4-digit PIN and an administrator's is
+        8+ characters, and this screen cannot tell which it is looking at until
+        the token is consumed server-side. A hardcoded 8 here silently made the
+        form unsubmittable for every learner.
+      */}
       <PasswordField
         label={d.newPwLabel}
         name="password"
         autoComplete="new-password"
-        minLength={8}
         showLabel={d.pwShow}
         hideLabel={d.pwHide}
         required
@@ -28,12 +33,12 @@ export function ResetPasswordForm({ lang, token }: { lang: Lang; token: string }
           label={d.newPwConfirm}
           name="confirm"
           autoComplete="new-password"
-          minLength={8}
           showLabel={d.pwShow}
           hideLabel={d.pwHide}
           required
         />
       </div>
+      <p className="text-[12px] leading-[1.45] text-muted">{d.resetHint}</p>
     </AuthForm>
   );
 }

@@ -2,14 +2,21 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { homeFor } from "@/lib/rbac";
 import { currentDict } from "@/lib/lang";
-import { HelpIcon, CheckIcon } from "@/components/ui/icons";
-import { SignInForm } from "./signin-form";
+import { CheckIcon } from "@/components/ui/icons";
+import { ButtonLink } from "@/components/ui/primitives";
 
+/**
+ * The welcome screen: register, or sign in.
+ *
+ * It keeps the hero, because this is the first thing anyone sees; the sign-in
+ * form moved to /signin. Two links rather than a form, so the page stays a
+ * server component.
+ */
 export default async function LoginPage() {
   const user = await currentUser();
   if (user) redirect(homeFor(user.role));
 
-  const { lang, d } = await currentDict();
+  const { d } = await currentDict();
 
   return (
     <>
@@ -49,15 +56,20 @@ export default async function LoginPage() {
             {d.signinSub}
           </p>
 
-          <div className="mt-[18px]">
-            <SignInForm lang={lang} />
-          </div>
-
-          <div className="my-4 flex items-center gap-[9px] rounded-2xl border-2 border-dashed border-ink bg-cream px-[13px] py-3">
-            <HelpIcon className="shrink-0 text-brand-deep" />
-            <p className="text-[12px] leading-[1.45] text-body [overflow-wrap:anywhere]">
-              {d.signinNote}
-            </p>
+          <div className="mt-6 flex flex-col gap-[10px]">
+            <ButtonLink
+              href="/signup"
+              className="rounded-[18px] py-[16px] text-center text-[15px] tracking-[0.02em]"
+            >
+              {d.registerCta}
+            </ButtonLink>
+            <ButtonLink
+              href="/signin"
+              tone="secondary"
+              className="rounded-[18px] py-[16px] text-center text-[15px] tracking-[0.02em]"
+            >
+              {d.memberCta}
+            </ButtonLink>
           </div>
         </div>
 

@@ -91,7 +91,7 @@ export function sendLearnerInvite(to: string, name: string, appUrl: string) {
       `<p style="font-size:15px;line-height:1.55;color:#4A3F35">Ya puedes entrar a PalabrIA. Tu contraseña inicial es tu propio correo:</p>
        <div style="margin:14px 0;padding:12px 14px;background:#FFF9EF;border:2px dashed #1B1611;border-radius:12px;font-size:14px"><strong>${to}</strong></div>
        <p style="font-size:15px;line-height:1.55;color:#4A3F35">Te pediremos una contraseña nueva la primera vez que entres.</p>
-       <p style="margin:20px 0"><a href="${appUrl}/login" style="display:inline-block;padding:13px 20px;background:#EA580C;color:#FFF7ED;border:2px solid #1B1611;border-radius:14px;font-weight:700;text-decoration:none">Entrar</a></p>`,
+       <p style="margin:20px 0"><a href="${appUrl}/signin" style="display:inline-block;padding:13px 20px;background:#EA580C;color:#FFF7ED;border:2px solid #1B1611;border-radius:14px;font-weight:700;text-decoration:none">Entrar</a></p>`,
     ),
   });
 }

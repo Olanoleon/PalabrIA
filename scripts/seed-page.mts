@@ -26,6 +26,7 @@
  * `directUrl`, not `url`, so changing only DATABASE_URL leaves this pointed
  * somewhere you did not intend — change both.
  */
+import { freeJoinCode } from "../src/lib/join-code";
 import "dotenv/config";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -152,7 +153,11 @@ async function seedPage(page: Page) {
   const org =
     (await prisma.organization.findFirst({ where: { slug: page.org.slug } })) ??
     (await prisma.organization.create({
-      data: { name: page.org.name, slug: page.org.slug },
+      data: {
+        name: page.org.name,
+        slug: page.org.slug,
+        joinCode: await freeJoinCode(prisma),
+      },
     }));
   console.log(`organization: ${org.name}`);
 

@@ -12,14 +12,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider          = "postgresql"
   // Runtime connection. On Neon this is the *pooled* string (host contains
   // `-pooler`), which is what a serverless app should hold open.
-  url      = env("DATABASE_URL")
+  url               = env("DATABASE_URL")
   // Migrations and introspection need a direct connection: PgBouncer in
   // transaction mode cannot run the advisory locks and DDL that Prisma issues.
   // Locally this is simply the same value as DATABASE_URL.
-  directUrl = env("DIRECT_URL")
+  directUrl         = env("DIRECT_URL")
   // Only `prisma migrate dev` uses this; `migrate deploy` never touches it.
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
@@ -98,9 +98,22 @@ model PlatformSettings {
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  /**
+   * The four digits a learner types to join this organisation, and the tail of
+   * its /join/<code> invite link.
+   * Text rather than an integer so a leading zero survives, and so the code can
+   * be lengthened later without touching the column type. Deliberately short
+   * enough to read out over the phone, which does mean the whole space can be
+   * walked by a script — accepted, since nothing behind a learner account is
+   * sensitive and the alternative was listing every customer in a public
+   * dropdown.
+   */
+  joinCode String? @unique
+
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -108,23 +121,33 @@ model Organization {
   users    User[]
   learners Learner[]
   areas    Area[]
-  areaTags  AreaTag[]
+  areaTags AreaTag[]
 }
 
 // ── Identity ────────────────────────────────────────────────────────────────
 
 model User {
-  id                 String   @id @default(cuid())
-  email              String   @unique
+  id                 String    @id @default(cuid())
+  email              String    @unique
   passwordHash       String
   name               String
   role               Role
-  uiLang             UiLang   @default(es)
-  mustChangePassword Boolean  @default(true)
-  isActive           Boolean  @default(true)
+  uiLang             UiLang    @default(es)
+  mustChangePassword Boolean   @default(true)
+  isActive           Boolean   @default(true)
   lastLoginAt        DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+
+  /**
+   * Consecutive failed sign-ins, reset to zero the moment one succeeds.
+   * Recorded to be visible, not to gate anything: sign-in is never refused on
+   * account of it. A learner's credential is a 4-digit PIN, so a run of
+   * failures is worth being able to see in the logs, but locking people out of
+   * a vocabulary app costs more in support than it saves.
+   */
+  failedSignIns      Int       @default(0)
+  lastFailedSignInAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   orgId String?
   org   Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -152,23 +175,22 @@ model AuthToken {
 // ── Learner ─────────────────────────────────────────────────────────────────
 
 model Learner {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String       @id @default(cuid())
+  userId String       @unique
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   orgId  String
   org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   team     String?
   timezone String  @default("America/Bogota")
 
-  xp             Int       @default(0)
-  streakCount    Int       @default(0)
-  streakLastDay  String?   // YYYY-MM-DD in the learner's own timezone
-  lastActiveAt   DateTime?
+  xp            Int       @default(0)
+  streakCount   Int       @default(0)
+  streakLastDay String? // YYYY-MM-DD in the learner's own timezone
+  lastActiveAt  DateTime?
 
   /**
    * First-run coach-marks the learner has already dismissed, by step key.
-   *
    * On the record rather than in localStorage so the tutorial follows the
    * learner to a second device and, more importantly, does not carry over
    * between two learners sharing one phone. Keys are defined in
@@ -200,23 +222,23 @@ model Learner {
 // ── Billing ─────────────────────────────────────────────────────────────────
 
 model Payment {
-  id          String      @id @default(cuid())
-  learnerId   String
-  learner     Learner     @relation(fields: [learnerId], references: [id], onDelete: Cascade)
-  amount      Int
-  currency    String
-  reference   String?
-  declaredAt  DateTime    @default(now())
-  periodStart DateTime
-  periodEnd   DateTime
+  id                  String      @id @default(cuid())
+  learnerId           String
+  learner             Learner     @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  amount              Int
+  currency            String
+  reference           String?
+  declaredAt          DateTime    @default(now())
+  periodStart         DateTime
+  periodEnd           DateTime
   // What paidThrough held before this declaration extended it. A rejection
   // restores exactly this, so a learner who was already suspended does not end
   // up with a fresher expiry than they started with.
   previousPaidThrough DateTime?
-  reviewState ReviewState @default(PENDING)
-  reviewedBy  String?
-  reviewedAt  DateTime?
-  note        String?
+  reviewState         ReviewState @default(PENDING)
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  note                String?
 
   @@index([learnerId])
   @@index([reviewState])
@@ -243,22 +265,19 @@ model GlobalTemplate {
   name      String
   createdAt DateTime @default(now())
 
-  areas  Area[]
-  tags   AreaTag[]
+  areas Area[]
+  tags  AreaTag[]
 }
 
 /**
  * A label the areas of a curriculum are grouped under.
- *
  * Purely presentational: it groups the learner's path into sections and gates
  * nothing. Administrators name their own — a school may use CEFR levels, or its
  * own "Workshop 1" to mark what a term will examine — so the names are data
  * rather than an enum.
- *
  * A table rather than a label on the area, for two reasons: renaming happens in
  * one place, and the order sections appear in is chosen rather than alphabetical
  * (which would put "Workshop 10" before "Workshop 2").
- *
  * Scoped like an area: an organization's own, or the global template's.
  */
 model AreaTag {
@@ -278,20 +297,20 @@ model AreaTag {
 }
 
 model Area {
-  id          String    @id @default(cuid())
-  scope       AreaScope
-  templateId  String?
-  template    GlobalTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  orgId       String?
-  org         Organization?   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id         String          @id @default(cuid())
+  scope      AreaScope
+  templateId String?
+  template   GlobalTemplate? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  orgId      String?
+  org        Organization?   @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   name        String
   nameEs      String?
-  description String   @default("")
-  iconKey     String   @default("sparkle")
-  tint        String   @default("#FFEDD5")
-  sortOrder   Int      @default(0)
-  isVisible   Boolean  @default(false)
+  description String  @default("")
+  iconKey     String  @default("sparkle")
+  tint        String  @default("#FFEDD5")
+  sortOrder   Int     @default(0)
+  isVisible   Boolean @default(false)
 
   /**
    * Optional tag this area is listed under. Null means the area shows
@@ -318,27 +337,27 @@ model Unit {
   areaId String
   area   Area   @relation(fields: [areaId], references: [id], onDelete: Cascade)
 
-  name              String
-  subtitle          String     @default("")
-  subtitleEn        String     @default("")
-  sortOrder         Int        @default(0)
-  isVisible         Boolean    @default(true)
-  difficulty        Difficulty @default(EASY)
-  wordCount         Int        @default(6)
-  introParagraph    String     @default("")
-  introParagraphEs  String     @default("")
+  name             String
+  subtitle         String     @default("")
+  subtitleEn       String     @default("")
+  sortOrder        Int        @default(0)
+  isVisible        Boolean    @default(true)
+  difficulty       Difficulty @default(EASY)
+  wordCount        Int        @default(6)
+  introParagraph   String     @default("")
+  introParagraphEs String     @default("")
 
   /**
    * Bumped only when a regeneration replaces this unit's content. A learner
    * whose UnitProgress.seenContentVersion is behind this has passed material
    * that no longer exists, and is invited back.
    */
-  contentVersion  Int        @default(1)
+  contentVersion Int @default(1)
 
   sourceUnitId    String?
   generationInput Json?
   generatedAt     DateTime?
-  editedAfterGen   Boolean   @default(false)
+  editedAfterGen  Boolean   @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -356,17 +375,17 @@ model Word {
   unitId String
   unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
-  text                String
-  translation         String
-  definition          String
-  definitionEs        String
-  ipa                 String
-  syllables           String @default("")
-  stress              String @default("")
-  pos                 String @default("")
-  exampleSentence     String
-  exampleSentenceEs   String @default("")
-  sortOrder           Int    @default(0)
+  text              String
+  translation       String
+  definition        String
+  definitionEs      String
+  ipa               String
+  syllables         String @default("")
+  stress            String @default("")
+  pos               String @default("")
+  exampleSentence   String
+  exampleSentenceEs String @default("")
+  sortOrder         Int    @default(0)
 
   activities Activity[]
 
@@ -393,14 +412,13 @@ model Activity {
 
   /**
    * Ties the rows of one match-up together.
-   *
    * A match-up is three pairings, so it is stored as three ordinary rows —
    * each with its own real `wordId`, its own options and its own answer. That
    * keeps grading, coverage counting and partial credit working with no
    * special cases; the only thing the runtime adds is drawing rows that share
    * a group on a single screen. Null for every other type.
    */
-  matchGroup  String?
+  matchGroup String?
 
   attempts ActivityAttempt[]
 
@@ -411,21 +429,21 @@ model Activity {
 // ── Progress & gamification ─────────────────────────────────────────────────
 
 model UnitProgress {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   learnerId String
   learner   Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
   unitId    String
   unit      Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
-  bestScore  Int      @default(0)
-  attempts   Int      @default(0)
+  bestScore          Int       @default(0)
+  attempts           Int       @default(0)
   // Defaults to 1, matching Unit.contentVersion, so existing progress is not
   // retroactively marked as behind the moment this column is added.
-  seenContentVersion Int @default(1)
-  xpAwarded  Int      @default(0)
-  flawless   Boolean  @default(false)
-  passedAt   DateTime?
-  updatedAt  DateTime @updatedAt
+  seenContentVersion Int       @default(1)
+  xpAwarded          Int       @default(0)
+  flawless           Boolean   @default(false)
+  passedAt           DateTime?
+  updatedAt          DateTime  @updatedAt
 
   @@unique([learnerId, unitId])
   @@index([unitId])
@@ -458,9 +476,9 @@ model XpLedger {
 }
 
 model Badge {
-  id     String @id @default(cuid())
-  key    String @unique // bd1 … bd6
-  order  Int    @default(0)
+  id      String @id @default(cuid())
+  key     String @unique // bd1 … bd6
+  order   Int    @default(0)
   svgPath String
 
   learners LearnerBadge[]

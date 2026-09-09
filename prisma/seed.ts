@@ -8,6 +8,7 @@
  *
  * Idempotent: re-running it resets the demo data rather than duplicating it.
  */
+import { freeJoinCode } from "../src/lib/join-code";
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma";
@@ -92,10 +93,18 @@ async function main() {
   const { replicate } = await import("./seed-replicate");
 
   const arkus = await prisma.organization.create({
-    data: { name: "Arkus", slug: "arkus" },
+    data: {
+      name: "Arkus",
+      slug: "arkus",
+      joinCode: await freeJoinCode(prisma),
+    },
   });
   const camil = await prisma.organization.create({
-    data: { name: "CAMIL Institute Medellín", slug: "camil-medellin" },
+    data: {
+      name: "CAMIL Institute Medellín",
+      slug: "camil-medellin",
+      joinCode: await freeJoinCode(prisma),
+    },
   });
 
   for (const org of [arkus, camil]) {

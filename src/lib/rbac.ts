@@ -26,7 +26,7 @@ export { Forbidden, homeFor };
 
 export async function requireUser(): Promise<CurrentUser> {
   const user = await currentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/signin");
   if (ENFORCE_PASSWORD_CHANGE && user.mustChangePassword) {
     redirect("/new-password");
   }

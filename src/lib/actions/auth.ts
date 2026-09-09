@@ -21,10 +21,17 @@ import {
 } from "@/lib/auth";
 import { homeFor } from "@/lib/rbac";
 import { ENFORCE_PASSWORD_CHANGE } from "@/lib/config";
+import { passwordProblem } from "@/lib/password";
+import { passwordMessage } from "@/lib/password-message";
 import { sendPasswordReset, sendTwoFactorCode } from "@/lib/resend";
-import { t, type Lang } from "@/lib/i18n";
+import { isLang, t, type Lang } from "@/lib/i18n";
 
 export type FormState = { error?: string; notice?: string };
+
+function langOf(formData: FormData): Lang {
+  const raw = String(formData.get("lang") ?? "es");
+  return isLang(raw) ? raw : "es";
+}
 
 function dict(lang: string) {
   return t((lang === "en" ? "en" : "es") as Lang);
@@ -36,6 +43,30 @@ async function appUrl(): Promise<string> {
   const host = h.get("host") ?? "localhost:3000";
   const proto = host.startsWith("localhost") ? "http" : "https";
   return `${proto}://${host}`;
+}
+
+/** How many failures in a row before it is worth a line in the logs. */
+const NOTEWORTHY_FAILURES = 10;
+
+/**
+ * Records a wrong password. Never blocks the next attempt.
+ *
+ * A learner's credential is four digits, so a run of failures is worth being
+ * able to see; locking the account is not, because there is nothing sensitive
+ * behind it and a locked-out learner is a support message. The warning lands in
+ * the same server log as the `[openai]` usage lines.
+ */
+async function noteFailedSignIn(id: string, email: string, before: number) {
+  const failedSignIns = before + 1;
+  await prisma.user.update({
+    where: { id },
+    data: { failedSignIns, lastFailedSignInAt: new Date() },
+  });
+  if (failedSignIns === NOTEWORTHY_FAILURES) {
+    console.warn(
+      `[auth] ${failedSignIns} consecutive failed sign-ins for ${email}`,
+    );
+  }
 }
 
 export async function signIn(
@@ -57,6 +88,7 @@ export async function signIn(
     return { error: d.signinBadCreds };
   }
   if (!(await verifyPassword(password, user.passwordHash))) {
+    await noteFailedSignIn(user.id, user.email, user.failedSignIns);
     return { error: d.signinBadCreds };
   }
   if (!user.isActive) return { error: d.signinInactive };
@@ -79,7 +111,7 @@ export async function signIn(
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { lastLoginAt: new Date() },
+    data: { lastLoginAt: new Date(), failedSignIns: 0, lastFailedSignInAt: null },
   });
   await startSession(user);
   redirect(
@@ -95,7 +127,7 @@ export async function verifyTwoFactor(
 ): Promise<FormState> {
   const d = dict(String(formData.get("lang") ?? "es"));
   const userId = await getPendingUserId();
-  if (!userId) redirect("/login");
+  if (!userId) redirect("/signin");
 
   const code = String(formData.get("code") ?? "").trim();
   const result = await consumeOneTime("TWO_FACTOR", code, userId);
@@ -120,7 +152,7 @@ export async function resendTwoFactor(
 ): Promise<FormState> {
   const d = dict(String(formData.get("lang") ?? "es"));
   const userId = await getPendingUserId();
-  if (!userId) redirect("/login");
+  if (!userId) redirect("/signin");
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   const code = await issueOneTime(user.id, "TWO_FACTOR", TWO_FACTOR_TTL_MIN);
   const sent = await sendTwoFactorCode(user.email, code, TWO_FACTOR_TTL_MIN);
@@ -148,32 +180,25 @@ export async function requestPasswordReset(
   return { notice: d.forgotToast };
 }
 
-function passwordProblem(
-  password: string,
-  confirm: string,
-  email: string,
-  d: ReturnType<typeof dict>,
-): string | null {
-  if (password.length < 8) return d.newPwShort;
-  if (password !== confirm) return d.newPwMismatch;
-  if (normalizeEmail(password) === normalizeEmail(email)) return d.newPwSameAsEmail;
-  return null;
-}
-
 export async function changePassword(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const d = dict(String(formData.get("lang") ?? "es"));
+  const lang = langOf(formData);
   const session = await getSession();
-  if (!session) redirect("/login");
+  if (!session) redirect("/signin");
 
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
   const user = await prisma.user.findUniqueOrThrow({ where: { id: session.uid } });
 
-  const problem = passwordProblem(password, confirm, user.email, d);
-  if (problem) return { error: problem };
+  const problem = passwordProblem({
+    role: user.role,
+    password,
+    confirm,
+    email: user.email,
+  });
+  if (problem) return { error: passwordMessage(problem, lang) };
 
   await prisma.user.update({
     where: { id: user.id },
@@ -186,13 +211,22 @@ export async function resetPassword(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const d = dict(String(formData.get("lang") ?? "es"));
+  const lang = langOf(formData);
+  const d = dict(lang);
   const token = String(formData.get("token") ?? "");
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
 
-  if (password.length < 8) return { error: d.newPwShort };
+  // Which rule applies depends on the role, and the role is only known once the
+  // token is consumed — but consuming burns a single-use link, so a typo must
+  // not reach that point. Check what can be checked without knowing the role
+  // first: the confirmation, and whether the input could satisfy *either* rule.
+  // That catches every ordinary mistake. The remaining cases (a learner typing
+  // a long password, an admin typing four digits) still cost a fresh link.
   if (password !== confirm) return { error: d.newPwMismatch };
+  if (!/^\d{4}$/.test(password) && password.length < 8) {
+    return { error: d.newPwShort };
+  }
 
   const result = await consumeOneTime("PASSWORD_RESET", token);
   if (!result.ok) return { error: d.resetBadLink };
@@ -200,9 +234,13 @@ export async function resetPassword(
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: result.userId },
   });
-  if (normalizeEmail(password) === normalizeEmail(user.email)) {
-    return { error: d.newPwSameAsEmail };
-  }
+  const problem = passwordProblem({
+    role: user.role,
+    password,
+    confirm,
+    email: user.email,
+  });
+  if (problem) return { error: passwordMessage(problem, lang) };
 
   await prisma.user.update({
     where: { id: user.id },

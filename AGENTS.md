@@ -28,6 +28,8 @@ each file. Read the relevant one instead of grepping:
 | XP, level curve, streaks, pass threshold | `xp.ts` |
 | Which unit is open, passed, locked | `unlock.ts` |
 | Who may see or write which content | `scope.ts` (pure) → `rbac.ts` (Next-bound) |
+| What counts as a valid password, by role | `password.ts` (pure) |
+| What an unauthenticated visitor may read | `public-data.ts` |
 | Billing lifecycle, grace, access | `billing-rules.ts` (pure) → `billing.ts` — **unreviewed, see below** |
 | Grading a practice run and paying it out | `progress.ts` |
 | AI generation prompt + schema | `openai.ts`, `unit-schema.ts`, `unit-validate.ts` |
@@ -41,6 +43,9 @@ new rules there and call them from the server module — not the other way round
 ## Layout
 
 - `src/app/(auth)` · `(learner)` · `(console)` route groups.
+- **`/login` is the welcome screen** (register or sign in), **`/signin` is the
+  form**. Everything that sends an unauthenticated visitor off to authenticate
+  points at `/signin`; only `signOut` and the root redirect land on `/login`.
 - `(console)/admin/*` and `(console)/super/*` are **thin parallel shells over the
   same components** in `src/components/admin/` and the same `admin-data.ts`. A
   change to one console almost always needs the mirrored change in the other.
@@ -87,6 +92,41 @@ new rules there and call them from the server module — not the other way round
   `correct / activities` over the whole unit, so trimming a session there would
   silently mark the trimmed questions wrong.
 
+## Accounts
+
+There are two ways an account comes into being, and they differ in ways that
+matter:
+
+- **`inviteLearner` / `createOrgAdmin`** — an administrator creates it, the
+  initial password *is* the person's own email, and `mustChangePassword` is
+  true.
+- **`createLearnerAccount`** (`actions/signup.ts`) — the learner registers
+  themselves, chooses a 4-digit PIN, and `mustChangePassword` is **false**,
+  because they picked the credential themselves. Public and unauthenticated:
+  no `actor()` gate, a `P2002` catch around the create because the
+  check-then-create race is real once anyone can call it, and the organisation
+  is always re-resolved from the submitted code — never from an id in the form.
+
+**Password rules are role-dependent.** A `LEARNER` uses exactly four digits; an
+admin uses eight characters or more. The rules live in the pure `password.ts`
+and are called from three places (signup, change, reset) — do not re-inline
+them, which is how the old copy in `actions/auth.ts` had already drifted. Note
+`resetPassword` cannot know the role until it consumes the token, and consuming
+burns a single-use link, so it pre-checks what it can without the role first.
+
+**Every organisation needs a join code.** It is how learners reach an org at
+all, so all five creation paths — the console and four scripts — go through
+`freeJoinCode` in `join-code.ts`. An org with a null code cannot be joined.
+Registering with no code lands in the demo org named by
+`PUBLIC_SIGNUP_ORG_SLUG`. Four digits is a deliberate, discussed trade: the
+whole space can be walked, and that was accepted in exchange for a code someone
+can read out over the phone.
+
+**`Organization.isActive` is checked almost nowhere.** Deactivation works by
+flipping every member's `User.isActive`, so a user created *afterwards* would
+be active in a dead org. `public-data.ts` filters on it for exactly that
+reason; anything new that resolves an org for an outsider must too.
+
 ## Payments are not settled yet
 
 Everything payment-related is **written but unreviewed** — treat it as a draft,
@@ -122,8 +162,14 @@ way to see what today's behaviour actually is.
 
 ## Known posture
 
+Sign-in counts consecutive failures on `User.failedSignIns` and **never blocks
+on them** — there is nothing sensitive behind a learner account, and a lockout
+costs more in support than it saves. Ten in a row writes one line to the server
+log. Do not turn the counter into a gate without asking.
+
 `ENFORCE_PASSWORD_CHANGE` is **off** for this phase at the owner's request, so
 admin-created accounts keep their default password (the user's own email)
-indefinitely. This is a deliberate, documented decision — see `lib/config.ts`.
+indefinitely. It does not touch self-registered learners, who set
+`mustChangePassword: false` at creation. This is a deliberate, documented decision — see `lib/config.ts`.
 Don't "fix" it; the flag turns the intended behaviour back on retroactively with
 no migration.

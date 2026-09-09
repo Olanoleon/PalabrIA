@@ -6,7 +6,7 @@ import { TwoFactorForm } from "./form";
 /** Second factor for administrators (PRD: admins use a code emailed by Resend). */
 export default async function VerifyTwoFactorPage() {
   const pending = await getPendingUserId();
-  if (!pending) redirect("/login");
+  if (!pending) redirect("/signin");
   const { lang, d } = await currentDict();
 
   return (

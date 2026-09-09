@@ -21,6 +21,7 @@
  *   OWNER_EMAIL, OWNER_PASSWORD, OWNER_NAME, OWNER_ORG
  *   LEARNER_EMAIL, LEARNER_PASSWORD, LEARNER_NAME
  */
+import { freeJoinCode } from "../src/lib/join-code";
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma";
@@ -102,7 +103,9 @@ async function main() {
 
   const org =
     existingOrg ??
-    (await prisma.organization.create({ data: { name: ORG_NAME, slug } }));
+    (await prisma.organization.create({
+      data: { name: ORG_NAME, slug, joinCode: await freeJoinCode(prisma) },
+    }));
 
   if (existingOrg) {
     console.log(`• "${ORG_NAME}" already exists — leaving its content alone`);

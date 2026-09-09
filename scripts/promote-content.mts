@@ -19,6 +19,7 @@
  * progress against — that is what `seed:page --update` is for, deliberately,
  * on a unit you have decided to rebuild.
  */
+import { freeJoinCode } from "../src/lib/join-code";
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma";
 
@@ -77,7 +78,13 @@ async function main() {
     (await target.organization.findFirst({ where: { slug: org.slug } })) ??
     (DRY
       ? null
-      : await target.organization.create({ data: { name: org.name, slug: org.slug } }));
+      : await target.organization.create({
+          data: {
+            name: org.name,
+            slug: org.slug,
+            joinCode: await freeJoinCode(target),
+          },
+        }));
   if (!targetOrg && !DRY) throw new Error("could not resolve the target organization");
   if (!targetOrg) console.log(`+ would create organization ${org.name}`);
 

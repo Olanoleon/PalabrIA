@@ -24,7 +24,7 @@ export default async function ResetPasswordPage({
               {d.resetBadLink}
             </p>
             <Link
-              href="/login"
+              href="/signin"
               className="press rounded-2xl border-2 border-ink bg-surface py-3 text-center text-[14px] font-bold hard-1"
             >
               {d.signinCta}

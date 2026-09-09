@@ -11,7 +11,7 @@ import { NewPasswordForm } from "./form";
  */
 export default async function NewPasswordPage() {
   const user = await currentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/signin");
   // Reachable on purpose even when nothing forces it: a user may choose to
   // replace a default password. Only bounce if there is nothing to change.
   if (!user.mustChangePassword && !ENFORCE_PASSWORD_CHANGE) {
