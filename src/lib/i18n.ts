@@ -140,6 +140,8 @@ export const ES = {
   // ── Cards / reading / avatar ──────────────────────────────────────────────
   card: "Tarjeta",
   flipShow: "Toca para ver la definición",
+  prevCard: "Tarjeta anterior",
+  nextCard: "Tarjeta siguiente",
   flipBack: "Toca para volver",
   pron: "Pronunciación · IPA americano",
   stress: "acento en",
@@ -431,6 +433,8 @@ export const EN: Translated = {
 
   card: "Card",
   flipShow: "Tap to see the definition",
+  prevCard: "Previous card",
+  nextCard: "Next card",
   flipBack: "Tap to flip back",
   pron: "Pronunciation · American IPA",
   stress: "stress on",

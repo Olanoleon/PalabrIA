@@ -10,6 +10,24 @@ import type { UnitDetail } from "@/lib/learner-data";
 
 type Word = UnitDetail["words"][number];
 
+/** A card seen edge-on, for the flip cue. Decorative only. */
+function FlipGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="14"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path d="M12 5v14" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
 /** Past this many pixels a horizontal drag counts as a swipe, not a tap. */
 const SWIPE_THRESHOLD = 48;
 /** How long the outgoing card takes to leave, and the incoming one to arrive. */
@@ -47,6 +65,8 @@ export function CardsMode({
   const [flipped, setFlipped] = useState(false);
   // The nudge stops for good once the learner discovers the flip themselves.
   const [everFlipped, setEverFlipped] = useState(false);
+  /** Set on the first touch of the card, which retires the hint. */
+  const [touched, setTouched] = useState(false);
   const [drag, setDrag] = useState(0);
   /**
    * A card change is a three-beat animation rather than a content swap: the
@@ -62,9 +82,23 @@ export function CardsMode({
 
   const word = words[index];
 
+  /** The flip cue runs until the learner engages with the card at all. */
+  const showHint = hint && !everFlipped && !touched;
+
+  const atFirst = index === 0;
+  const atLast = index === words.length - 1;
+
   /** dir: 1 moves to the next card, -1 to the previous. */
   const advance = (dir: 1 | -1) => {
     if (slide) return; // ignore input while a transition is in flight
+    // The deck has ends. It used to wrap, so swiping past the last card looped
+    // silently back to the first and there was no way to tell you had seen
+    // them all. Arrows disappear at the ends; swipes and arrow keys stop too,
+    // so all three agree.
+    if ((dir === -1 && atFirst) || (dir === 1 && atLast)) {
+      setDrag(0);
+      return;
+    }
     setDrag(0);
     setSlide({ dir, stage: "out" });
   };
@@ -75,7 +109,12 @@ export function CardsMode({
     if (slide.stage === "out") {
       const id = setTimeout(() => {
         setIndex((current) => {
-          const next = (current + slide.dir + words.length) % words.length;
+          // Clamped rather than wrapped; `advance` already refuses to move
+          // past either end.
+          const next = Math.min(
+            words.length - 1,
+            Math.max(0, current + slide.dir),
+          );
           if (next >= words.length - 1) onSeen();
           return next;
         });
@@ -140,8 +179,29 @@ export function CardsMode({
     onSeen();
   };
 
+  /**
+   * Whether the pointer landed on something with its own job — the Listen
+   * button, for now.
+   *
+   * The controls already stop propagation, which is enough when a tap resolves
+   * cleanly. It is not enough while the flip hint is tilting the card: the
+   * learner aims at Listen, the card rotates a few degrees under their finger,
+   * and the tap resolves against the card instead — so the first press of the
+   * sound button turned the card over rather than saying the word.
+   */
+  const onControl = (event: React.PointerEvent) =>
+    Boolean((event.target as HTMLElement | null)?.closest("button"));
+
   const onPointerDown = (event: React.PointerEvent) => {
     if (slide) return;
+    // Whatever happens next, the learner has found the card — so the hint
+    // stops moving it. A cue that is still animating while someone is trying
+    // to press something is working against them.
+    setTouched(true);
+    if (onControl(event)) {
+      gesture.current = null;
+      return;
+    }
     gesture.current = { x: event.clientX, y: event.clientY, dragging: false };
   };
 
@@ -169,6 +229,8 @@ export function CardsMode({
     gesture.current = null;
     setDrag(0);
     if (!start) return;
+    // Released over a control: that press belongs to the control.
+    if (onControl(event)) return;
     const dx = event.clientX - start.x;
     if (!start.dragging || Math.abs(dx) < SWIPE_THRESHOLD) {
       // Not a swipe: treat it as the tap it was.
@@ -187,7 +249,24 @@ export function CardsMode({
         <span>
           {d.card} {index + 1} / {words.length}
         </span>
-        <span className="ml-auto">{flipped ? d.flipBack : d.flipShow}</span>
+        <span className="ml-auto flex items-center gap-[6px]">
+          {/*
+            The hint used to tilt the whole card. That moved the Listen button
+            out from under a finger already reaching for it, so the first press
+            of the sound button turned the card over instead of saying the
+            word. The cue now lives here, above the card, where nothing is
+            tappable and nothing it animates can be missed by a thumb.
+          */}
+          {showHint ? (
+            <span
+              aria-hidden="true"
+              className="inline-block [animation:flip-hint_2.4s_ease-in-out_infinite] text-brand-deep"
+            >
+              <FlipGlyph />
+            </span>
+          ) : null}
+          {flipped ? d.flipBack : d.flipShow}
+        </span>
       </div>
 
       <div
@@ -214,14 +293,7 @@ export function CardsMode({
         className="h-[352px] cursor-pointer touch-pan-y select-none [perspective:1300px]"
       >
         <div className="size-full [transform-style:preserve-3d]" style={slideStyle()}>
-        <div
-          className={cn(
-            "size-full [transform-style:preserve-3d]",
-            hint &&
-              !everFlipped &&
-              "[animation:flip-hint_2.4s_ease-in-out_infinite]",
-          )}
-        >
+        <div className="size-full [transform-style:preserve-3d]">
         <div
           className="relative size-full transition-transform duration-[520ms] [transform-style:preserve-3d]"
           style={{
@@ -309,11 +381,19 @@ export function CardsMode({
       </div>
 
       <div className="flex items-center gap-[10px]">
+        {/*
+          Hidden rather than removed at the ends, so the dots stay centred and
+          the row does not jump as the learner moves through the deck.
+        */}
         <button
           type="button"
           onClick={() => advance(-1)}
-          aria-label="anterior"
-          className="press grid size-[46px] place-items-center rounded-[14px] border-2 border-ink bg-surface hard-1"
+          aria-label={d.prevCard}
+          disabled={atFirst}
+          className={cn(
+            "grid size-[46px] place-items-center rounded-[14px] border-2 border-ink bg-surface hard-1",
+            atFirst ? "invisible" : "press",
+          )}
         >
           <ChevronLeft size={15} />
         </button>
@@ -331,8 +411,12 @@ export function CardsMode({
         <button
           type="button"
           onClick={() => advance(1)}
-          aria-label="siguiente"
-          className="press grid size-[46px] place-items-center rounded-[14px] border-2 border-ink bg-brand-mid hard-1"
+          aria-label={d.nextCard}
+          disabled={atLast}
+          className={cn(
+            "grid size-[46px] place-items-center rounded-[14px] border-2 border-ink bg-brand-mid hard-1",
+            atLast ? "invisible" : "press",
+          )}
         >
           <ChevronRightBig size={15} />
         </button>
