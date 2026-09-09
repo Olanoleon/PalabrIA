@@ -9,8 +9,11 @@ import { ToastProvider } from "@/components/learner/toast";
  * profile screens stay reachable while a learner is suspended.
  */
 export default async function LearnerLayout({ children }: LayoutProps<"/">) {
-  await requireLearner();
+  const { user } = await requireLearner();
   const lang = await currentLang();
+  // The tab itself disappears for a learner whose organisation is invoiced;
+  // the route redirects too, but a tab nobody may use should not be on screen.
+  const showPayments = user.org?.billingMode !== "ORG_PAID";
 
   return (
     <ToastProvider>
@@ -22,7 +25,7 @@ export default async function LearnerLayout({ children }: LayoutProps<"/">) {
       */}
       <div className="screen-shell flex h-dvh flex-col overflow-hidden bg-paper text-ink">
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-        <BottomNav lang={lang} />
+        <BottomNav lang={lang} showPayments={showPayments} />
       </div>
     </ToastProvider>
   );

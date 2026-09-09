@@ -61,6 +61,7 @@ export default async function PathPage() {
           <PayBanner
             lang={lang}
             daysUntilDue={billing.daysUntilDue ?? -(billing.daysOverdue ?? 0)}
+            onTrial={billing.onTrial}
           />
         ) : null}
       </header>

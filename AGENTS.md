@@ -127,10 +127,46 @@ flipping every member's `User.isActive`, so a user created *afterwards* would
 be active in a dead org. `public-data.ts` filters on it for exactly that
 reason; anything new that resolves an org for an outsider must too.
 
-## Payments are not settled yet
+## Billing
 
-Everything payment-related is **written but unreviewed** — treat it as a draft,
-not as an invariant. That covers `billing-rules.ts`, `billing.ts`, `breb.ts`,
+**A new learner gets 8 days, and the trial has no grace.** `TRIAL_DAYS` in
+`billing-rules.ts`; `initialPaidThrough` applies it to both creation paths. The
+5-day grace still exists, but only for an account that has paid before — being
+late is a thing you can only be about a payment you owe.
+
+**A trial reads as `TRIAL`, not `ACTIVE`.** It used to evaluate to ACTIVE the
+moment `paidThrough` was in the future, which lost the distinction; the copy
+needs it to say "three days left" rather than implying a subscription nobody
+bought, and `evaluateStatus` needs it to know there is no grace to give.
+
+**`SUSPENDED` is left by paying, never by waiting.** `evaluateStatus` returns
+SUSPENDED unchanged rather than recomputing it against the grace window.
+Without that, a trial suspended yesterday reads as PAST_DUE today — one day
+overdue is inside the grace window — and PAST_DUE still has access, so the lock
+silently undoes itself. There is a test for exactly this.
+
+**Which screens survive a lock.** `learnerContext({ requireAccess: true })`
+gates path, area, unit and practice. Leaderboard, payments and profile
+deliberately do not — those three stay open so a locked learner can see what
+they are missing and pay for it.
+
+**`Organization.billingMode`.** `ORG_PAID` means the company is invoiced
+outside the app: its learners always have access, the payments tab is gone from
+the nav, `/payments` redirects to `/profile`, and the amount disappears from
+the profile screen. What a company pays for its staff is not its staff's
+business, so every money-shaped surface keys off `billing.orgPaid` rather than
+each screen deciding for itself. The sweep skips those learners entirely.
+`DISABLED` still outranks it — that is a hold on the individual.
+
+**Declaring a payment unlocks immediately, before review.** Deliberate, and
+re-confirmed after self-signup opened registration to anyone: the pending queue
+is the control, so it has to actually be watched.
+
+## Payments are still only half-reviewed
+
+The lifecycle above is now exercised by `verify:billing` and the pure tests, but
+the declare/confirm/reject flow underneath is **written but unreviewed** — treat
+it as a draft, not as an invariant. That covers `billing-rules.ts`, `billing.ts`, `breb.ts`,
 `actions/payments.ts`, the `/api/cron/billing` sweep, the `Payment` /
 `BillingAudit` models, and the panels in `components/admin/payments-panel.tsx`
 and `components/learner/declare-payment.tsx`.

@@ -9,6 +9,7 @@ import {
   enterOrganizationMode,
   renameOrganization,
   setOrganizationActive,
+  setOrganizationBillingMode,
   setUserActive,
 } from "@/lib/actions/super";
 import { Panel, Tag, Empty } from "@/components/admin/pieces";
@@ -23,6 +24,7 @@ type OrgRow = {
   name: string;
   slug: string;
   joinCode: string | null;
+  billingMode: "LEARNER_PAID" | "ORG_PAID";
   isActive: boolean;
   _count: { learners: number; areas: number };
   users: Array<{ id: string; name: string; email: string; isActive: boolean }>;
@@ -98,6 +100,9 @@ export function OrganizationsPanel({
                     {activeOrgId === org.id ? (
                       <Tag tone="brand">{d.orgInMode}</Tag>
                     ) : null}
+                    {org.billingMode === "ORG_PAID" ? (
+                      <Tag tone="brand">{d.billingOrgPaid}</Tag>
+                    ) : null}
                     {org.joinCode ? (
                       <span className="rounded-lg border-[1.5px] border-muted-line bg-cream px-[7px] py-[1px] font-mono text-[12px] font-bold tracking-[0.12em]">
                         {org.joinCode}
@@ -136,6 +141,34 @@ export function OrganizationsPanel({
                     appUrl={appUrl}
                     lang={lang}
                   />
+
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-muted">
+                      {d.billingModeLabel}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <SmallButton
+                        tone={org.billingMode === "ORG_PAID" ? "secondary" : "primary"}
+                        onClick={() =>
+                          setOrganizationBillingMode(
+                            org.id,
+                            org.billingMode === "ORG_PAID"
+                              ? "LEARNER_PAID"
+                              : "ORG_PAID",
+                          )
+                        }
+                      >
+                        {org.billingMode === "ORG_PAID"
+                          ? d.billingSwitchToLearner
+                          : d.billingSwitchToOrg}
+                      </SmallButton>
+                      <p className="flex-1 text-[11.5px] text-muted-2">
+                        {org.billingMode === "ORG_PAID"
+                          ? d.billingOrgNote
+                          : d.billingLearnerNote}
+                      </p>
+                    </div>
+                  </div>
 
                   <ActionForm
                     action={renameOrganization}

@@ -29,15 +29,29 @@ const TABS = [
  */
 const TAB_ROOTS = new Set<string>(TABS.map((tab) => tab.href));
 
-export function BottomNav({ lang }: { lang: Lang }) {
+export function BottomNav({
+  lang,
+  showPayments = true,
+}: {
+  lang: Lang;
+  /** False when the learner's organisation is invoiced instead of them. */
+  showPayments?: boolean;
+}) {
   const pathname = usePathname();
   const labels = t(lang).tabs;
 
   if (!TAB_ROOTS.has(pathname)) return null;
 
+  const tabs = showPayments
+    ? TABS
+    : TABS.filter((tab) => tab.href !== "/payments");
+
   return (
     <nav className="relative z-45 flex gap-[6px] border-t-[1.5px] border-rule bg-paper px-[14px] pb-3 pt-[6px]">
-      {TABS.map((tab, index) => {
+      {tabs.map((tab) => {
+        // Index into the label list by href, not by position: dropping the
+        // payments tab would otherwise shift every label after it.
+        const index = TABS.findIndex((t) => t.href === tab.href);
         const active = pathname === tab.href;
         return (
           <Link

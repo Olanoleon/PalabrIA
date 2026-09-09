@@ -6,6 +6,7 @@ import {
   hasAccess,
   isAdminHeld,
   nextPeriod,
+  TRIAL_DAYS,
 } from "@/lib/billing-rules";
 
 const now = new Date("2026-08-21T12:00:00Z");
@@ -172,5 +173,156 @@ describe("cycles", () => {
 
   it("starts today for a learner with no period at all", () => {
     expect(nextPeriod(null, now).periodStart).toEqual(now);
+  });
+});
+
+/**
+ * A trial is not a subscription that happens to be free.
+ *
+ * It stays legible as a trial while it runs — so copy can say "three days
+ * left" rather than implying a subscription nobody bought — and it ends on the
+ * day it says. The grace period exists for a payment that is late; nothing is
+ * late about a trial running out.
+ */
+describe("the free trial", () => {
+  it("reads as TRIAL while it is running, not ACTIVE", () => {
+    expect(
+      evaluateStatus({
+        status: "TRIAL",
+        paidThrough: new Date("2026-08-25T00:00:00Z"),
+        graceDays: grace,
+        now,
+      }),
+    ).toBe("TRIAL");
+  });
+
+  it("suspends the moment it ends, with no grace", () => {
+    expect(
+      evaluateStatus({
+        status: "TRIAL",
+        // One hour past, well inside the five-day grace a payer would get.
+        paidThrough: new Date("2026-08-21T11:00:00Z"),
+        graceDays: grace,
+        now,
+      }),
+    ).toBe("SUSPENDED");
+  });
+
+  it("still grants access while it runs", () => {
+    expect(hasAccess("TRIAL")).toBe(true);
+  });
+
+  it("leaves the grace period intact for someone who has paid before", () => {
+    // The same lateness, one hour, on an account that has paid: PAST_DUE, and
+    // still inside. This is the pair that makes the rule worth having.
+    expect(
+      evaluateStatus({
+        status: "ACTIVE",
+        paidThrough: new Date("2026-08-21T11:00:00Z"),
+        graceDays: grace,
+        now,
+      }),
+    ).toBe("PAST_DUE");
+  });
+
+  it("is eight days long", () => {
+    expect(TRIAL_DAYS).toBe(8);
+  });
+
+  it("marks the view as a trial so the banner can say so", () => {
+    const view = billingView({
+      status: "TRIAL",
+      paidThrough: new Date("2026-08-24T12:00:00Z"),
+      graceDays: grace,
+      now,
+    });
+    expect(view.onTrial).toBe(true);
+    expect(view.access).toBe(true);
+    expect(view.daysUntilDue).toBe(3);
+  });
+});
+
+/**
+ * When the organisation is invoiced, none of the learner's own billing state
+ * should reach the screen — not a due date, not a banner, not an amount.
+ */
+describe("an organisation-paid learner", () => {
+  const orgPaid = true;
+
+  it("has access even with a long-expired period", () => {
+    const view = billingView({
+      status: "SUSPENDED",
+      paidThrough: new Date("2026-01-01T00:00:00Z"),
+      graceDays: grace,
+      now,
+      orgPaid,
+    });
+    expect(view.access).toBe(true);
+    expect(view.orgPaid).toBe(true);
+  });
+
+  it("is never nudged and never shown a date", () => {
+    const view = billingView({
+      status: "PAST_DUE",
+      paidThrough: new Date("2026-08-01T00:00:00Z"),
+      graceDays: grace,
+      now,
+      orgPaid,
+    });
+    expect(view.showBanner).toBe(false);
+    expect(view.paidThrough).toBe(null);
+    expect(view.daysUntilDue).toBe(null);
+    expect(view.daysOverdue).toBe(null);
+    expect(view.onTrial).toBe(false);
+  });
+
+  it("is still blocked when an administrator has disabled them", () => {
+    // Who pays does not outrank an explicit hold on that individual.
+    const view = billingView({
+      status: "DISABLED",
+      paidThrough: null,
+      graceDays: grace,
+      now,
+      orgPaid,
+    });
+    expect(view.access).toBe(false);
+  });
+
+  it("keeps an administrative override open", () => {
+    const view = billingView({
+      status: "OVERRIDE_ACTIVE",
+      paidThrough: null,
+      graceDays: grace,
+      now,
+      orgPaid,
+    });
+    expect(view.access).toBe(true);
+  });
+});
+
+describe("suspension is left by paying, not by waiting", () => {
+  it("stays SUSPENDED even when the period is only a day overdue", () => {
+    // How an expired trial looks the moment after the sweep suspends it. Read
+    // naively this is "one day late", which is inside the grace window — and
+    // PAST_DUE has access, so the lock would come straight back off.
+    expect(
+      evaluateStatus({
+        status: "SUSPENDED",
+        paidThrough: new Date("2026-08-20T12:00:00Z"),
+        graceDays: grace,
+        now,
+      }),
+    ).toBe("SUSPENDED");
+  });
+
+  it("goes ACTIVE once a payment pushes the period forward", () => {
+    expect(
+      evaluateStatus({
+        status: "SUSPENDED",
+        paidThrough: new Date("2026-09-21T12:00:00Z"),
+        graceDays: grace,
+        now,
+      }),
+    ).toBe("ACTIVE");
   });
 });

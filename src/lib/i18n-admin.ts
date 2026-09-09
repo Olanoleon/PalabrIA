@@ -265,6 +265,15 @@ export const ADMIN_ES = {
   joinNote:
     "Los aprendices escriben estos 4 números al registrarse, o abren el enlace.",
   joinNoCode: "Esta organización todavía no tiene código.",
+  billingModeLabel: "Pagos",
+  billingLearnerPaid: "Los paga cada aprendiz",
+  billingOrgPaid: "Los paga la organización",
+  billingSwitchToOrg: "Que pague la organización",
+  billingSwitchToLearner: "Que pague cada aprendiz",
+  billingOrgNote:
+    "Sus aprendices entran siempre y no ven la pestaña de pagos ni el monto. La organización se factura por fuera de la app.",
+  billingLearnerNote:
+    "Cada aprendiz declara su propio pago. Tras 8 días de prueba, sin pago se bloquean las unidades.",
   orgAdmins: "Administradores",
   orgNoAdmins: "Sin administradores todavía.",
   orgAdminCreate: "Crear administrador",
@@ -573,6 +582,15 @@ export const ADMIN_EN: AdminDict = {
     "A new code will be generated and the links you already shared will stop working. Continue?",
   joinNote: "Learners type these 4 digits when registering, or open the link.",
   joinNoCode: "This organization has no code yet.",
+  billingModeLabel: "Payments",
+  billingLearnerPaid: "Each learner pays",
+  billingOrgPaid: "The organization pays",
+  billingSwitchToOrg: "Switch to organization-paid",
+  billingSwitchToLearner: "Switch to learner-paid",
+  billingOrgNote:
+    "Its learners always have access and never see the payments tab or the amount. The organization is invoiced outside the app.",
+  billingLearnerNote:
+    "Each learner declares their own payment. After an 8-day trial, no payment locks the units.",
   orgAdmins: "Administrators",
   orgNoAdmins: "No administrators yet.",
   orgAdminCreate: "Create administrator",

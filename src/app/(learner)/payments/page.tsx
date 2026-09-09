@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { learnerContext, paymentsData } from "@/lib/learner-data";
 import { isUsableKey, qrDataUrl } from "@/lib/breb";
 import { formatDate, formatMoney } from "@/lib/i18n";
@@ -16,6 +17,11 @@ const STATE_TONE = {
 export default async function PaymentsPage() {
   const { lang, d, learner } = await learnerContext();
   const { settings, payments, billing } = await paymentsData(learner.id);
+
+  // Their organisation is invoiced outside the app. There is nothing here for
+  // them to do, and the amount is between the company and us — so the screen
+  // does not exist for them rather than showing an emptied-out version of it.
+  if (billing.orgPaid) redirect("/profile");
 
   const keyUsable = isUsableKey(settings.brebKey);
   const qr = keyUsable ? await qrDataUrl(settings.brebKey) : null;
@@ -57,9 +63,21 @@ export default async function PaymentsPage() {
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-[18px] pb-6 pt-2">
         <div className={cn("rounded-[18px] border-2 border-ink p-[15px] flat-2", tone)}>
           <div className="text-[14.5px] font-bold">{statusLine}</div>
+          {/*
+            The date reads differently depending on whether it is still ahead.
+            It used to always say "access active through …", which on a
+            suspended account announced an expiry that had already passed as
+            though it were good news — and now that every expired trial lands
+            on this screen, that is the common case rather than the rare one.
+          */}
           {billing.paidThrough ? (
             <div className="mt-[3px] text-[12px] text-body">
-              {d.payPaidThrough(formatDate(billing.paidThrough, lang))}
+              {/* daysUntilDue is non-null only while the date is still ahead. */}
+              {billing.onTrial
+                ? d.payTrialEndsOn(formatDate(billing.paidThrough, lang))
+                : billing.daysUntilDue !== null
+                  ? d.payPaidThrough(formatDate(billing.paidThrough, lang))
+                  : d.payEndedOn(formatDate(billing.paidThrough, lang))}
             </div>
           ) : null}
           <div className="mt-3 flex items-baseline gap-2">

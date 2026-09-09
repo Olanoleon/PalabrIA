@@ -267,8 +267,15 @@ export const ES = {
   payAmount: "Mensualidad",
   payNextDue: "Próximo pago",
   payPaidThrough: (d: string) => "Acceso activo hasta el " + d,
+  payEndedOn: (d: string) => "Tu acceso terminó el " + d,
+  payTrialEndsOn: (d: string) => "Tu prueba gratis termina el " + d,
   payStatusActive: "Al día",
   payStatusTrial: "Periodo de prueba",
+  payStatusTrialDays: (n: number) =>
+    n <= 0 ? "Tu prueba termina hoy" : "Prueba · " + n + (n === 1 ? " día" : " días"),
+  payTrialOverTitle: "Tu prueba terminó",
+  payTrialOverBody:
+    "Registra tu pago para volver a las unidades. Mientras tanto puedes ver la tabla del mes y tu perfil.",
   payStatusDueSoon: (n: number) =>
     n === 0 ? "Vence hoy" : n === 1 ? "Vence mañana" : "Vence en " + n + " días",
   payStatusPastDue: (n: number) =>
@@ -297,6 +304,10 @@ export const ES = {
     "El administrador todavía no configuró la llave Bre-B. Escríbele para pagar.",
   payBanner: (n: number) =>
     n <= 0 ? "Tu pago está vencido" : "Tu pago vence en " + n + " días",
+  payTrialBanner: (n: number) =>
+    n <= 0
+      ? "Tu prueba gratis termina hoy"
+      : "Te quedan " + n + (n === 1 ? " día" : " días") + " de prueba gratis",
   payBannerCta: "Pagar",
 } as const;
 
@@ -538,8 +549,15 @@ export const EN: Translated = {
   payAmount: "Monthly fee",
   payNextDue: "Next payment",
   payPaidThrough: (d) => "Access active through " + d,
+  payEndedOn: (d) => "Your access ended on " + d,
+  payTrialEndsOn: (d) => "Your free trial ends on " + d,
   payStatusActive: "Up to date",
   payStatusTrial: "Trial period",
+  payStatusTrialDays: (n) =>
+    n <= 0 ? "Your trial ends today" : "Trial · " + n + (n === 1 ? " day" : " days"),
+  payTrialOverTitle: "Your trial has ended",
+  payTrialOverBody:
+    "Register your payment to get the units back. Meanwhile you can still see the monthly board and your profile.",
   payStatusDueSoon: (n) =>
     n === 0 ? "Due today" : n === 1 ? "Due tomorrow" : "Due in " + n + " days",
   payStatusPastDue: (n) => "Payment " + n + (n === 1 ? " day" : " days") + " overdue",
@@ -566,6 +584,10 @@ export const EN: Translated = {
   payNoKey:
     "Your administrator has not set the Bre-B key yet. Message them to pay.",
   payBanner: (n) => (n <= 0 ? "Your payment is overdue" : "Your payment is due in " + n + " days"),
+  payTrialBanner: (n) =>
+    n <= 0
+      ? "Your free trial ends today"
+      : n + (n === 1 ? " day" : " days") + " left of your free trial",
   payBannerCta: "Pay",
 };
 

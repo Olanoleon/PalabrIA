@@ -10,6 +10,16 @@ import type { BillingStatus } from "@/generated/prisma";
 
 export const DAY_MS = 86_400_000;
 
+/**
+ * How long a brand-new learner gets for free.
+ *
+ * Eight days, and deliberately without a grace period afterwards: a trial that
+ * quietly runs to thirteen is not the eight days anyone was promised. The
+ * grace still applies to somebody who has paid before and is late, where it is
+ * usually a bank delay rather than a decision.
+ */
+export const TRIAL_DAYS = 8;
+
 /** Statuses the automatic sweep must leave alone. */
 export function isAdminHeld(status: BillingStatus): boolean {
   return status === "OVERRIDE_ACTIVE" || status === "DISABLED";
@@ -47,6 +57,8 @@ export type StatusInput = {
   paidThrough: Date | null;
   graceDays: number;
   now: Date;
+  /** Whether the learner's organisation is invoiced instead of the learner. */
+  orgPaid?: boolean;
 };
 
 /**
@@ -57,7 +69,26 @@ export function evaluateStatus(input: StatusInput): BillingStatus {
   const { status, paidThrough, graceDays, now } = input;
   if (isAdminHeld(status)) return status;
   if (!paidThrough) return status === "TRIAL" ? "TRIAL" : "PAST_DUE";
-  if (paidThrough.getTime() >= now.getTime()) return "ACTIVE";
+
+  const live = paidThrough.getTime() >= now.getTime();
+
+  // A trial stays a trial while it lasts, rather than reading as ACTIVE the way
+  // it used to. The distinction is load-bearing now: it is what lets the app
+  // say "your trial ends in three days" instead of implying a subscription
+  // nobody bought, and it is how the rule below knows there is nothing to be
+  // late with.
+  if (status === "TRIAL") return live ? "TRIAL" : "SUSPENDED";
+
+  if (live) return "ACTIVE";
+
+  // Suspension is left by paying, which pushes paidThrough into the future and
+  // is caught above — never by time passing. Without this, an expired trial
+  // would be suspended by the sweep and then read as PAST_DUE the very next
+  // time anyone looked at it, because it is only a day overdue and a day is
+  // inside the grace window. PAST_DUE still has access, so the lock would
+  // quietly undo itself.
+  if (status === "SUSPENDED") return "SUSPENDED";
+
   const overdue = daysBetween(paidThrough, now);
   return overdue >= graceDays ? "SUSPENDED" : "PAST_DUE";
 }
@@ -71,13 +102,40 @@ export type BillingView = {
   daysOverdue: number | null;
   /** True when the learner should see a nudge banner on the learning screens. */
   showBanner: boolean;
+  /**
+   * The organisation is invoiced outside the app, so none of this is the
+   * learner's business. Every money-shaped surface keys off this: the payments
+   * tab, the banner, the amount on the profile screen.
+   */
+  orgPaid: boolean;
+  /** True while the free period is running, so copy can say so. */
+  onTrial: boolean;
 };
 
 const BANNER_WINDOW_DAYS = 5;
 
 export function billingView(input: StatusInput): BillingView {
   const status = evaluateStatus(input);
-  const { paidThrough, now } = input;
+  const { paidThrough, now, orgPaid = false } = input;
+
+  // An organisation that pays for its people keeps them open, with one
+  // exception: DISABLED is an explicit administrative hold on that individual
+  // and outranks whoever is footing the bill.
+  if (orgPaid && input.status !== "DISABLED") {
+    return {
+      status,
+      access: true,
+      adminHeld: isAdminHeld(input.status),
+      // Nulled rather than passed through: there is no due date to show
+      // someone who is not being billed.
+      paidThrough: null,
+      daysUntilDue: null,
+      daysOverdue: null,
+      showBanner: false,
+      orgPaid: true,
+      onTrial: false,
+    };
+  }
   const daysUntilDue =
     paidThrough && paidThrough.getTime() >= now.getTime()
       ? daysBetween(now, paidThrough)
@@ -97,6 +155,8 @@ export function billingView(input: StatusInput): BillingView {
       !isAdminHeld(input.status) &&
       (status === "PAST_DUE" ||
         (daysUntilDue !== null && daysUntilDue <= BANNER_WINDOW_DAYS)),
+    orgPaid: false,
+    onTrial: status === "TRIAL",
   };
 }
 

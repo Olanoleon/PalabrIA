@@ -30,7 +30,9 @@ export async function learnerContext(options?: { requireAccess?: boolean }) {
     currentDict(),
     getSettings(),
   ]);
-  const billing = viewFor(learner, settings);
+  // Who pays decides what the learner is shown, so it has to be part of the
+  // billing answer rather than something each screen remembers to check.
+  const billing = viewFor(learner, settings, user.org?.billingMode);
   if (options?.requireAccess && !billing.access) redirect("/payments");
   return { user, learner, lang, d, settings, billing, level: levelFromXp(learner.xp) };
 }
@@ -621,14 +623,22 @@ export async function badgeState(learnerId: string) {
 export async function paymentsData(learnerId: string) {
   const [settings, learner, payments] = await Promise.all([
     getSettings(),
-    prisma.learner.findUniqueOrThrow({ where: { id: learnerId } }),
+    prisma.learner.findUniqueOrThrow({
+      where: { id: learnerId },
+      include: { org: { select: { billingMode: true } } },
+    }),
     prisma.payment.findMany({
       where: { learnerId },
       orderBy: { declaredAt: "desc" },
       take: 12,
     }),
   ]);
-  return { settings, learner, payments, billing: viewFor(learner, settings) };
+  return {
+    settings,
+    learner,
+    payments,
+    billing: viewFor(learner, settings, learner.org.billingMode),
+  };
 }
 
 export { wordsLearned };

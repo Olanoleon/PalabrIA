@@ -4,7 +4,8 @@
  */
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma";
-import { declarePayment, getSettings, reviewPayment, runBillingSweep, setOverride, viewFor } from "../src/lib/billing";
+import { declarePayment, getSettings, initialPaidThrough, reviewPayment, runBillingSweep, setOverride, viewFor } from "../src/lib/billing";
+import { TRIAL_DAYS } from "../src/lib/billing-rules";
 
 const prisma = new PrismaClient();
 let failures = 0;
@@ -113,6 +114,62 @@ check("cleared override falls back to the computed status",
 // ── Audit trail ──────────────────────────────────────────────────────────
 const audits = await prisma.billingAudit.count({ where: { learnerId: subject.id } });
 check("every transition is audited", audits > 5, true);
+
+// ── The trial: eight days, and no grace when it ends ──────────────────────
+const trialEnds = initialPaidThrough();
+const trialDays = Math.round((trialEnds.getTime() - Date.now()) / 86_400_000);
+check("a new learner's trial is eight days", trialDays, TRIAL_DAYS);
+
+await prisma.learner.update({
+  where: { id: subject.id },
+  // One day past the end — comfortably inside the grace a payer would get.
+  data: { billingStatus: "TRIAL", paidThrough: days(1) },
+});
+await runBillingSweep();
+row = await prisma.learner.findUniqueOrThrow({ where: { id: subject.id } });
+check("an expired trial suspends with no grace", row.billingStatus, "SUSPENDED");
+check("and loses access to the content", viewFor(row, settings).access, false);
+
+await prisma.learner.update({
+  where: { id: subject.id },
+  data: { billingStatus: "TRIAL", paidThrough: new Date(Date.now() + 3 * 86_400_000) },
+});
+await runBillingSweep();
+row = await prisma.learner.findUniqueOrThrow({ where: { id: subject.id } });
+check("a running trial stays TRIAL rather than reading as ACTIVE", row.billingStatus, "TRIAL");
+check("and keeps access", viewFor(row, settings).access, true);
+
+// ── An organisation that pays for its learners ────────────────────────────
+const org = await prisma.organization.findUniqueOrThrow({ where: { id: subject.orgId } });
+await prisma.organization.update({
+  where: { id: org.id },
+  data: { billingMode: "ORG_PAID" },
+});
+await prisma.learner.update({
+  where: { id: subject.id },
+  // As lapsed as it gets: the organisation paying makes it irrelevant.
+  data: { billingStatus: "SUSPENDED", paidThrough: days(90) },
+});
+row = await prisma.learner.findUniqueOrThrow({ where: { id: subject.id } });
+const orgView = viewFor(row, settings, "ORG_PAID");
+check("an org-paid learner has access despite a dead period", orgView.access, true);
+check("and is shown no due date", orgView.paidThrough, null);
+check("and is never nudged to pay", orgView.showBanner, false);
+
+const before = row.billingStatus;
+await runBillingSweep();
+row = await prisma.learner.findUniqueOrThrow({ where: { id: subject.id } });
+check("the sweep leaves org-paid learners alone", row.billingStatus, before);
+
+await prisma.organization.update({
+  where: { id: org.id },
+  data: { billingMode: org.billingMode },
+});
+check(
+  "switching back restores the learner's own state",
+  viewFor(row, settings, "LEARNER_PAID").access,
+  false,
+);
 
 // Restore the seeded state.
 await prisma.payment.deleteMany({ where: { learnerId: subject.id } });

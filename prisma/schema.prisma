@@ -44,6 +44,22 @@ enum BillingStatus {
   DISABLED
 }
 
+/**
+ * Who settles a learner's subscription.
+ */
+enum BillingMode {
+  /**
+   * The learner declares their own payments — the original behaviour.
+   */
+  LEARNER_PAID
+  /**
+   * The organisation is invoiced outside the app and its learners are simply
+   * open. They never see the payments tab, a due date or an amount: what a
+   * company pays for its staff is not its staff's business.
+   */
+  ORG_PAID
+}
+
 enum ReviewState {
   PENDING
   CONFIRMED
@@ -113,6 +129,8 @@ model Organization {
    * dropdown.
    */
   joinCode String? @unique
+
+  billingMode BillingMode @default(LEARNER_PAID)
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

@@ -10,7 +10,10 @@ import { cn } from "@/lib/cn";
 export default async function LeaderboardPage() {
   // Gated like the learning screens: only payments and profile stay open to a
   // suspended learner.
-  const { user, learner, lang, d } = await learnerContext({ requireAccess: true });
+  // No access gate: once the trial ends, the leaderboard, payments and profile
+  // are the three screens that stay open. Seeing the board is also part of the
+  // reason to come back and pay.
+  const { user, learner, lang, d } = await learnerContext();
   const board = await monthlyBoard(learner.orgId, learner.id);
   const month = monthLabel(new Date(), lang);
 

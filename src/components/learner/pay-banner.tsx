@@ -8,9 +8,15 @@ import { t, type Lang } from "@/lib/i18n";
 export function PayBanner({
   lang,
   daysUntilDue,
+  onTrial = false,
 }: {
   lang: Lang;
   daysUntilDue: number;
+  /**
+   * A trial reads differently from a late subscription: nothing is owed yet,
+   * and it ends on the day it says rather than sliding into a grace period.
+   */
+  onTrial?: boolean;
 }) {
   const d = t(lang);
   const overdue = daysUntilDue <= 0;
@@ -20,7 +26,9 @@ export function PayBanner({
       className="press flex items-center gap-3 rounded-2xl border-2 border-ink px-[13px] py-[11px] text-[12.5px] font-semibold hard-1"
       style={{ background: overdue ? "#FFF9EF" : "#FFEDD5" }}
     >
-      <span className="flex-1">{d.payBanner(daysUntilDue)}</span>
+      <span className="flex-1">
+        {onTrial ? d.payTrialBanner(daysUntilDue) : d.payBanner(daysUntilDue)}
+      </span>
       <span className="rounded-full border-[1.5px] border-ink bg-brand px-[10px] py-1 text-[11px] font-bold text-brand-ink">
         {d.payBannerCta}
       </span>

@@ -92,30 +92,41 @@ export default async function ProfilePage() {
             <ChevronRight size={15} />
           </Link>
 
-          <Link
-            href="/payments"
-            className="press flex items-center gap-3 rounded-2xl border-2 border-ink bg-surface p-[14px] flat-2"
-          >
-            <span className="grid size-[38px] flex-none place-items-center rounded-xl border-2 border-ink bg-brand-soft">
-              <PaymentIcon size={21} />
-            </span>
-            <span className="flex-1">
-              <span className="block text-[14.5px] font-bold">{d.paymentsTitle}</span>
-              <span className="block text-[11.5px] text-muted-2">
-                {formatMoney(settings.monthlyAmount, settings.currency, lang)} ·{" "}
-                {billing.status === "ACTIVE"
-                  ? d.payStatusActive
-                  : billing.status === "OVERRIDE_ACTIVE"
-                    ? d.payStatusOverride
-                    : billing.status === "SUSPENDED"
-                      ? d.payStatusSuspended
-                      : billing.status === "PAST_DUE"
-                        ? d.payStatusPastDue(billing.daysOverdue ?? 0)
-                        : d.payStatusTrial}
+          {/*
+            Hidden entirely when the organisation is invoiced — this row is the
+            one place the monthly amount appears outside the payments screen,
+            and what a company pays for its staff is not its staff's business.
+          */}
+          {billing.orgPaid ? null : (
+            <Link
+              href="/payments"
+              className="press flex items-center gap-3 rounded-2xl border-2 border-ink bg-surface p-[14px] flat-2"
+            >
+              <span className="grid size-[38px] flex-none place-items-center rounded-xl border-2 border-ink bg-brand-soft">
+                <PaymentIcon size={21} />
               </span>
-            </span>
-            <ChevronRight size={15} />
-          </Link>
+              <span className="flex-1">
+                <span className="block text-[14.5px] font-bold">
+                  {d.paymentsTitle}
+                </span>
+                <span className="block text-[11.5px] text-muted-2">
+                  {formatMoney(settings.monthlyAmount, settings.currency, lang)} ·{" "}
+                  {billing.onTrial
+                    ? d.payStatusTrialDays(billing.daysUntilDue ?? 0)
+                    : billing.status === "ACTIVE"
+                      ? d.payStatusActive
+                      : billing.status === "OVERRIDE_ACTIVE"
+                        ? d.payStatusOverride
+                        : billing.status === "SUSPENDED"
+                          ? d.payStatusSuspended
+                          : billing.status === "PAST_DUE"
+                            ? d.payStatusPastDue(billing.daysOverdue ?? 0)
+                            : d.payStatusTrial}
+                </span>
+              </span>
+              <ChevronRight size={15} />
+            </Link>
+          )}
         </div>
 
         <NoteCard>{d.xpNote}</NoteCard>

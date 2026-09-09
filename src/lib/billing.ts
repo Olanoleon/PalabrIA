@@ -10,14 +10,15 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import {
-  addCycle,
   billingView,
+  DAY_MS,
   evaluateStatus,
   isAdminHeld,
   nextPeriod,
+  TRIAL_DAYS,
   type BillingView,
 } from "@/lib/billing-rules";
-import type { BillingStatus } from "@/generated/prisma";
+import type { BillingMode, BillingStatus } from "@/generated/prisma";
 
 export type Settings = {
   brebKey: string;
@@ -63,12 +64,19 @@ type LearnerBilling = {
 export function viewFor(
   learner: LearnerBilling,
   settings: Pick<Settings, "graceDays">,
+  /**
+   * The learner's organisation. Passed explicitly rather than read here so the
+   * function stays synchronous and the caller cannot forget that who pays is
+   * part of the answer.
+   */
+  orgBilling: BillingMode = "LEARNER_PAID",
   now = new Date(),
 ): BillingView {
   return billingView({
     status: learner.billingStatus,
     paidThrough: learner.paidThrough,
     graceDays: settings.graceDays,
+    orgPaid: orgBilling === "ORG_PAID",
     now,
   });
 }
@@ -252,7 +260,13 @@ export type SweepResult = {
 export async function runBillingSweep(now = new Date()): Promise<SweepResult> {
   const settings = await getSettings();
   const learners = await prisma.learner.findMany({
-    where: { billingStatus: { notIn: ["OVERRIDE_ACTIVE", "DISABLED"] } },
+    where: {
+      billingStatus: { notIn: ["OVERRIDE_ACTIVE", "DISABLED"] },
+      // An organisation-paid learner has no due date to fall behind. Sweeping
+      // them would suspend people who owe nothing and fill the audit trail
+      // with transitions that never affected their access.
+      org: { billingMode: "LEARNER_PAID" },
+    },
     select: { id: true, billingStatus: true, paidThrough: true },
   });
 
@@ -279,7 +293,14 @@ export async function runBillingSweep(now = new Date()): Promise<SweepResult> {
   return result;
 }
 
-/** First cycle for a freshly created learner: a full month on the house. */
+/**
+ * Where a brand-new learner's free period ends.
+ *
+ * Eight days, not a month: long enough to finish a unit or two and see whether
+ * the thing is for them, short enough that the decision to pay is made while
+ * they still remember signing up. `evaluateStatus` gives it no grace, so this
+ * date is exactly when the content locks.
+ */
 export function initialPaidThrough(now = new Date()): Date {
-  return addCycle(now);
+  return new Date(now.getTime() + TRIAL_DAYS * DAY_MS);
 }

@@ -11,6 +11,7 @@ import { reviewPayment, updateSettings } from "@/lib/billing";
 import { defaultTemplateId, replicateTemplateToOrg } from "@/lib/replicate";
 import { freeJoinCode } from "@/lib/join-code";
 import type { ActionState } from "@/lib/actions/admin";
+import type { BillingMode } from "@/generated/prisma";
 
 async function superAdmin() {
   return requireRole("SUPER_ADMIN");
@@ -99,6 +100,26 @@ export async function renameOrganization(
   await prisma.organization.update({ where: { id: orgId }, data: { name } });
   revalidateSuper();
   return { notice: "Organización actualizada." };
+}
+
+/**
+ * Switches who settles the subscription for an organisation's learners.
+ *
+ * Moving to ORG_PAID opens every learner in it immediately, whatever state
+ * their own billing was in — which is the point: the company is paying now, so
+ * an unpaid month of theirs is no longer anyone's problem. Their rows are left
+ * as they are rather than rewritten, so switching back restores exactly the
+ * situation the organisation left.
+ */
+export async function setOrganizationBillingMode(
+  orgId: string,
+  billingMode: BillingMode,
+) {
+  await superAdmin();
+  await prisma.organization.update({ where: { id: orgId }, data: { billingMode } });
+  revalidateSuper();
+  // The learner app reads this on every screen, so its cache has to go too.
+  revalidatePath("/", "layout");
 }
 
 /** Deactivating blocks every member's sign-in without touching their data. */
