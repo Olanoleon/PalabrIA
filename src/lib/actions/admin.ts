@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { isUniqueViolation, prisma } from "@/lib/prisma";
 import {
   activeOrgId,
   areaScopeFilter,
@@ -43,6 +43,8 @@ function revalidateAdmin() {
 }
 
 // ── Learners ────────────────────────────────────────────────────────────────
+
+const EmailSchema = z.string().trim().toLowerCase().email();
 
 const InviteSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -122,24 +124,62 @@ export async function updateLearner(
   const learnerId = String(formData.get("learnerId") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const team = String(formData.get("team") ?? "").trim();
+  const rawEmail = String(formData.get("email") ?? "").trim();
 
   const learner = await prisma.learner.findUniqueOrThrow({
     where: { id: learnerId },
-    select: { orgId: true, userId: true },
+    select: { orgId: true, userId: true, user: { select: { email: true } } },
   });
   assertOrgWrite(user, learner.orgId);
 
   if (name.length < 2) return { error: "El nombre es demasiado corto." };
 
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: learner.userId }, data: { name } }),
-    prisma.learner.update({
-      where: { id: learnerId },
-      data: { team: team || null },
-    }),
-  ]);
+  // Editable because a typo at creation otherwise locks someone out of their
+  // own account: the address is the sign-in identity and the only route a
+  // password reset can travel.
+  const email = rawEmail ? normalizeEmail(rawEmail) : learner.user.email;
+  if (!EmailSchema.safeParse(email).success) {
+    return { error: "Ese correo no es válido." };
+  }
+
+  try {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: learner.userId },
+        data: { name, email },
+      }),
+      prisma.learner.update({
+        where: { id: learnerId },
+        data: { team: team || null },
+      }),
+    ]);
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return { error: "Ya existe otra cuenta con ese correo." };
+    }
+    throw error;
+  }
+
   revalidateAdmin();
   return { notice: "Datos actualizados." };
+}
+
+/**
+ * Removes a learner and everything attached to them.
+ *
+ * Super Admin only, and genuinely permanent: deleting the user cascades to
+ * their progress, attempts, XP ledger, badges, billing audit and — the part
+ * worth pausing over — their payment rows, so past income figures move. That
+ * was a deliberate choice; `setLearnerActive` is the reversible option.
+ */
+export async function deleteLearner(learnerId: string) {
+  await requireRole("SUPER_ADMIN");
+  const learner = await prisma.learner.findUniqueOrThrow({
+    where: { id: learnerId },
+    select: { userId: true },
+  });
+  await prisma.user.delete({ where: { id: learner.userId } });
+  revalidateAdmin();
 }
 
 /** Deactivation blocks sign-in outright; progress and XP are untouched. */

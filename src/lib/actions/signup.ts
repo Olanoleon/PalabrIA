@@ -3,8 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma";
+import { isUniqueViolation, prisma } from "@/lib/prisma";
 import { hashPassword, normalizeEmail, startSession } from "@/lib/auth";
 import { initialPaidThrough } from "@/lib/billing";
 import { isLang, t } from "@/lib/i18n";
@@ -110,10 +109,7 @@ export async function createLearnerAccount(
     // Unlike the admin invite, this endpoint is public, so the gap between
     // "does this email exist" and "create it" is a race worth losing safely.
     // P2002 is the unique index on User.email doing its job.
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
+    if (isUniqueViolation(error)) {
       return { error: d.signupTaken };
     }
     throw error;

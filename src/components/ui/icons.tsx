@@ -206,3 +206,58 @@ export const AreaGlyph = ({ iconKey, size = 22 }: { iconKey: string; size?: numb
   };
   return <Stroke d={paths[iconKey] ?? paths.sparkle} size={size} strokeWidth={1.8} />;
 };
+
+// ── Row actions in the console tables ───────────────────────────────────────
+
+export const EditIcon = ({ size = 15, className }: Props) => (
+  <Stroke
+    size={size}
+    className={className}
+    d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3zM14.5 6.5l3 3"
+  />
+);
+
+/** A crossed-out circle: the account stays, the sign-in stops. */
+export const DisableIcon = ({ size = 15, className }: Props) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.9"
+    strokeLinecap="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M6 6l12 12" />
+  </svg>
+);
+
+export const TrashIcon = ({ size = 15, className }: Props) => (
+  <Stroke
+    size={size}
+    className={className}
+    d="M4 7h16M10 7V5h4v2M6 7l1 13h10l1-13M10 11v6M14 11v6"
+  />
+);
+
+/** Restores a disabled account. */
+export const EnableIcon = ({ size = 15, className }: Props) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.9"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M8.5 12.5l2.5 2.5 4.5-5" />
+  </svg>
+);

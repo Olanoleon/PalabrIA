@@ -104,6 +104,129 @@ export type LearnerRow = {
   overrideNote: string | null;
 };
 
+// ── Platform-wide learner management (Super Admin) ──────────────────────────
+
+export type PlatformLearnerRow = {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  team: string | null;
+  orgId: string;
+  orgName: string;
+  createdAt: Date;
+  /** Whether an administrator has disabled the account outright. */
+  isActive: boolean;
+  /** Billing status after the rules are applied, not the stored column. */
+  effectiveStatus: string;
+  hasAccess: boolean;
+  orgPaid: boolean;
+};
+
+/**
+ * Every learner on the platform, in one list.
+ *
+ * The Super Admin console used to render one panel per organisation, which
+ * meant finding a person required knowing which company they belonged to.
+ * A single filterable table replaces that; the organisation becomes a column.
+ */
+export async function allLearnerRows(): Promise<PlatformLearnerRow[]> {
+  const settings = await getSettings();
+  const learners = await prisma.learner.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { id: true, name: true, email: true, isActive: true } },
+      org: { select: { id: true, name: true, billingMode: true } },
+    },
+  });
+
+  return learners.map((learner) => {
+    const view = viewFor(learner, settings, learner.org.billingMode);
+    return {
+      id: learner.id,
+      userId: learner.user.id,
+      name: learner.user.name,
+      email: learner.user.email,
+      team: learner.team,
+      orgId: learner.org.id,
+      orgName: learner.org.name,
+      createdAt: learner.createdAt,
+      isActive: learner.user.isActive,
+      effectiveStatus: view.status,
+      // Disabled at the account level beats any amount of billing access.
+      hasAccess: view.access && learner.user.isActive,
+      orgPaid: view.orgPaid,
+    };
+  });
+}
+
+export type LearnerDashboard = {
+  lifetime: number;
+  active: number;
+  monetized: number;
+  yearIncome: number;
+  currency: string;
+};
+
+/**
+ * The four numbers above the learner table.
+ *
+ * `active` and `monetized` are counted in JS rather than SQL because both
+ * depend on rules the database does not know: whether a billing period has
+ * lapsed, and whether the learner's organisation is invoiced instead of them.
+ * At platform scale that is one query and a loop, which is cheaper than
+ * teaching Postgres the billing rules and keeping the two in step.
+ */
+export async function learnerDashboard(): Promise<LearnerDashboard> {
+  const settings = await getSettings();
+  const yearStart = new Date(Date.UTC(new Date().getUTCFullYear(), 0, 1));
+
+  const [learners, paid, income] = await Promise.all([
+    prisma.learner.findMany({
+      select: {
+        id: true,
+        billingStatus: true,
+        paidThrough: true,
+        user: { select: { isActive: true } },
+        org: { select: { billingMode: true } },
+      },
+    }),
+    // Confirmed only: a declaration that was rejected is not money, and one
+    // still pending is a claim. Same bar as the income figure beside it.
+    prisma.payment.findMany({
+      where: { reviewState: "CONFIRMED" },
+      select: { learnerId: true },
+      distinct: ["learnerId"],
+    }),
+    prisma.payment.aggregate({
+      where: { reviewState: "CONFIRMED", declaredAt: { gte: yearStart } },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  const hasPaid = new Set(paid.map((p) => p.learnerId));
+
+  let active = 0;
+  let monetized = 0;
+  for (const learner of learners) {
+    const view = viewFor(learner, settings, learner.org.billingMode);
+    if (view.access && learner.user.isActive) active++;
+    // Someone whose company is invoiced is monetised whether or not a payment
+    // row exists against their name — the money arrives, just not through them.
+    if (hasPaid.has(learner.id) || learner.org.billingMode === "ORG_PAID") {
+      monetized++;
+    }
+  }
+
+  return {
+    lifetime: learners.length,
+    active,
+    monetized,
+    yearIncome: income._sum.amount ?? 0,
+    currency: settings.currency,
+  };
+}
+
 export async function learnerRows(orgId: string): Promise<LearnerRow[]> {
   const settings = await getSettings();
   const learners = await prisma.learner.findMany({
