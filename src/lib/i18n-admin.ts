@@ -182,7 +182,10 @@ export const ADMIN_ES = {
   learnerCreate: "Crear cuenta",
   learnerOrg: "Organización",
   learnerInviteNote:
-    "La contraseña inicial es su propio correo y tendrá que cambiarla al entrar. El primer mes queda como periodo de prueba.",
+    (days: number) =>
+    "La contraseña inicial es su propio correo y tendrá que cambiarla al entrar. Tiene " +
+    days +
+    " días de prueba.",
   learnersEmpty: "Todavía no hay aprendices en esta organización.",
   colLearner: "Aprendiz",
   colProgress: "Progreso",
@@ -502,7 +505,10 @@ export const ADMIN_EN: AdminDict = {
   learnerCreate: "Create account",
   learnerOrg: "Organization",
   learnerInviteNote:
-    "The initial password is their own email and they must change it on first sign-in. The first month is a trial period.",
+    (days) =>
+    "The initial password is their own email and they must change it on first sign-in. They get a " +
+    days +
+    "-day trial.",
   learnersEmpty: "No learners in this organization yet.",
   colLearner: "Learner",
   colProgress: "Progress",

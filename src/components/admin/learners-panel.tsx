@@ -1,5 +1,6 @@
 "use client";
 
+import { TRIAL_DAYS } from "@/lib/billing-rules";
 import { useState } from "react";
 import {
   inviteLearner,
@@ -77,7 +78,7 @@ export function LearnersPanel({
                 ) : null}
               </div>
               <p className="text-[11.5px] text-muted-2">
-                {d.learnerInviteNote}
+                {d.learnerInviteNote(TRIAL_DAYS)}
               </p>
             </ActionForm>
           </div>

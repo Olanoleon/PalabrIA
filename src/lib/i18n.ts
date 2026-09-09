@@ -32,7 +32,8 @@ export const ES = {
   registerCta: "REGISTRO GRATIS",
   memberCta: "¿YA ERES MIEMBRO?",
   signupTitle: "Crea tu cuenta",
-  signupSub: "Es gratis y el primer mes va por nuestra cuenta.",
+  signupSub: (days: number) =>
+    "Pruébalo gratis " + days + " días, sin tarjeta.",
   signupCode: "Código de tu organización",
   signupCodeOptional: "opcional",
   signupCodeHint: "Son 4 números. Si no tienes uno, déjalo vacío y prueba la app.",
@@ -333,7 +334,7 @@ export const EN: Translated = {
   registerCta: "FREE REGISTER",
   memberCta: "ALREADY MEMBER?",
   signupTitle: "Create your account",
-  signupSub: "It's free, and the first month is on us.",
+  signupSub: (days) => "Try it free for " + days + " days, no card needed.",
   signupCode: "Your organisation code",
   signupCodeOptional: "optional",
   signupCodeHint:

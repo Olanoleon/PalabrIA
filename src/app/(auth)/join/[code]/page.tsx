@@ -1,3 +1,4 @@
+import { TRIAL_DAYS } from "@/lib/billing-rules";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
@@ -57,7 +58,7 @@ export default async function JoinPage({ params }: PageProps<"/join/[code]">) {
           {d.signupTitle}
         </h1>
         <p className="mt-2 text-[14px] leading-[1.5] text-body text-pretty">
-          {d.signupSub}
+          {d.signupSub(TRIAL_DAYS)}
         </p>
 
         <div className="mt-[18px]">

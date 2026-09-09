@@ -1,3 +1,4 @@
+import { TRIAL_DAYS } from "@/lib/billing-rules";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { homeFor } from "@/lib/rbac";
@@ -23,7 +24,7 @@ export default async function SignupPage() {
           {d.signupTitle}
         </h1>
         <p className="mt-2 text-[14px] leading-[1.5] text-body text-pretty">
-          {d.signupSub}
+          {d.signupSub(TRIAL_DAYS)}
         </p>
 
         <div className="mt-[18px]">
