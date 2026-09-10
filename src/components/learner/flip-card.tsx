@@ -10,6 +10,16 @@ import type { UnitDetail } from "@/lib/learner-data";
 
 type Word = UnitDetail["words"][number];
 
+/** The nearest ancestor that actually scrolls, if any. */
+function scrollerFor(node: HTMLElement | null): HTMLElement | null {
+  for (let el = node?.parentElement; el; el = el.parentElement) {
+    const overflowY = getComputedStyle(el).overflowY;
+    const scrolls = overflowY === "auto" || overflowY === "scroll";
+    if (scrolls && el.scrollHeight > el.clientHeight) return el;
+  }
+  return null;
+}
+
 /** A card seen edge-on, for the flip cue. Decorative only. */
 function FlipGlyph() {
   return (
@@ -33,8 +43,22 @@ const SWIPE_THRESHOLD = 48;
 /** How long the outgoing card takes to leave, and the incoming one to arrive. */
 const EXIT_MS = 190;
 const ENTER_MS = 300;
-/** Beyond this much vertical movement it is a scroll, so leave it alone. */
-const SCROLL_TOLERANCE = 40;
+/**
+ * Movement before the gesture commits to an axis, in px.
+ *
+ * Small, because the decision has to be made from the first flick of the
+ * thumb — but not so small that the jitter of putting a finger down decides it.
+ */
+const AXIS_LOCK = 8;
+
+/**
+ * How much more vertical than horizontal a drag must be to count as a scroll.
+ *
+ * Biased towards the swipe on purpose. Thumbs travel in arcs, so a swipe across
+ * a phone held in one hand is rarely level; treating "mostly sideways" as
+ * sideways is what makes the deck feel like it responds.
+ */
+const VERTICAL_BIAS = 1.3;
 
 /**
  * Cards mode: a 3D flip card carousel. The front carries the word, IPA and
@@ -77,7 +101,14 @@ export function CardsMode({
     dir: 1 | -1;
     stage: "out" | "placed" | "in";
   } | null>(null);
-  const gesture = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
+  const gesture = useRef<{
+    x: number;
+    y: number;
+    /** Last Y seen, so a vertical drag can be applied incrementally. */
+    lastY: number;
+    axis: "none" | "x" | "y";
+    scroller: HTMLElement | null;
+  } | null>(null);
   const { speak, speaking, state } = useSpeech();
 
   const word = words[index];
@@ -192,7 +223,7 @@ export function CardsMode({
   const onControl = (event: React.PointerEvent) =>
     Boolean((event.target as HTMLElement | null)?.closest("button"));
 
-  const onPointerDown = (event: React.PointerEvent) => {
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (slide) return;
     // Whatever happens next, the learner has found the card — so the hint
     // stops moving it. A cue that is still animating while someone is trying
@@ -202,7 +233,22 @@ export function CardsMode({
       gesture.current = null;
       return;
     }
-    gesture.current = { x: event.clientX, y: event.clientY, dragging: false };
+    gesture.current = {
+      x: event.clientX,
+      y: event.clientY,
+      lastY: event.clientY,
+      axis: "none",
+      scroller: scrollerFor(event.currentTarget),
+    };
+    // Capture so a swipe that wanders off the card still reaches us. Recorded
+    // above first, and guarded: capture throws if the pointer is no longer
+    // active, and losing the card to an exception here would be far worse than
+    // losing the tail of one gesture.
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Not capturable; the gesture still works while the finger stays put.
+    }
   };
 
   const onPointerMove = (event: React.PointerEvent) => {
@@ -210,18 +256,32 @@ export function CardsMode({
     if (!start) return;
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
-    // Vertical intent wins: the page must still scroll under the card.
-    if (Math.abs(dy) > SCROLL_TOLERANCE && Math.abs(dy) > Math.abs(dx)) {
-      gesture.current = null;
-      setDrag(0);
+
+    // Decide the axis once, then hold it for the rest of the gesture.
+    //
+    // The card used to declare `touch-action: pan-y`, which hands vertical
+    // panning to the browser — and the browser commits to a scroll from the
+    // first few pixels, before our code has seen enough to disagree. On phones
+    // that decide early, a swipe across the deck became a scroll down the page
+    // and the card never moved. Now the card takes both axes and this decides,
+    // which means a mostly-sideways drag is a swipe even if the thumb arced.
+    if (start.axis === "none") {
+      if (Math.abs(dx) < AXIS_LOCK && Math.abs(dy) < AXIS_LOCK) return;
+      start.axis =
+        Math.abs(dy) > Math.abs(dx) * VERTICAL_BIAS ? "y" : "x";
+    }
+
+    if (start.axis === "y") {
+      // Vertical is ours now too, so the page has to be moved by hand. No
+      // inertia, but this pane is barely taller than one screen.
+      if (start.scroller) start.scroller.scrollTop -= event.clientY - start.lastY;
+      start.lastY = event.clientY;
       return;
     }
-    if (Math.abs(dx) > 6) {
-      start.dragging = true;
-      // Follows the finger nearly 1:1 so the drag reads as moving the card,
-      // with mild resistance at the extremes.
-      setDrag(Math.sign(dx) * Math.min(Math.abs(dx) * 0.9, 160));
-    }
+
+    // Follows the finger nearly 1:1 so the drag reads as moving the card,
+    // with mild resistance at the extremes.
+    setDrag(Math.sign(dx) * Math.min(Math.abs(dx) * 0.9, 160));
   };
 
   const onPointerUp = (event: React.PointerEvent) => {
@@ -231,13 +291,14 @@ export function CardsMode({
     if (!start) return;
     // Released over a control: that press belongs to the control.
     if (onControl(event)) return;
-    const dx = event.clientX - start.x;
-    if (!start.dragging || Math.abs(dx) < SWIPE_THRESHOLD) {
-      // Not a swipe: treat it as the tap it was.
-      if (!start.dragging) flip();
+    // A gesture that never picked an axis never moved: it was a tap.
+    if (start.axis === "none") {
+      flip();
       return;
     }
-    advance(dx < 0 ? 1 : -1);
+    if (start.axis === "y") return;
+    const dx = event.clientX - start.x;
+    if (Math.abs(dx) >= SWIPE_THRESHOLD) advance(dx < 0 ? 1 : -1);
   };
 
   // Guarded after the hooks above, which must run on every render.
@@ -288,9 +349,9 @@ export function CardsMode({
           if (event.key === "ArrowRight") advance(1);
           if (event.key === "ArrowLeft") advance(-1);
         }}
-        // pan-y keeps vertical scrolling with the page while we take the
-        // horizontal axis for swiping.
-        className="h-[352px] cursor-pointer touch-pan-y select-none [perspective:1300px]"
+        // touch-none, not pan-y: the browser must not claim an axis before
+        // onPointerMove has decided which one this gesture is.
+        className="h-[352px] cursor-pointer touch-none select-none [perspective:1300px]"
       >
         <div className="size-full [transform-style:preserve-3d]" style={slideStyle()}>
         <div className="size-full [transform-style:preserve-3d]">
