@@ -42,6 +42,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // Matches manifest.webmanifest and the cream the app actually renders at
+  // the top; they used to disagree, which showed as an orange bar over a
+  // cream header once installed.
   themeColor: "#FDF9F3",
 };
 
