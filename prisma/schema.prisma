@@ -377,6 +377,20 @@ model Unit {
   generatedAt     DateTime?
   editedAfterGen  Boolean   @default(false)
 
+  /**
+   * Set while an AI regeneration runs in the background, cleared when it ends.
+   *
+   * The work outlives the request that started it, so this column is the only
+   * thing that knows it is happening: the console reads it to lock the unit,
+   * because its words and questions are about to be replaced wholesale and
+   * editing them would be editing something that is about to cease to exist.
+   * A run whose process died leaves this set forever, so readers treat one
+   * older than REGENERATION_STALE_MIN as dead rather than as running.
+   */
+  regeneratingSince DateTime?
+  /** Why the last background regeneration failed, for the console to show. */
+  regenerationError String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

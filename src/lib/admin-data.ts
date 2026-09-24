@@ -9,6 +9,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { getSettings, viewFor } from "@/lib/billing";
 import { levelFromXp, PASS_THRESHOLD } from "@/lib/xp";
+import { isRegenerating } from "@/lib/regeneration";
 import { activeOrgId, areaScopeFilter, type CurrentUser } from "@/lib/rbac";
 import { currentDict } from "@/lib/lang";
 
@@ -313,6 +314,8 @@ export type ContentArea = {
     activityCount: number;
     generated: boolean;
     fromTemplate: boolean;
+    /** A background AI regeneration is replacing this unit's content right now. */
+    regenerating: boolean;
   }>;
 };
 
@@ -356,6 +359,9 @@ export async function contentTree(user: CurrentUser): Promise<ContentArea[]> {
       activityCount: unit._count.activities,
       generated: unit.generatedAt !== null,
       fromTemplate: unit.sourceUnitId !== null,
+      // Decided here rather than in the component: the staleness window is a
+      // clock comparison, and the server's clock is the one that set it.
+      regenerating: isRegenerating(unit.regeneratingSince),
     })),
   }));
 }

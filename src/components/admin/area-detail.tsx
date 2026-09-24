@@ -18,6 +18,7 @@ import {
 } from "@/components/admin/form-bits";
 import { GenerateUnitLink } from "@/components/admin/generate-unit-link";
 import { TagPicker } from "@/components/admin/tag-picker";
+import { RegenerationWatch } from "@/components/admin/regeneration-watch";
 import { cn } from "@/lib/cn";
 import type { ContentArea } from "@/lib/admin-data";
 import { adminT } from "@/lib/i18n-admin";
@@ -50,11 +51,15 @@ export function AreaDetail({
     HARD: d.difficultyHard,
   };
   const [editing, setEditing] = useState(false);
+  const anyRegenerating = area.units.some((u) => u.regenerating);
   const visibleUnits = area.units.filter((u) => u.isVisible).length;
   const totalWords = area.units.reduce((n, u) => n + u.wordCount, 0);
 
   return (
     <div className="flex flex-col gap-5">
+      {/* So a unit locked by a background job unlocks itself on this screen
+          too, without the administrator reloading to find out. */}
+      {anyRegenerating ? <RegenerationWatch /> : null}
       <Panel className={cn(!area.isVisible && "border-dashed bg-hidden")}>
         {/* Stacked below sm: side by side, the buttons stole enough width to
             wrap the title and squeeze the description into a ribbon. */}
@@ -196,6 +201,9 @@ export function AreaDetail({
                       {unit.isVisible ? d.tagVisible : d.tagHidden}
                     </Tag>
                     {unit.generated ? <Tag tone="brand">{d.tagAi}</Tag> : null}
+                    {unit.regenerating ? (
+                      <Tag tone="warn">{d.regeneratingTag}</Tag>
+                    ) : null}
                   </div>
                   <p className="mt-[2px] text-[11.5px] text-muted">
                     {d.unitStats(
@@ -207,8 +215,12 @@ export function AreaDetail({
                 </div>
 
                 <div className="flex flex-none items-center gap-2 sm:ml-auto">
+                  {/* Everything this unit holds is about to be replaced, so
+                      there is nothing here worth opening or hiding until the
+                      job lands. */}
                   <SmallButton
                     tone={unit.isVisible ? "secondary" : "soft"}
+                    disabled={unit.regenerating}
                     onClick={() => {
                       if (
                         unit.isVisible &&
@@ -221,12 +233,22 @@ export function AreaDetail({
                   >
                     {unit.isVisible ? d.hide : d.show}
                   </SmallButton>
-                  <Link
-                    href={`${base}/unit/${unit.id}`}
-                    className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
-                  >
-                    {d.edit}
-                  </Link>
+                  {unit.regenerating ? (
+                    <span
+                      aria-disabled="true"
+                      title={d.regenerateLockedBody}
+                      className="cursor-not-allowed rounded-xl border-2 border-dashed border-muted-line bg-locked px-3 py-[8px] text-[12.5px] font-bold text-muted-2"
+                    >
+                      {d.regeneratingShort}
+                    </span>
+                  ) : (
+                    <Link
+                      href={`${base}/unit/${unit.id}`}
+                      className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
+                    >
+                      {d.edit}
+                    </Link>
+                  )}
                 </div>
               </li>
             ))}

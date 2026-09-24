@@ -1,10 +1,21 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { deleteUnit, setUnitVisible, updateUnitMeta, updateWord } from "@/lib/actions/admin";
+import { useRouter } from "next/navigation";
+import {
+  deleteUnit,
+  dismissRegenerationError,
+  setUnitVisible,
+  startUnitRegeneration,
+  updateUnitMeta,
+  updateWord,
+} from "@/lib/actions/admin";
 import { Panel, Tag } from "@/components/admin/pieces";
 import { ActionForm, Field, SmallButton, TextArea } from "@/components/admin/form-bits";
 import { SparkleIcon } from "@/components/ui/icons";
+import { RegenerationWatch } from "@/components/admin/regeneration-watch";
+import { isRegenerating } from "@/lib/regeneration";
 import { cn } from "@/lib/cn";
 import { adminT } from "@/lib/i18n-admin";
 import type { Lang } from "@/lib/i18n";
@@ -21,6 +32,8 @@ type UnitData = {
   generatedAt: Date | null;
   editedAfterGen: boolean;
   generationInput: unknown;
+  regeneratingSince: Date | null;
+  regenerationError: string | null;
   area: { id: string; name: string };
   words: Array<{
     id: string;
@@ -57,8 +70,55 @@ export function UnitEditor({
   lang: Lang;
 }) {
   const d = adminT(lang);
+  const router = useRouter();
+  const [regenerating, startRegenerating] = useTransition();
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const options = (raw: unknown): string[] =>
     Array.isArray(raw) ? (raw as string[]) : [];
+
+  /*
+    A unit whose content is being replaced wholesale has nothing worth editing:
+    every word and question on this screen is about to stop existing, and a
+    save landing mid-replacement would be written over without a trace. So the
+    editor is not rendered at all while the job runs — the page waits instead,
+    and picks itself up when the work lands.
+  */
+  if (isRegenerating(unit.regeneratingSince)) {
+    return (
+      <div className="flex flex-col gap-5">
+        <RegenerationWatch />
+        <Panel
+          title={unit.name}
+          description={d.unitMeta(
+            unit.area.name,
+            unit.words.length,
+            unit.activities.length,
+          )}
+        >
+          <div className="flex flex-col items-start gap-3 rounded-2xl border-2 border-dashed border-ink bg-cream p-5">
+            <Tag tone="brand">
+              <span className="inline-flex items-center gap-2">
+                <SparkleIcon size={12} />
+                {d.regeneratingTag}
+              </span>
+            </Tag>
+            <h2 className="font-display text-[19px] font-semibold tracking-[-0.02em]">
+              {d.regenerateLockedTitle}
+            </h2>
+            <p className="max-w-[60ch] text-[13px] leading-[1.5] text-body">
+              {d.regenerateLockedBody}
+            </p>
+            <Link
+              href={`${base}/content/${unit.area.id}`}
+              className="press rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
+            >
+              {d.unitBackToArea}
+            </Link>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -86,12 +146,44 @@ export function UnitEditor({
             >
               {unit.isVisible ? d.hide : d.show}
             </SmallButton>
-            <Link
-              href={`${base}/unit/${unit.id}/regenerate`}
-              className="press inline-flex items-center gap-2 rounded-xl border-2 border-ink bg-ai px-3 py-[8px] text-[12.5px] font-bold text-ai-ink hard-1"
+            {/*
+              One click, not a form: the inputs that produced this unit are
+              stored on it, so the only thing the old screen asked for was a
+              retype of what the server already knows.
+            */}
+            <button
+              type="button"
+              disabled={regenerating}
+              onClick={() => {
+                if (!window.confirm(d.regenerateNowConfirm(unit.name))) return;
+                setRegenerateError(null);
+                startRegenerating(async () => {
+                  const outcome = await startUnitRegeneration(unit.id);
+                  if ("error" in outcome) {
+                    setRegenerateError(outcome.error);
+                    return;
+                  }
+                  // Returns as soon as the unit is marked; the work carries on
+                  // server-side and this render swaps to the locked screen.
+                  router.refresh();
+                });
+              }}
+              className="press inline-flex items-center gap-2 rounded-xl border-2 border-ink bg-ai px-3 py-[8px] text-[12.5px] font-bold text-ai-ink hard-1 disabled:opacity-60"
             >
               <SparkleIcon size={14} />
-              {d.regenerateLink}
+              {regenerating ? d.regenerateNowRunning : d.regenerateLink}
+            </button>
+            {/*
+              The long way round, for changing the topic, the word list or the
+              difficulty. In the header rather than beside the stored request,
+              because a hand-seeded unit has no stored request to show and would
+              otherwise lose the screen entirely.
+            */}
+            <Link
+              href={`${base}/unit/${unit.id}/regenerate`}
+              className="press inline-flex items-center gap-2 rounded-xl border-2 border-ink bg-surface px-3 py-[8px] text-[12.5px] font-bold hard-1"
+            >
+              {d.regenerateOtherInputs}
             </Link>
             <Link
               href={`${base}/content/${unit.area.id}`}
@@ -102,6 +194,25 @@ export function UnitEditor({
           </div>
         }
       >
+        {unit.regenerationError ? (
+          <div className="mb-4 rounded-xl border-2 border-ink bg-cream px-3 py-2 text-[12.5px] text-brand-dark">
+            <p className="font-medium">
+              {d.regenerateFailed} {unit.regenerationError}
+            </p>
+            <button
+              type="button"
+              onClick={() => dismissRegenerationError(unit.id)}
+              className="mt-2 text-[12px] font-bold underline"
+            >
+              {d.regenerateDismiss}
+            </button>
+          </div>
+        ) : null}
+        {regenerateError ? (
+          <p className="mb-4 rounded-xl border-2 border-ink bg-cream px-3 py-2 text-[12.5px] font-medium text-brand-dark">
+            {regenerateError}
+          </p>
+        ) : null}
         <ActionForm
           action={updateUnitMeta}
           submitLabel={d.unitSave}
@@ -234,13 +345,6 @@ export function UnitEditor({
           <pre className="overflow-x-auto rounded-xl border-2 border-ink bg-locked p-3 font-mono text-[11.5px]">
             {JSON.stringify(unit.generationInput, null, 2)}
           </pre>
-          <Link
-            href={`${base}/unit/${unit.id}/regenerate`}
-            className="press mt-3 inline-flex items-center gap-2 rounded-xl border-2 border-ink bg-ai px-3 py-[8px] text-[12.5px] font-bold text-ai-ink hard-1"
-          >
-            <SparkleIcon size={14} />
-            {d.regenerateLink}
-          </Link>
         </Panel>
       ) : null}
 

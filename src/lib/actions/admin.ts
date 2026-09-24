@@ -18,6 +18,9 @@ import { evaluateBadges } from "@/lib/progress";
 import { GenerationError, generateUnit } from "@/lib/openai";
 import { MAX_WORDS, MIN_WORDS, type GeneratedUnit } from "@/lib/unit-schema";
 import { validateGeneratedUnit, type Issue } from "@/lib/unit-validate";
+import { hasBlockingIssue } from "@/lib/unit-validate";
+import { readGenerationInput } from "@/lib/generation-input";
+import { isRegenerating } from "@/lib/regeneration";
 import { persistGeneratedUnit, replaceGeneratedUnit } from "@/lib/unit-persist";
 import { getSettings } from "@/lib/billing";
 import type { Difficulty } from "@/generated/prisma";
@@ -670,6 +673,208 @@ export async function regenerateUnit(
   revalidateAdmin();
   revalidatePath("/path");
   return result;
+}
+
+/**
+ * Starts a regeneration and returns immediately.
+ *
+ * The request that produced the unit is stored on it, so there is nothing to
+ * fill in — the review screen at /unit/<id>/regenerate is still there for
+ * regenerating with *different* inputs.
+ *
+ * The work does NOT belong to this request. A model call takes up to 150
+ * seconds, and an administrator who navigates away should not silently kill a
+ * half-finished replacement or, worse, leave one running whose outcome nobody
+ * can see. So the unit is marked as regenerating first, the work is detached,
+ * and `Unit.regeneratingSince` is what the console reads to lock the unit
+ * until it lands.
+ */
+export async function startUnitRegeneration(
+  unitId: string,
+): Promise<{ started: true } | { error: string }> {
+  const user = await actor();
+  await assertUnitInScope(user, unitId);
+
+  const unit = await prisma.unit.findUnique({
+    where: { id: unitId },
+    select: { id: true, regeneratingSince: true },
+  });
+  if (!unit) return { error: "Esa unidad ya no existe." };
+  // Two administrators, or two taps: the second must not start a second model
+  // call against the same unit.
+  if (isRegenerating(unit.regeneratingSince)) {
+    return { error: "Esta unidad ya se está regenerando." };
+  }
+
+  await prisma.unit.update({
+    where: { id: unitId },
+    data: { regeneratingSince: new Date(), regenerationError: null },
+  });
+  revalidateAdmin();
+
+  // Deliberately not awaited: the console polls `regeneratingSince` instead.
+  // `runRegeneration` never rejects, so there is no unhandled rejection here.
+  void runRegeneration(unitId);
+
+  return { started: true };
+}
+
+/**
+ * The detached half: generate, replace, and clear the flag whatever happens.
+ *
+ * Authorisation was settled by the caller — this runs with no request context
+ * at all, so it must not reach for cookies, headers or the acting user.
+ */
+async function runRegeneration(unitId: string): Promise<void> {
+  try {
+    const outcome = await regenerateFromStoredInput(unitId);
+    await prisma.unit.update({
+      where: { id: unitId },
+      data: {
+        regeneratingSince: null,
+        regenerationError: "error" in outcome ? outcome.error : null,
+      },
+    });
+    if (!("error" in outcome)) {
+      // Outside the request that started this, so a Next cache call may have
+      // nothing to attach to. The database write above is what matters; this
+      // is only to save the learner a stale read.
+      try {
+        revalidatePath("/path");
+      } catch {
+        /* no request context — the next render picks it up anyway */
+      }
+    }
+  } catch (error) {
+    // The unit must never be left locked, whatever went wrong.
+    const message =
+      error instanceof GenerationError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : "La regeneración falló.";
+    console.error(`[regenerate] ${unitId}: ${message}`);
+    await prisma.unit
+      .update({
+        where: { id: unitId },
+        data: { regeneratingSince: null, regenerationError: message },
+      })
+      .catch(() => {});
+  }
+}
+
+/**
+ * Generates a replacement for a unit from the request that produced it.
+ *
+ * Nobody is watching a draft here, so a generation the validator rejects is
+ * retried once before giving up; on the review screen that retry was the
+ * administrator pressing the button again.
+ */
+async function regenerateFromStoredInput(
+  unitId: string,
+): Promise<{ unitId: string } | { error: string }> {
+  const unit = await prisma.unit.findUnique({
+    where: { id: unitId },
+    select: {
+      id: true,
+      difficulty: true,
+      generationInput: true,
+      words: { select: { text: true }, orderBy: { sortOrder: "asc" } },
+      area: {
+        select: {
+          id: true,
+          name: true,
+          units: { select: { id: true, words: { select: { text: true } } } },
+        },
+      },
+    },
+  });
+  if (!unit) return { error: "Esa unidad ya no existe." };
+
+  const prior = readGenerationInput(unit.generationInput);
+  const currentWords = unit.words.map((w) => w.text);
+
+  // A unit seeded by hand, or created before the request was stored, has no
+  // inputs to reuse. Its own vocabulary is the closest thing to them: the
+  // paragraph and the questions are rewritten, the words the learner already
+  // met are kept.
+  const wordList = prior?.wordList?.length
+    ? prior.wordList
+    : prior?.topic
+      ? undefined
+      : currentWords;
+  if (!wordList?.length && !prior?.topic) {
+    return { error: "Esta unidad no tiene palabras ni tema con los que regenerarla." };
+  }
+
+  const input = {
+    areaId: unit.area.id,
+    wordCount: Math.min(
+      MAX_WORDS,
+      Math.max(MIN_WORDS, prior?.wordCount ?? currentWords.length),
+    ),
+    difficulty: prior?.difficulty ?? unit.difficulty,
+    topic: prior?.topic,
+    wordList,
+  };
+
+  // Everything the area already teaches EXCEPT this unit. Including its own
+  // words would forbid the model from the very vocabulary it is being asked to
+  // keep.
+  const existingWords = unit.area.units
+    .filter((other) => other.id !== unit.id)
+    .flatMap((other) => other.words.map((w) => w.text));
+
+  const settings = await getSettings();
+  let lastIssue: string | null = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    let draft: GeneratedUnit;
+    try {
+      draft = await generateUnit(
+        { ...input, areaName: unit.area.name, existingWords },
+        settings.openaiModel,
+      );
+    } catch (error) {
+      if (error instanceof GenerationError) return { error: error.message };
+      throw error;
+    }
+
+    const issues = validateGeneratedUnit(draft, {
+      wordCount: input.wordCount,
+      wordList: input.wordList,
+    });
+    if (hasBlockingIssue(issues)) {
+      lastIssue = issues.find((i) => i.level === "error")!.message;
+      continue;
+    }
+
+    const result = await replaceGeneratedUnit(unitId, draft, {
+      difficulty: input.difficulty,
+      generationInput: input,
+      edited: false,
+      // Visibility belongs to the unit, not to this generation.
+      visible: true,
+    });
+    if ("error" in result) {
+      lastIssue = result.error;
+      continue;
+    }
+    return result;
+  }
+
+  return { error: lastIssue ?? "La generación no produjo una unidad válida." };
+}
+
+/** Clears the message left by a failed background regeneration. */
+export async function dismissRegenerationError(unitId: string) {
+  const user = await actor();
+  await assertUnitInScope(user, unitId);
+  await prisma.unit.update({
+    where: { id: unitId },
+    data: { regenerationError: null },
+  });
+  revalidateAdmin();
 }
 
 // ── Unit editing ────────────────────────────────────────────────────────────

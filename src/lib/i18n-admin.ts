@@ -185,6 +185,17 @@ export const ADMIN_ES = {
   regenerateConfirm: (name: string) =>
     `¿Reemplazar el contenido de "${name}"? No se puede deshacer.`,
   regenerateBack: "Volver a la unidad",
+  regenerateNowConfirm: (name: string) =>
+    `¿Regenerar "${name}" con la IA usando los mismos datos? Se reemplazan sus palabras, su párrafo y sus preguntas. La mejor marca de cada aprendiz se conserva; el detalle de sus respuestas anteriores no. El trabajo sigue en el servidor aunque salgas de esta pantalla, y la unidad queda bloqueada hasta que termine. No se puede deshacer.`,
+  regenerateNowRunning: "Regenerando…",
+  regenerateOtherInputs: "Regenerar con otros datos",
+  regeneratingTag: "Regeneración en curso",
+  regeneratingShort: "Regenerando…",
+  regenerateLockedTitle: "Esta unidad se está regenerando",
+  regenerateLockedBody:
+    "La IA está escribiendo sus palabras, su párrafo y sus preguntas. Puedes irte: el trabajo sigue en el servidor y esta pantalla se actualiza sola cuando termina. Hasta entonces la unidad no se puede editar, porque todo lo que hay en ella está a punto de ser reemplazado.",
+  regenerateFailed: "La última regeneración falló:",
+  regenerateDismiss: "Entendido, ocultar aviso",
   generateTitle: "Generar unidad con IA",
   generateArea: (area: string) => `Área: ${area}`,
   generateWords: "Número de palabras",
@@ -551,6 +562,17 @@ export const ADMIN_EN: AdminDict = {
   regenerateConfirm: (name) =>
     `Replace the content of "${name}"? This cannot be undone.`,
   regenerateBack: "Back to the unit",
+  regenerateNowConfirm: (name) =>
+    `Regenerate "${name}" with AI using the same inputs? Its words, paragraph and questions are replaced. Each learner's best score is kept; the detail of their previous answers is not. The work carries on server-side even if you leave this screen, and the unit is locked until it finishes. This cannot be undone.`,
+  regenerateNowRunning: "Regenerating…",
+  regenerateOtherInputs: "Regenerate with different inputs",
+  regeneratingTag: "Regenerating",
+  regeneratingShort: "Regenerating…",
+  regenerateLockedTitle: "This unit is being regenerated",
+  regenerateLockedBody:
+    "The AI is writing its words, its paragraph and its questions. You can leave: the work carries on server-side and this screen updates itself when it lands. Until then the unit cannot be edited, because everything in it is about to be replaced.",
+  regenerateFailed: "The last regeneration failed:",
+  regenerateDismiss: "Got it, hide this",
   generateTitle: "Generate a unit with AI",
   generateArea: (area) => `Area: ${area}`,
   generateWords: "Number of words",
