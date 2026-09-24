@@ -4,11 +4,18 @@ import { useMemo, useState } from "react";
 import {
   deleteLearner,
   inviteLearner,
+  overrideLearnerStatus,
   setLearnerActive,
   updateLearner,
 } from "@/lib/actions/admin";
 import { Panel, StatTile, Tag, Empty, TableScroll, Th, Td } from "@/components/admin/pieces";
-import { ActionForm, Field, Select, SmallButton } from "@/components/admin/form-bits";
+import {
+  ActionForm,
+  Field,
+  Select,
+  SmallButton,
+  TextArea,
+} from "@/components/admin/form-bits";
 import { ConfirmAction } from "@/components/admin/confirm-action";
 import {
   DisableIcon,
@@ -257,6 +264,11 @@ function Row({
           ) : (
             <Tag tone="neutral">{d.learnerDisabledTag}</Tag>
           )}
+          {row.overrideNote ? (
+            <span className="mt-1 block text-[11px] text-muted-2">
+              {row.overrideNote}
+            </span>
+          ) : null}
         </Td>
         <Td>
           <div className="flex justify-end gap-[6px]">
@@ -334,6 +346,46 @@ function Row({
                 </div>
                 <p className="text-[11.5px] text-muted-2">{d.learnerEmailHint}</p>
               </ActionForm>
+
+              <div className="mt-4 h-px bg-rule" />
+
+              {/*
+                Waiving a subscription lives here because there is nowhere else
+                a Super Admin can reach it: /admin/learners is gated to org
+                admins, and this table replaced the panel that used to carry it.
+                OVERRIDE_ACTIVE keeps the learner open and takes them out of the
+                nightly sweep entirely.
+              */}
+              <div className="mt-4">
+                <ActionForm
+                  action={overrideLearnerStatus}
+                  submitLabel={d.learnerApplyStatus}
+                  tone="soft"
+                  hidden={{ learnerId: row.id }}
+                >
+                  <Select
+                    label={d.learnerManualStatus}
+                    name="status"
+                    defaultValue={
+                      row.billingStatus === "OVERRIDE_ACTIVE" ||
+                      row.billingStatus === "DISABLED"
+                        ? row.billingStatus
+                        : "AUTO"
+                    }
+                  >
+                    <option value="AUTO">{d.learnerStatusAuto}</option>
+                    <option value="OVERRIDE_ACTIVE">{d.learnerStatusForced}</option>
+                    <option value="DISABLED">{d.learnerStatusDisabled}</option>
+                  </Select>
+                  <TextArea
+                    label={d.reason}
+                    name="note"
+                    required
+                    defaultValue={row.overrideNote ?? ""}
+                    placeholder={d.learnerReasonHint}
+                  />
+                </ActionForm>
+              </div>
             </div>
           </td>
         </tr>

@@ -119,6 +119,13 @@ export type PlatformLearnerRow = {
   isActive: boolean;
   /** Billing status after the rules are applied, not the stored column. */
   effectiveStatus: string;
+  /**
+   * The stored column, which is what an administrative hold is written to and
+   * therefore what the manual-status control has to reflect.
+   */
+  billingStatus: string;
+  /** Why someone was forced active or disabled by hand, if they were. */
+  overrideNote: string | null;
   hasAccess: boolean;
   orgPaid: boolean;
 };
@@ -153,6 +160,8 @@ export async function allLearnerRows(): Promise<PlatformLearnerRow[]> {
       createdAt: learner.createdAt,
       isActive: learner.user.isActive,
       effectiveStatus: view.status,
+      billingStatus: learner.billingStatus,
+      overrideNote: learner.statusOverrideNote,
       // Disabled at the account level beats any amount of billing access.
       hasAccess: view.access && learner.user.isActive,
       orgPaid: view.orgPaid,
