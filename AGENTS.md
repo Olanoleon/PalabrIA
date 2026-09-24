@@ -92,6 +92,28 @@ new rules there and call them from the server module — not the other way round
   `correct / activities` over the whole unit, so trimming a session there would
   silently mark the trimmed questions wrong.
 
+## Regeneration runs outside its request
+
+**"Regenerar con IA" starts a detached job, not a page.** `startUnitRegeneration`
+stamps `Unit.regeneratingSince`, fires `runRegeneration` without awaiting it and
+returns; the model call then outlives the request that began it. That column is
+the only thing that knows the job is happening, so the console reads it to lock
+the unit — the area row drops its Editar link and `UnitEditor` refuses to render
+the editor at all, because every word and question on screen is about to stop
+existing and a save landing mid-replacement would be overwritten without a
+trace. Both screens poll through `RegenerationWatch`; nothing pushes.
+
+Consequences to keep in mind before touching it: the detached half runs with **no
+request context**, so it must never reach for cookies, headers or `actor()` —
+authorisation is settled by the caller. A process that dies mid-run leaves the
+column set with nobody to clear it, which is why `regeneration.ts` treats a mark
+older than `REGENERATION_STALE_MIN` as stale rather than as running. And a
+deploy mid-job simply loses it: the unit unlocks itself ten minutes later with
+its old content intact, since `replaceGeneratedUnit` writes in one transaction.
+
+The review screen at `/unit/<id>/regenerate` is still the way to regenerate with
+*different* inputs, and is the only caller of `regenerateUnit`.
+
 ## Accounts
 
 There are two ways an account comes into being, and they differ in ways that
