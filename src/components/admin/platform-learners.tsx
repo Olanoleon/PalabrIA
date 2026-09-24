@@ -285,7 +285,7 @@ function Row({
             {row.isActive ? (
               <ConfirmAction
                 icon={<DisableIcon />}
-                srLabel={d.deactivate}
+                srLabel={d.learnerDisableUser}
                 title={d.learnerDisableTitle}
                 body={d.learnerDisableBody(row.name)}
                 confirmLabel={d.learnerDisableConfirm}
@@ -295,7 +295,7 @@ function Row({
             ) : (
               <ConfirmAction
                 icon={<EnableIcon />}
-                srLabel={d.reactivate}
+                srLabel={d.learnerEnableUser}
                 title={d.learnerEnableTitle}
                 body={d.learnerEnableBody(row.name)}
                 confirmLabel={d.learnerEnableConfirm}
