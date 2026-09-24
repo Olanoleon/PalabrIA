@@ -43,7 +43,7 @@ function draft(words: string[], title: string): GeneratedUnit {
     activities: [
       ...words.slice(0, -3).map((text, i) =>
         i % 3 === 1
-          ? { type: "IPA_MATCH" as const, word: text, prompt: "p", promptEs: "p", sentence: null, options: [`/${text}/`, "/x/", "/y/", "/z/"], answerIndex: 0, note: "n", noteEs: "n", pairs: null }
+          ? { type: "IPA_MATCH" as const, word: text, prompt: `Sound of ${text}?`, promptEs: `Sonido de ${text}?`, sentence: null, options: [`/${text}/`, "/x/", "/y/", "/z/"], answerIndex: 0, note: "n", noteEs: "n", pairs: null }
           : i % 3 === 2
             ? { type: "TYPE_WHAT_YOU_HEAR" as const, word: text, prompt: "p", promptEs: "p", sentence: null, options: [], answerIndex: 0, note: "n", noteEs: "n", pairs: null }
             : { type: "FILL_BLANK" as const, word: text, prompt: "p", promptEs: "p", sentence: "A ______ here.", options: [text, "x", "y", "z"], answerIndex: 0, note: "n", noteEs: "n", pairs: null },

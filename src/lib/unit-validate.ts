@@ -32,6 +32,9 @@ const normalize = (s: string) => s.trim().toLowerCase();
  * One for the single-answer types; all three for a match-up, whose `word` field
  * is only an anchor for the first pair.
  */
+/** A slash-delimited transcription anywhere in a string: /ˈbæk.eɪk/. */
+const HAS_IPA = /\/[^\s/][^/]*\//;
+
 /** IPA stripped of slashes and spacing, for comparing two transcriptions. */
 const ipaKey = (ipa: string) => ipa.replace(/[\s/]+/g, "").toLowerCase();
 
@@ -214,6 +217,47 @@ export function validateGeneratedUnit(
         level: "warning",
         message: `Activity for "${a.word}" repeats an option.`,
       });
+    }
+    // An IPA_MATCH only works in one direction: the question names the word,
+    // the options carry the sound. Generated the other way round — the
+    // transcription in the prompt and transcriptions as the options — the
+    // learner is matching an IPA against itself and the word never appears on
+    // screen at all, because `prompt` is the only text the practice screen
+    // draws for this type.
+    if (a.type === "IPA_MATCH") {
+      if (!a.prompt.toLowerCase().includes(normalize(a.word))) {
+        issues.push({
+          level: "error",
+          message: `IPA_MATCH for "${a.word}" never names the word in its prompt ("${a.prompt}"), so there is nothing on screen to match the sound to.`,
+        });
+      }
+      if (!a.promptEs.toLowerCase().includes(normalize(a.word))) {
+        issues.push({
+          level: "error",
+          message: `The Spanish prompt of the IPA_MATCH for "${a.word}" never names the word ("${a.promptEs}").`,
+        });
+      }
+      if (HAS_IPA.test(a.prompt) || HAS_IPA.test(a.promptEs)) {
+        issues.push({
+          level: "error",
+          message: `IPA_MATCH for "${a.word}" puts a transcription in the question ("${a.prompt}"); the question carries the spelling and the options carry the sound.`,
+        });
+      }
+      const notIpa = a.options.filter((o) => !o.includes("/"));
+      if (notIpa.length) {
+        issues.push({
+          level: "error",
+          message: `IPA_MATCH for "${a.word}" offers options that are not transcriptions: ${notIpa.join(", ")}.`,
+        });
+      }
+      const own = unit.words.find((w) => normalize(w.text) === normalize(a.word));
+      const chosen = a.options[a.answerIndex];
+      if (own && chosen && ipaKey(chosen) !== ipaKey(own.ipa)) {
+        issues.push({
+          level: "error",
+          message: `IPA_MATCH for "${a.word}" marks ${chosen} correct, but the word's transcription is ${own.ipa}.`,
+        });
+      }
     }
     if (a.type === "FILL_BLANK" && !a.sentence?.includes("___")) {
       issues.push({

@@ -34,18 +34,33 @@ function activity(
         noteEs: "n",
         pairs: null,
       }
-    : {
-        type,
-        word: text,
-        prompt: "Pick one.",
-        promptEs: "Elige una.",
-        sentence: type === "FILL_BLANK" ? "This is a ______." : null,
-        options: [text, "other", "third", "fourth"],
-        answerIndex: 0,
-        note: "n",
-        noteEs: "n",
-        pairs: null,
-      };
+    : type === "IPA_MATCH"
+      ? {
+          // One direction only: the word in the question, transcriptions in
+          // the options, the right one matching this word's own `ipa`.
+          type,
+          word: text,
+          prompt: `Which transcription matches ${text}?`,
+          promptEs: `Que transcripcion corresponde a ${text}?`,
+          sentence: null,
+          options: [`/${text}/`, "/other/", "/third/", "/fourth/"],
+          answerIndex: 0,
+          note: "n",
+          noteEs: "n",
+          pairs: null,
+        }
+      : {
+          type,
+          word: text,
+          prompt: "Pick one.",
+          promptEs: "Elige una.",
+          sentence: type === "FILL_BLANK" ? "This is a ______." : null,
+          options: [text, "other", "third", "fourth"],
+          answerIndex: 0,
+          note: "n",
+          noteEs: "n",
+          pairs: null,
+        };
 }
 
 /** A match-up over three of the unit's words. Every unit must carry one. */
@@ -373,5 +388,50 @@ describe("validateGeneratedUnit", () => {
     const issues = validateGeneratedUnit(draft, { wordCount: 6 });
     expect(hasBlockingIssue(issues)).toBe(true);
     expect(issues.some((i) => i.message.includes("ambiguous"))).toBe(true);
+  });
+  // An IPA_MATCH the other way round — the transcription in the question and
+  // transcriptions as the options — reached production: the learner was asked
+  // to match /ˈbæk.eɪk/ against four transcriptions, with the word nowhere on
+  // the screen.
+  it("blocks an IPA_MATCH that asks with the transcription", () => {
+    const draft = unit(SIX);
+    const ipa = draft.activities.find((a) => a.type === "IPA_MATCH")!;
+    ipa.prompt = "Which word has this pronunciation: /bravo/?";
+    ipa.promptEs = "Que palabra suena /bravo/?";
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("in the question"))).toBe(true);
+  });
+
+  it("blocks an IPA_MATCH whose prompt never names the word", () => {
+    const draft = unit(SIX);
+    const ipa = draft.activities.find((a) => a.type === "IPA_MATCH")!;
+    ipa.prompt = "Pick the right one.";
+    ipa.promptEs = "Elige la correcta.";
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("never names the word"))).toBe(
+      true,
+    );
+  });
+
+  it("blocks an IPA_MATCH offering words instead of transcriptions", () => {
+    const draft = unit(SIX);
+    const ipa = draft.activities.find((a) => a.type === "IPA_MATCH")!;
+    ipa.options = ["bravo", "delta", "echo", "foxtrot"];
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("not transcriptions"))).toBe(
+      true,
+    );
+  });
+
+  it("blocks an IPA_MATCH marking a transcription that is not the word's", () => {
+    const draft = unit(SIX);
+    const ipa = draft.activities.find((a) => a.type === "IPA_MATCH")!;
+    ipa.answerIndex = 1;
+    const issues = validateGeneratedUnit(draft, { wordCount: 6 });
+    expect(hasBlockingIssue(issues)).toBe(true);
+    expect(issues.some((i) => i.message.includes("marks"))).toBe(true);
   });
 });
