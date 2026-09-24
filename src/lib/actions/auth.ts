@@ -8,6 +8,7 @@ import {
   TWO_FACTOR_TTL_MIN,
   clearPending,
   consumeOneTime,
+  peekOneTime,
   endSession,
   getPendingUserId,
   getSession,
@@ -217,23 +218,15 @@ export async function resetPassword(
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
 
-  // Which rule applies depends on the role, and the role is only known once the
-  // token is consumed — but consuming burns a single-use link, so a typo must
-  // not reach that point. Check what can be checked without knowing the role
-  // first: the confirmation, and whether the input could satisfy *either* rule.
-  // That catches every ordinary mistake. The remaining cases (a learner typing
-  // a long password, an admin typing four digits) still cost a fresh link.
-  if (password !== confirm) return { error: d.newPwMismatch };
-  if (!/^\d{4}$/.test(password) && password.length < 8) {
-    return { error: d.newPwShort };
-  }
+  // Look the token up without spending it, so the rules can be applied in full
+  // before anything is burned. The earlier version consumed first and checked
+  // afterwards, which meant an administrator typing a 4-digit PIN — the thing
+  // this app has taught everyone to type — was told to use eight characters
+  // and handed a link that no longer worked.
+  const found = await peekOneTime("PASSWORD_RESET", token);
+  if (!found.ok) return { error: d.resetBadLink };
 
-  const result = await consumeOneTime("PASSWORD_RESET", token);
-  if (!result.ok) return { error: d.resetBadLink };
-
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: result.userId },
-  });
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: found.userId } });
   const problem = passwordProblem({
     role: user.role,
     password,
@@ -241,6 +234,10 @@ export async function resetPassword(
     email: user.email,
   });
   if (problem) return { error: passwordMessage(problem, lang) };
+
+  // Only now, with a password that will be accepted, is the link spent.
+  const result = await consumeOneTime("PASSWORD_RESET", token);
+  if (!result.ok) return { error: d.resetBadLink };
 
   await prisma.user.update({
     where: { id: user.id },

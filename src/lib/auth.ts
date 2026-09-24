@@ -19,7 +19,8 @@ const PENDING_COOKIE = "pal_2fa";
 const SESSION_DAYS = 30;
 
 export const TWO_FACTOR_TTL_MIN = 10;
-export const RESET_TTL_MIN = 15;
+/** An hour, not fifteen minutes: long enough to go and dig it out of spam. */
+export const RESET_TTL_MIN = 60;
 export const MAX_CODE_ATTEMPTS = 5;
 
 function secret(): Uint8Array {
@@ -195,10 +196,21 @@ export async function issueOneTime(
   ttlMinutes: number,
 ): Promise<string> {
   const raw = purpose === "TWO_FACTOR" ? generateCode() : generateToken();
-  await prisma.authToken.updateMany({
-    where: { userId, purpose, usedAt: null },
-    data: { usedAt: new Date() },
-  });
+
+  // A fresh 2FA code supersedes the last one: the learner is sitting on the
+  // code screen and only the newest is any use to them.
+  //
+  // A reset link does not. Mail is slow and sometimes lands in spam, so the
+  // honest sequence is "ask, see nothing, ask again, then find the first one
+  // and click it" — and retiring the older link made that first click fail. A
+  // reset token is 32 random bytes and lives an hour; letting a couple be open
+  // at once costs nothing worth having.
+  if (purpose === "TWO_FACTOR") {
+    await prisma.authToken.updateMany({
+      where: { userId, purpose, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+  }
   await prisma.authToken.create({
     data: {
       userId,
@@ -213,6 +225,35 @@ export async function issueOneTime(
 export type OneTimeResult =
   | { ok: true; userId: string }
   | { ok: false; reason: "invalid" | "expired" | "throttled" };
+
+/**
+ * Who a token belongs to, without spending it.
+ *
+ * `resetPassword` cannot know which password rules apply until it knows the
+ * role, and the role is on the user behind the token — but consuming to find
+ * out burns a single-use link on a password that might then be rejected. So it
+ * looks first, decides, and only consumes once it is going to succeed.
+ *
+ * Deliberately does not count attempts: `consumeOneTime` still does, and a
+ * 32-byte token is not something anyone guesses.
+ */
+export async function peekOneTime(
+  purpose: TokenPurpose,
+  raw: string,
+): Promise<{ ok: true; userId: string } | { ok: false }> {
+  const candidates = await prisma.authToken.findMany({
+    where: { purpose, usedAt: null },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+  for (const token of candidates) {
+    if (token.attempts >= MAX_CODE_ATTEMPTS) continue;
+    if (!(await bcrypt.compare(raw, token.codeHash))) continue;
+    if (token.expiresAt.getTime() < Date.now()) return { ok: false };
+    return { ok: true, userId: token.userId };
+  }
+  return { ok: false };
+}
 
 export async function consumeOneTime(
   purpose: TokenPurpose,

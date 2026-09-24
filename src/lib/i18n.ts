@@ -20,7 +20,15 @@ export const ES = {
   signinForgot: "¿Olvidaste tu contraseña?",
   pwShow: "Ver",
   pwHide: "Ocultar",
-  forgotToast: "Te enviamos un enlace para restablecer tu contraseña.",
+  forgotToast:
+    "Te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja de spam o correo no deseado — a veces llega ahí.",
+  forgotTitle: "Restablece tu contraseña",
+  forgotSub:
+    "Escribe tu correo y te enviamos un enlace para elegir una nueva.",
+  forgotCta: "Enviarme el enlace",
+  forgotBack: "Volver a entrar",
+  forgotSpamNote:
+    "Si no lo ves en unos minutos, busca en spam o correo no deseado.",
   signinNote:
     "Usa el correo de tu organización para aparecer en la tabla mensual.",
   signinLegal: "Al entrar aceptas los términos y el aviso de privacidad.",
@@ -326,7 +334,14 @@ export const EN: Translated = {
   signinForgot: "Forgot your password?",
   pwShow: "Show",
   pwHide: "Hide",
-  forgotToast: "We sent you a link to reset your password.",
+  forgotToast:
+    "We sent you a link to reset your password. Check your spam or junk folder — it sometimes lands there.",
+  forgotTitle: "Reset your password",
+  forgotSub: "Enter your email and we will send you a link to pick a new one.",
+  forgotCta: "Send me the link",
+  forgotBack: "Back to sign in",
+  forgotSpamNote:
+    "If you do not see it in a few minutes, look in spam or junk.",
   signinNote: "Use your organization email to appear on the monthly board.",
   signinLegal: "By signing in you accept the terms and the privacy notice.",
   signinBadCreds: "Wrong email or password.",
