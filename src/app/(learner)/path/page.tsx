@@ -32,7 +32,7 @@ export default async function PathPage() {
   const shown = sections.flatMap((section) => section.areas);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col">
       <header className="flex flex-col gap-[14px] px-[18px] pb-3 pt-4">
         <LearnerHeader lang={lang} streak={learner.streakCount} xp={learner.xp} />
 
@@ -70,7 +70,7 @@ export default async function PathPage() {
         ) : null}
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-[18px] pb-4 pt-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-[18px] pb-[84px] pt-2">
         <div className="flex items-baseline gap-2">
           <h2 className="font-display text-[14px] font-semibold uppercase tracking-[0.02em]">
             {d.areasTitle}
@@ -125,17 +125,24 @@ export default async function PathPage() {
       </div>
 
       {/*
-        Outside the scrolling list so it is always reachable, and inset from the
-        area cards so its narrower width reads as a different kind of thing.
+        Floats over the list rather than taking a row of its own, so the cards
+        scroll behind it and its upward shadow reads as depth instead of as a
+        band across the screen. The list carries matching bottom padding, so
+        the last card still clears it when you reach the end.
+
+        pointer-events-none on the strip, auto on the pill: otherwise the
+        bottom 72px of the screen would swallow the scroll gesture.
       */}
-      <div className="relative z-40 shrink-0 px-8 pb-2 pt-1">
-        <BoardTeaser
-          lang={lang}
-          rows={board.rows}
-          me={board.me}
-          total={board.total}
-          orgName={user.org?.name ?? ""}
-        />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 px-8 pb-2 pt-1">
+        <div className="pointer-events-auto">
+          <BoardTeaser
+            lang={lang}
+            rows={board.rows}
+            me={board.me}
+            total={board.total}
+            orgName={user.org?.name ?? ""}
+          />
+        </div>
       </div>
     </div>
   );
