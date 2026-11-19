@@ -1,10 +1,10 @@
 import {
   badgeState,
-  areaSections,
   learnerContext,
   monthlyBoard,
   visibleAreas,
 } from "@/lib/learner-data";
+import { areaSections } from "@/lib/area-sections";
 import { LearnerHeader, LevelBar } from "@/components/learner/header-chips";
 import { AreaCard } from "@/components/learner/area-card";
 import { Coachmark } from "@/components/learner/coachmark";
@@ -26,6 +26,10 @@ export default async function PathPage() {
 
   const earned = badges.filter((b) => b.earned).length;
   const firstName = user.name.split(" ")[0];
+  // Grouped once, then flattened back: `shown` is the areas in the order they
+  // are drawn, which is what the numbering and the coachmark key off.
+  const sections = areaSections(areas);
+  const shown = sections.flatMap((section) => section.areas);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -77,7 +81,7 @@ export default async function PathPage() {
         {areas.length === 0 ? (
           <NoteCard>{d.areasEmpty}</NoteCard>
         ) : (
-          areaSections(areas).map((section) => (
+          sections.map((section) => (
             <div key={section.heading ?? "untagged"} className="flex flex-col gap-3">
               {/*
                 A section with no heading is the untagged one, which every
@@ -94,7 +98,10 @@ export default async function PathPage() {
               ) : null}
 
               {section.areas.map((area) => {
-                const index = areas.indexOf(area);
+                // Position on screen, not in the unsorted list: the sections
+                // reorder the areas, and "ÁREA 01" has to be the first card
+                // the learner actually sees.
+                const index = shown.indexOf(area);
                 // Only the first card on the screen is spotlit: dimming the
                 // page around every card would say nothing about where to begin.
                 return index === 0 ? (

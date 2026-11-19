@@ -155,40 +155,6 @@ export async function visibleAreas(
   });
 }
 
-/**
- * The areas split into the sections the path screen draws.
- *
- * Untagged areas come first and carry no heading, which is what every area
- * created before tags existed does — a school that has tagged only its newest
- * term should not have the older ones filed under an invented label. Tagged
- * sections then follow in the order the administrator arranged them.
- */
-export function areaSections(areas: AreaCardData[]): Array<{
-  heading: string | null;
-  areas: AreaCardData[];
-}> {
-  const untagged = areas.filter((a) => !a.tag);
-  const tagged = new Map<string, { name: string; sortOrder: number; areas: AreaCardData[] }>();
-  for (const area of areas) {
-    if (!area.tag) continue;
-    const found = tagged.get(area.tag.id);
-    if (found) found.areas.push(area);
-    else
-      tagged.set(area.tag.id, {
-        name: area.tag.name,
-        sortOrder: area.tag.sortOrder,
-        areas: [area],
-      });
-  }
-
-  return [
-    ...(untagged.length ? [{ heading: null, areas: untagged }] : []),
-    ...[...tagged.values()]
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((g) => ({ heading: g.name, areas: g.areas })),
-  ];
-}
-
 export type UnitRowData = {
   id: string;
   number: number;
